@@ -13,7 +13,8 @@ const addMeterRoutes=require('./routes/meter');
 const addTarriffRoutes=require('./routes/tarriff');
 
 const imageRoutes = require('./routes/imageRoute'); 
-const port=2000;
+const port = process.env.PORT || 2000;
+
 env.config();
 mongoose
   .connect(
