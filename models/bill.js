@@ -1,166 +1,5 @@
-  // const mongoose = require("mongoose");
-  // const billSchema = new mongoose.Schema(
-  //   {
-     
-  //     consumerNumber:{
-  //       type: String,
-  //       trim: true,  
-  //     },
-  //     email: {
-  //       type: String,
-  //       required: true,
-  //       trim: true,
-  //     },
-  //     consumerName: {
-  //       type: String,
-  //   },
-  //    consumerAddress: {
-  //       type: String,
-  //   },
-  //   contactNumber: {
-  //     type: Number,
-  //     required: true,
-  //     validate: {
-  //       validator: function(v) {
-  //         return /^\d{10}$/.test(v.toString());
-  //       },
-  //       message: "Contact number must be a 10-digit number"
-  //     }
-  //   },
-     
-  //     ward: {
-  //       type: String,
-  //       trim: true,
-  //     },
-  //     totalConsumption: {
-  //       type: Number,
-  //     },
-      
 
-  //     tarriffCode: {
-  //       type: String,     
-  //   },
-  //   tarriffType: {
-  //       type: String,      
-  //   },  
-  //     meterStatus: {
-  //       type: String,
-  //       trim: true,
-  //     },
-      
-  //     netLoad:{
-  //      type: String,
-  //     },
-  //     sanctionedLoad:{
-  //       type: String,
-  //     },
-  //    billNo:{
-  //     type: String,
-  //    },
-  //     previousReadingDate: {
-  //       type: String,
-  //     },
-  //     previousReading: {
-  //       type: Number,
-  //     },
-  //     currentReadingDate: {
-  //       type: String,
-  //     },
-  //     monthAndYear: {
-  //       type: String,
-  //     },
-  //     currentReading: {
-  //       type: Number,
-  //     },
-  //     billDate: {
-  //       type:String,
-  //     },
-  //     currentBillAmount: {
-  //       type: Number,
-  //     },
-  //     totalArrears: {
-  //       type: Number,
-  //     },
-  //     netBillAmount: {
-  //       type: Number,
-  //     },
-  //     roundedBillAmount: {
-  //       type: Number,
-  //     },
-  //     ifPaidByThisDate: {
-  //      type:String,
-  //     },
-  //     earlyPaymentAmount: {
-  //       type: Number,
-  //     },
-  //     ifPaidBefore: {
-  //       type: Number,
-  //     },
-  //     dueDate: {
-  //       type:String,
-  //     },
-  //     dueAlert:{
-  //       type: Boolean,
-  //       default: false,
-  //     },
-  //     ifPaidAfter: {
-  //       type: Number,
-  //     },
-  //     overdueDate: {
-  //       type:String,
-  //     },
-  //     paymentStatus:{
-  //       type:String,
-  //     },
-  //     approvedStatus:{
-  //       type:String,
-  //     },
-  //     paidAmount: {
-  //       type: Number,
-  //     },
-  //     promptPaymentDate: {
-  //       type:String,
-  //     },
-  //     overdueDate: {
-  //       type:String,
-  //     },
-  //     pendingAmount: {
-  //       type: Number,
-  //     },
-  //     forwardForGeneration: {
-  //       type: Boolean,
-  //       default: false,
-  //     },
-  //     flagStatus: {
-  //       type: Boolean,
-  //       default: false,
-  //     },
-  //     receiptNoBillPayment: {
-  //       type: String,
-  //     },
-  //     billPaymentDate:{
-  //       type:String,
-  //     },
-    
-      
-  //   },
-  //   { timestamps: true }
-  // );
-
-  
-  // billSchema.pre('save', function (next) {
-  //   const today = new Date();
-  //   const twoDaysBeforeDue = new Date(this.dueDate);
-  //   twoDaysBeforeDue.setDate(this.dueDate.getDate() - 2);
-  //   if (today.toDateString() === twoDaysBeforeDue.toDateString()) {
-  //     this.dueAlert = true;
-  //   } else {
-  //     this.dueAlert = false;
-  //   }
-  //   next();
-  // });
-  // module.exports = mongoose.model("Bill", billSchema);
-// -----------------------------------------------------------------------------
+// =======================After================>>>>>>>>>>>
 const mongoose = require("mongoose");
 
 const billSchema = new mongoose.Schema(
@@ -169,40 +8,61 @@ const billSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    email: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+
     consumerName: {
       type: String,
     },
     consumerAddress: {
       type: String,
     },
+    email: {
+      type: String,
+      // required: true,
+      trim: true,
+    },
     contactNumber: {
       type: String,
-     
-    
+
+
     },
     ward: {
       type: String,
       trim: true,
     },
+    adjustmentUnit: {
+      type: Number,
+    },
     totalConsumption: {
       type: Number,
     },
-    
-      tarriffCode: {
-        type: String,
-      },
-      tarriffType: {
-        type: String,
-      },
-    
+    installationDate: {
+      type: String,
+    },
+    tarriffCode: {
+      type: String,
+    },
+    tarriffType: {
+      type: String,
+    },
+    meterNumber: {
+      type: String,
+      // unique: true,
+      // required: true,
+    },
+
     meterStatus: {
       type: String,
       trim: true,
+    },
+    phaseType: {
+      type: String,
+  },
+    meterPurpose: {
+      type: String,
+    },
+   
+    billingUnit: {
+      type: String,
     },
     netLoad: {
       type: String,
@@ -210,14 +70,68 @@ const billSchema = new mongoose.Schema(
     sanctionedLoad: {
       type: String,
     },
+    billDate: {
+      type: String,
+    },
     billNo: {
+      type: String,
+    },
+    monthAndYear: {
       type: String,
     },
     previousReadingDate: {
       type: String, // Format: YYYY-MM-DD
     },
+    previousReading: {
+      type: Number,
+    },
     currentReadingDate: {
       type: String, // Format: YYYY-MM-DD
+    },
+    currentReading: {
+      type: Number,
+    },
+    currentBillAmount: {
+      type: Number,
+    },
+    totalArrears: {
+      type: Number,
+    },
+    netBillAmount: {
+      type: Number,
+    },
+    roundedBillAmount: {
+      type: Number,
+    },
+    ifPaidByThisDate: {
+      type: String,
+    },
+    earlyPaymentAmount: {
+      type: Number,
+    },
+    ifPaidAfter: {
+      type: Number,
+    },
+    paymentStatus: {
+      type: String,
+    },
+    paidAmount: {
+      type: Number,
+    },
+    pendingAmount: {
+      type: Number,
+    },
+    billPaymentDate: {
+      type: String,
+    },
+    receiptNoBillPayment: {
+      type: String,
+    },
+    promptPaymentDate: {
+      type: String,
+    },
+    promptPaymentAmount: {
+      type: Number,
     },
     dueDate: {
       type: String, // Format: YYYY-MM-DD
@@ -226,10 +140,34 @@ const billSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    // Additional fields as required...
+
+
+    juniorEngineerContactNumber: {
+      type: Number,
+    }
   },
   { timestamps: true }
 );
+billSchema.pre('save', function (next) {
+  if (this.dueDate) { // Ensure dueDate exists
+    const today = new Date();
+    const dueDate = new Date(this.dueDate); // Parse the string to a Date object
+
+    // Calculate the date two days before the due date
+    const twoDaysBeforeDue = new Date(dueDate);
+    twoDaysBeforeDue.setDate(dueDate.getDate() - 2);
+
+    // Check if today is two days before the due date
+    if (today.toDateString() === twoDaysBeforeDue.toDateString()) {
+      this.dueAlert = true;
+    } else {
+      this.dueAlert = false;
+    }
+  } else {
+    this.dueAlert = false; // Default to false if dueDate is not set
+  }
+  next();
+});
 
 module.exports = mongoose.model("Bill", billSchema);
 
