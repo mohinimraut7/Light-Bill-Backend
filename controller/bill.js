@@ -49,6 +49,7 @@ exports.addBill = async (req, res) => {
       ifPaidBefore,
       ifPaidAfter,
       paymentStatus,
+      approvedStatus,
       paidAmount,
       pendingAmount,
       billPaymentDate,
@@ -58,7 +59,7 @@ exports.addBill = async (req, res) => {
       dueDate,
       dueAlert,
       overdueDate,
-      approvedStatus,
+   
       forwardForGeneration,
     } = req.body;
 

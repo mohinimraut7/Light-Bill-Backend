@@ -115,6 +115,9 @@ const billSchema = new mongoose.Schema(
     paymentStatus: {
       type: String,
     },
+    approvedStatus: {
+      type: String,
+    },
     paidAmount: {
       type: Number,
     },
