@@ -23,10 +23,9 @@ const billSchema = new mongoose.Schema(
     contactNumber: {
       type: String,
 
-
     },
     ward: {
-      type: String,
+      type: String, 
       trim: true,
     },
     adjustmentUnit: {
@@ -38,10 +37,8 @@ const billSchema = new mongoose.Schema(
     installationDate: {
       type: String,
     },
-    tarriffCode: {
-      type: String,
-    },
-    tarriffType: {
+   
+    tarriffDescription: {
       type: String,
     },
     meterNumber: {
@@ -94,24 +91,13 @@ const billSchema = new mongoose.Schema(
     currentBillAmount: {
       type: Number,
     },
-    totalArrears: {
-      type: Number,
-    },
     netBillAmount: {
       type: Number,
     },
     roundedBillAmount: {
       type: Number,
     },
-    ifPaidByThisDate: {
-      type: String,
-    },
-    earlyPaymentAmount: {
-      type: Number,
-    },
-    ifPaidAfter: {
-      type: Number,
-    },
+   
     paymentStatus: {
       type: String,
     },
@@ -138,6 +124,9 @@ const billSchema = new mongoose.Schema(
     },
     dueDate: {
       type: String, // Format: YYYY-MM-DD
+    },
+    overDueAmount: {
+      type: Number,
     },
     dueAlert: {
       type: Boolean,

@@ -24,8 +24,7 @@ exports.addBill = async (req, res) => {
       adjustmentUnit,
       totalConsumption,
       installationDate,
-      tarriffCode,
-      tarriffType,
+      tarriffDescription,
       meterNumber,
       meterStatus,
       phaseType,
@@ -41,13 +40,8 @@ exports.addBill = async (req, res) => {
       currentReadingDate,
       currentReading,
       currentBillAmount,
-      totalArrears,
       netBillAmount,
       roundedBillAmount,
-      ifPaidByThisDate,
-      earlyPaymentAmount,
-      ifPaidBefore,
-      ifPaidAfter,
       paymentStatus,
       approvedStatus,
       paidAmount,
@@ -57,6 +51,7 @@ exports.addBill = async (req, res) => {
       promptPaymentDate,
       promptPaymentAmount,
       dueDate,
+      overDueAmount,
       dueAlert,
       overdueDate,
    
@@ -92,8 +87,7 @@ exports.addBill = async (req, res) => {
       adjustmentUnit,
       totalConsumption,
       installationDate,
-      tarriffCode,
-      tarriffType,
+      tarriffDescription,
       meterNumber,
       meterStatus,
       phaseType,
@@ -108,16 +102,9 @@ exports.addBill = async (req, res) => {
       previousReading,
       currentReadingDate,
       currentReading,
-      
       currentBillAmount,
-      totalArrears,
       netBillAmount,
       roundedBillAmount,
-      ifPaidByThisDate,
-      earlyPaymentAmount,
-      ifPaidBefore,
-     
-      ifPaidAfter,
       paymentStatus,
       paidAmount,
       pendingAmount,
@@ -126,6 +113,7 @@ exports.addBill = async (req, res) => {
       promptPaymentDate,
       promptPaymentAmount,
       dueDate,
+      overDueAmount,
       dueAlert,
       overdueDate,
       approvedStatus,
@@ -189,7 +177,10 @@ exports.addBill = async (req, res) => {
     await bill.save();
     res.status(201).json({
       message: 'Bill created successfully',
-      bill,
+      bill: {
+        consumerNumber: bill.consumerNumber,
+        monthAndYear: bill.monthAndYear,
+      },
     });
   } catch (error) {
     console.error(error);
@@ -327,7 +318,6 @@ bill.netLoad = netLoad || bill.netLoad || '';
     bill.currentReading = currentReading || bill.currentReading;
     bill.billDate = billDate || bill.billDate;
     bill.currentBillAmount = currentBillAmount || bill.currentBillAmount;
-    bill.totalArrears = totalArrears || bill.totalArrears;
     bill.netBillAmount = netBillAmount || bill.netBillAmount;
     bill.roundedBillAmount = roundedBillAmount || bill.roundedBillAmount;
     bill.ifPaidByThisDate = ifPaidByThisDate || bill.ifPaidByThisDate;
