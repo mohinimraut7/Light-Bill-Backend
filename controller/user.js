@@ -20,6 +20,19 @@ exports.addUser = async (req, res) => {
     if (!emailRegex.test(email)) {
       return res.status(400).json({ message: "Invalid email address" });
     }
+
+    // Check if email or contactNumber already exists
+    const existingUser = await User.findOne({
+      $or: [{ email }, { contactNumber }],
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ message: "User with the same email or contact number already exists" });
+    }
+
+    const finalRole = email === "harshalpatil@gmail.com" ? "Super Admin" : role;
+
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     const newUser = new User({
@@ -29,7 +42,7 @@ exports.addUser = async (req, res) => {
       password: hashedPassword,
       contactNumber,
       address,
-      role,
+      role: finalRole,
       ward
     });
     const savedUser = await newUser.save();
