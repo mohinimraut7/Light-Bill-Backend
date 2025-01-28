@@ -11,10 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.addUser = async (req, res) => {
   const {cn,username, email, password, contactNumber, address, role,ward } = req.body;
-  // const requesterRole = req?.user?.role;
-  // if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin') {
-  //   return res.status(403).json({ message: "You don't have authority to add user" });
-  // }
+ 
   try {
     if (!/^\d{10}$/.test(contactNumber.toString())) {
       return res.status(400).json({ message: "Contact number must be a 10-digit number" });
@@ -41,69 +38,6 @@ exports.addUser = async (req, res) => {
     res.status(400).json({ message: "Error adding user", error });
   }
 };
-
-// exports.addUserFromThirdPartyAPI = async (req, res) => {
-//   try {
-//     const response = await fetch('http://localhost:8000/dummyusers/dummyusers');
-    
-//     // Check if the response status is OK (status code 200-299)
-//     if (!response.ok) {
-//       return res.status(response.status).json({ message: "Failed to fetch data from third-party API", error: `Status: ${response.status}` });
-//     }
-
-//     // Log the raw response text before parsing for debugging purposes
-//     const responseText = await response.text();  // Get raw response text
-//     console.log("Raw response:", responseText);  // Log the raw response to console
-
-//     // Check if the responseText starts with a valid JSON format
-//     if (responseText.trim().startsWith("{") || responseText.trim().startsWith("[")) {
-//       try {
-//         // Attempt to parse the response manually
-//         let usersData = JSON.parse(responseText);  // Manually parse the response
-
-//         // Validate the parsed data format
-//         if (!Array.isArray(usersData)) {
-//           return res.status(400).json({ message: "Invalid data format received from third-party API" });
-//         }
-
-//         const userPromises = usersData.map(async (user) => {
-//           try {
-//             const contactNumber = user.contactNumber.toString();
-
-//             const newUser = new User({
-//               cn: user.cn,
-//               username: user.username,
-//               email: user.email,
-//               password: user.password,
-//               contactNumber: contactNumber,
-//               address: user.address,
-//               role: user.role,
-//               ward: user.ward,
-//             });
-
-//             await newUser.save();
-//           } catch (error) {
-//             console.error("Error saving user:", error.message);
-//           }
-//         });
-
-//         await Promise.all(userPromises);
-
-//         res.status(201).json({ message: "Users added successfully from third-party API" });
-
-//       } catch (error) {
-//         return res.status(400).json({ message: "Invalid JSON in the third-party API response", error: error.message });
-//       }
-//     } else {
-//       // If the response is not valid JSON
-//       return res.status(400).json({ message: "Received non-JSON response from third-party API" });
-//     }
-//   } catch (error) {
-//     console.error("Error fetching data or adding users from third-party API:", error.message);
-//     res.status(400).json({ message: "Error adding users from third-party API", error: error.message });
-//   }
-// };
-
 
 exports.deleteUser = async (req, res) => {
   const { user_id } = req.params;
@@ -171,7 +105,6 @@ exports.editProfile = async (req, res) => {
     user.ward = ward || user.ward;
     user.wardsection = wardsection || user.wardsection;
     user.description = description || user.description;
-
     if (role) {
       user.role = role;
       const userRole = await Role.findOne({ userId: user._id });

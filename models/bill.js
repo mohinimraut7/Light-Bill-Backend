@@ -17,7 +17,6 @@ const billSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      // required: true,
       trim: true,
     },
     contactNumber: {
@@ -77,13 +76,13 @@ const billSchema = new mongoose.Schema(
       type: String,
     },
     previousReadingDate: {
-      type: String, // Format: YYYY-MM-DD
+      type: String,
     },
     previousReading: {
       type: Number,
     },
     currentReadingDate: {
-      type: String, // Format: YYYY-MM-DD
+      type: String, 
     },
     currentReading: {
       type: Number,
@@ -123,7 +122,7 @@ const billSchema = new mongoose.Schema(
       type: Number,
     },
     dueDate: {
-      type: String, // Format: YYYY-MM-DD
+      type: String, 
     },
     overDueAmount: {
       type: Number,
@@ -141,22 +140,18 @@ const billSchema = new mongoose.Schema(
   { timestamps: true }
 );
 billSchema.pre('save', function (next) {
-  if (this.dueDate) { // Ensure dueDate exists
+  if (this.dueDate) { 
     const today = new Date();
-    const dueDate = new Date(this.dueDate); // Parse the string to a Date object
-
-    // Calculate the date two days before the due date
+    const dueDate = new Date(this.dueDate); 
     const twoDaysBeforeDue = new Date(dueDate);
     twoDaysBeforeDue.setDate(dueDate.getDate() - 2);
-
-    // Check if today is two days before the due date
     if (today.toDateString() === twoDaysBeforeDue.toDateString()) {
       this.dueAlert = true;
     } else {
       this.dueAlert = false;
     }
   } else {
-    this.dueAlert = false; // Default to false if dueDate is not set
+    this.dueAlert = false; 
   }
   next();
 });

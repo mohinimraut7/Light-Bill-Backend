@@ -77,13 +77,13 @@ const userSchema = new mongoose.Schema(
     },
     isVerified: {
       type: Boolean,
-      default: false, // Default to false until the email is verified
+      default: false, 
     },
     verificationToken: {
-      type: String, // Store the token for email verification
+      type: String, 
     },
     verificationTokenExpiry: {
-      type: Date, // Store the expiry date for the token
+      type: Date, 
     },
   },
   { timestamps: true }

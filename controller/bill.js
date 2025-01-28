@@ -7,8 +7,6 @@ const bcrypt=require('bcryptjs');
 const axios = require('axios');
 
 exports.addBill = async (req, res) => {
-  // ================After===================>>
-  console.log("req.body",req.body)
   const requesterRole = req?.user?.role;
   if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterRole !=='Executive Engineer' && requesterRole !=='Junior Engineer') { 
     return res.status(403).json({ message: "You don't have authority to add bill" }); 
@@ -54,7 +52,6 @@ exports.addBill = async (req, res) => {
       overDueAmount,
       dueAlert,
       overdueDate,
-   
       forwardForGeneration,
     } = req.body;
 
@@ -192,7 +189,7 @@ exports.addBill = async (req, res) => {
 };
 exports.addBillFromThirdPartyAPI = async (req, res) => {
   try {
-    // Fetch data from the third-party API
+    
     const response = await axios.get('http://localhost:8000/thirdpartybills/lightbills');
 
     if (!response.data || !Array.isArray(response.data)) {
@@ -231,7 +228,7 @@ exports.addBillFromThirdPartyAPI = async (req, res) => {
             ifPaidBefore: billData.ifPaidByThisDate?.amount,
             dueDate: billData.dueDate,
             ifPaidAfter: billData.ifPaidAfter?.amount,
-            // userId: user?._id,  
+             
           });
 
           await newBill.save();
@@ -412,25 +409,17 @@ bill.netLoad = netLoad || bill.netLoad || '';
 
 exports.getBills = async (req, res) => {
   try {
-    
-    // const bills = await Bill.find().populate('userId', 'cn,username email contactNumber ward')
-    // .populate('meterId','cn meterNumber phaseType tariffType sanctionedLoad installationDate');
-
     const bills = await Bill.find();
     res.status(200).json(bills);
   } catch (error) {
-    
     console.error('Error fetching bills:', error);
-
-    
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
 
 exports.updateBillStatus = async (req, res) => {
-  console.log("req.user.role", req.user.role)
   const { id, approvedStatus, paymentStatus, yesno } = req.body;
-  console.log("yesnocheck in backend", id, approvedStatus, paymentStatus, yesno)
+  
   let totalArrearsval;
   let netBillAmountval;
   let roundedBillAmountval;
@@ -447,7 +436,7 @@ exports.updateBillStatus = async (req, res) => {
           totalArrearsval=bill.totalArrears;
           netBillAmountval=bill.netBillAmount;
           roundedBillAmountval=bill.roundedBillAmount;
-          console.log("testing reverse>>>>>",totalArrearsval,netBillAmountval,roundedBillAmountval)
+          
         bill.paymentStatus = 'Paid';
         bill.approvedStatus = 'Done';
       }else if(approvedStatus === 'PendingForSuperAdmin' && yesno === 'No'&& paymentStatus==='Pending'){
@@ -466,7 +455,7 @@ exports.updateBillStatus = async (req, res) => {
         bill.approvedStatus = 'PendingForJuniorEngineer';
         bill.paymentStatus = 'UnPaid';
       } else if (req?.user?.role === 'Admin' && yesno === 'Yes') {
-        console.log('Updating approvedStatus to PendingForSuperAdmin');
+        
         bill.approvedStatus = 'PendingForSuperAdmin';
       } else if (req?.user?.role === 'Admin' && yesno === 'No' && approvedStatus === 'PendingForSuperAdmin') {
         bill.approvedStatus = 'PendingForAdmin';
@@ -506,7 +495,7 @@ exports.updateFlagStatus = async (req, res) => {
 };
   exports.deleteBill = async (req, res) => {
     const requesterRole = req?.user?.role;
-    console.log("check role",req.user.role)
+    
     if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterRole !=='Executive Engineer' && requesterRole !=='Junior Engineer') { 
       return res.status(403).json({ message: "You don't have authority to add bill" }); 
     }

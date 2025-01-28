@@ -135,53 +135,25 @@ exports.editRole = async (req, res) => {
     }
 };
 
-// exports.deleteRole = async (req, res) => {
-//     const { role_id } = req.params;
-//     try {
-//         const deletedRole = await Role.findByIdAndDelete(role_id);
-//         if (!deletedRole) {
-//             return res.status(404).json({
-//                 message: "Role not found",
-//             });
-//         }
-//         res.status(200).json({
-//             message: "Role deleted successfully",
-//             role: deletedRole,
-//         });
-//     } catch (error) {
-//         console.error('Error deleting role', error);
-//         res.status(500).json({
-//             message: "Internal Server Error"
-//         });
-//     }
-// }
 
 
 exports.deleteRole = async (req, res) => {
     const { role_id } = req.params;
     try {
-        // Find the role by ID
         const deletedRole = await Role.findByIdAndDelete(role_id);
-
-        // If role is not found, return a 404 error
         if (!deletedRole) {
             return res.status(404).json({
                 message: "Role not found",
             });
         }
-
-        // Find the user associated with the role
         const user = await User.findById(deletedRole.userId);
-
-        // If user is found, delete the user
         if (user) {
             await User.findByIdAndDelete(user._id);
         }
-
         res.status(200).json({
             message: "Role and associated user deleted successfully",
             role: deletedRole,
-            userId: deletedRole.userId,  // Optionally return the userId if needed
+            userId: deletedRole.userId, 
         });
     } catch (error) {
         console.error('Error deleting role', error);
