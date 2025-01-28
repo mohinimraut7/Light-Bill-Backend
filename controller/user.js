@@ -29,7 +29,7 @@ exports.addUser = async (req, res) => {
       return res.status(400).json({ message: "User with the same email or contact number already exists" });
     }
 
-    const finalRole = email === "harshalpatil@gmail.com" ? "Super Admin" : role;
+    // const finalRole = email === "mohinimraut7@gmail.com" ? "Super Admin" : role;
 
 
     const salt = await bcrypt.genSalt(10);
@@ -41,7 +41,7 @@ exports.addUser = async (req, res) => {
       password: hashedPassword,
       contactNumber,
       address,
-      role: finalRole,
+      role,
       ward
     });
     const savedUser = await newUser.save();
@@ -166,7 +166,7 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
-    if (email === "harshalpatil@gmail.com" && user.role !== "Super Admin") {
+    if (email === "mohinimraut7@gmail.com" && user.role !== "Super Admin") {
       user.role = "Super Admin";
       await user.save(); // Update the role in the database
     }
