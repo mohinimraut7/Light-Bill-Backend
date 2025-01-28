@@ -1,85 +1,84 @@
 
-// =======================After================>>>>>>>>>>>
 const mongoose = require("mongoose");
 
 const billSchema = new mongoose.Schema(
   {
-    consumerNumber: {
-      type: String,
-      trim: true,
-    },
+      consumerNumber: {
+        type: String,
+        trim: true,
+      },
 
-    consumerName: {
-      type: String,
-    },
-    consumerAddress: {
-      type: String,
-    },
-    email: {
-      type: String,
-      trim: true,
-    },
-    contactNumber: {
-      type: String,
+      consumerName: {
+        type: String,
+      },
+      consumerAddress: {
+        type: String,
+      },
+      email: {
+        type: String,
+        trim: true,
+      },
+      contactNumber: {
+        type: String,
 
-    },
-    ward: {
-      type: String, 
-      trim: true,
-    },
-    adjustmentUnit: {
-      type: Number,
-    },
-    totalConsumption: {
-      type: Number,
-    },
-    installationDate: {
-      type: String,
-    },
-   
-    tarriffDescription: {
-      type: String,
-    },
-    meterNumber: {
-      type: String,
-      // unique: true,
-      // required: true,
-    },
+      },
+      ward: {
+        type: String, 
+        trim: true,
+      },
+      adjustmentUnit: {
+        type: Number,
+      },
+      totalConsumption: {
+        type: Number,
+      },
+      installationDate: {
+        type: String,
+      },
+    
+      tarriffDescription: {
+        type: String,
+      },
+      meterNumber: {
+        type: String,
+        // unique: true,
+        // required: true,
+      },
 
-    meterStatus: {
-      type: String,
-      trim: true,
+      meterStatus: {
+        type: String,
+        trim: true,
+      },
+      phaseType: {
+        type: String,
     },
-    phaseType: {
-      type: String,
-  },
-    meterPurpose: {
-      type: String,
-    },
-   
-    billingUnit: {
-      type: String,
-    },
-    netLoad: {
-      type: String,
-    },
-    sanctionedLoad: {
-      type: String,
-    },
-    billDate: {
-      type: String,
-    },
-    billNo: {
-      type: String,
-    },
-    monthAndYear: {
-      type: String,
-    },
-    previousReadingDate: {
-      type: String,
-    },
-    previousReading: {
-      type: Number,
+      meterPurpose: {
+        type: String,
+      },
+    
+      billingUnit: {
+        type: String,
+      },
+      netLoad: {
+        type: String,
+      },
+      sanctionedLoad: {
+        type: String,
+      },
+      billDate: {
+        type: String,
+      },
+      billNo: {
+        type: String,
+      },
+      monthAndYear: {
+        type: String,
+      },
+      previousReadingDate: {
+        type: String,
+      },
+      previousReading: {
+        type: Number,
     },
     currentReadingDate: {
       type: String, 
