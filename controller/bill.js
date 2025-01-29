@@ -26,7 +26,7 @@ exports.addBill = async (req, res) => {
       meterNumber,
       meterStatus,
       phaseType,
-      // meterPurpose,
+     
       billingUnit,
       netLoad,  
       sanctionedLoad,
@@ -88,7 +88,6 @@ exports.addBill = async (req, res) => {
       meterNumber,
       meterStatus,
       phaseType,
-      meterPurpose,
       billingUnit,
       netLoad,  
       sanctionedLoad,
@@ -105,7 +104,7 @@ exports.addBill = async (req, res) => {
       paymentStatus,
       lastReceiptAmount,
       lastReceiptDate,
-      // receiptNoBillPayment,
+      
       promptPaymentDate,
       promptPaymentAmount,
       dueDate,
@@ -116,60 +115,58 @@ exports.addBill = async (req, res) => {
       forwardForGeneration,
       juniorEngineerContactNumber,
     });
-    if (paidAmount === roundedBillAmount && pendingAmount === 0) {
-      bill.paymentStatus = 'Paid';
-      switch (requesterRole) {
-        case 'Junior Engineer':
-          bill.approvedStatus = 'PendingForExecutiveEngineer';
-          bill.paymentStatus = 'Paid';
-          break;
-        case 'Executive Engineer':
-          bill.approvedStatus = 'PendingForAdmin';
-          bill.paymentStatus = 'Paid';
-          break;
-        case 'Admin':
-          bill.approvedStatus = 'PendingForSuperAdmin';
-          bill.paymentStatus = 'Paid';
-          break;
-        case 'Super Admin':
-          bill.approvedStatus = 'Done';
-          bill.paymentStatus = 'Paid';
-          break;
-        default:
-          console.error(`Unexpected role: ${requesterRole}`);
-          break;
-      }
-    }else if (paidAmount > 0 && paidAmount < roundedBillAmount) {
-      bill.paymentStatus = 'Partial';
-      switch (requesterRole) {
-        case 'Junior Engineer':
-          bill.approvedStatus = 'PendingForExecutiveEngineer';
-          bill.paymentStatus = 'Partial';
-          break;
-        case 'Executive Engineer':
-          bill.approvedStatus = 'PendingForAdmin';
-          bill.paymentStatus = 'Partial';
+    // if (lastReceiptAmount === roundedBillAmount) {
+    //   bill.paymentStatus = 'Paid';
+    //   switch (requesterRole) {
+    //     case 'Junior Engineer':
+    //       bill.approvedStatus = 'PendingForExecutiveEngineer';
+    //       bill.paymentStatus = 'Paid';
+    //       break;
+    //     case 'Executive Engineer':
+    //       bill.approvedStatus = 'PendingForAdmin';
+    //       bill.paymentStatus = 'Paid';
+    //       break;
+    //     case 'Admin':
+    //       bill.approvedStatus = 'PendingForSuperAdmin';
+    //       bill.paymentStatus = 'Paid';
+    //       break;
+    //     case 'Super Admin':
+    //       bill.approvedStatus = 'Done';
+    //       bill.paymentStatus = 'Paid';
+    //       break;
+    //     default:
+    //       console.error(`Unexpected role: ${requesterRole}`);
+    //       break;
+    //   }
+    // }else if (lastReceiptAmount > 0 && lastReceiptAmount < roundedBillAmount) {
+    //   bill.paymentStatus = 'Partial';
+    //   switch (requesterRole) {
+    //     case 'Junior Engineer':
+    //       bill.approvedStatus = 'PendingForExecutiveEngineer';
+    //       bill.paymentStatus = 'Partial';
+    //       break;
+    //     case 'Executive Engineer':
+    //       bill.approvedStatus = 'PendingForAdmin';
+    //       bill.paymentStatus = 'Partial';
 
-          break;
-        case 'Admin':
-          bill.approvedStatus = 'PendingForSuperAdmin';
-          bill.paymentStatus = 'Partial';
-          break;
-        case 'Super Admin':
-          bill.approvedStatus = 'PartialDone';
-          bill.paymentStatus = 'Partial';
-          break;
-        default:
-          console.error(`Unexpected role: ${requesterRole}`);
-          break;
-      }
-    } else {
-      if (pendingAmount === roundedBillAmount) {
-        bill.paymentStatus = 'UnPaid';
-      } else {
-        bill.paymentStatus = 'Pending';
-      }
-    }
+    //       break;
+    //     case 'Admin':
+    //       bill.approvedStatus = 'PendingForSuperAdmin';
+    //       bill.paymentStatus = 'Partial';
+    //       break;
+    //     case 'Super Admin':
+    //       bill.approvedStatus = 'PartialDone';
+    //       bill.paymentStatus = 'Partial';
+    //       break;
+    //     default:
+    //       console.error(`Unexpected role: ${requesterRole}`);
+    //       break;
+    //   }
+    // } else {
+      
+    //     bill.paymentStatus = 'Pending';
+    
+    // }
     await bill.save();
     res.status(201).json({
       message: 'Bill created successfully',
@@ -186,6 +183,9 @@ exports.addBill = async (req, res) => {
     });
   }
 };
+
+
+
 exports.addBillFromThirdPartyAPI = async (req, res) => {
   try {
     

@@ -6,6 +6,7 @@ const billSchema = new mongoose.Schema(
       consumerNumber: {
         type: String,
         trim: true,
+        required: true,
       },
 
       consumerName: {
@@ -20,7 +21,7 @@ const billSchema = new mongoose.Schema(
       },
       contactNumber: {
         type: String,
-
+        required: true,
       },
       ward: {
         type: String, 
@@ -28,9 +29,11 @@ const billSchema = new mongoose.Schema(
       },
       adjustmentUnit: {
         type: Number,
+        required: true,
       },
       totalConsumption: {
         type: Number,
+        required: true,
       },
       installationDate: {
         type: String,
@@ -41,59 +44,70 @@ const billSchema = new mongoose.Schema(
       },
       meterNumber: {
         type: String,
-        // unique: true,
-        // required: true,
+       
+        required: true,
       },
 
       meterStatus: {
         type: String,
         trim: true,
+        required: true,
       },
       phaseType: {
         type: String,
     },
-      // meterPurpose: {
-      //   type: String,
-      // },
+     
     
       billingUnit: {
         type: String,
+        required: true,
       },
       netLoad: {
         type: String,
+        required: true,
       },
       sanctionedLoad: {
         type: String,
       },
       billDate: {
         type: String,
+        required: true,
       },
       billNo: {
         type: String,
+        required: true,
       },
       monthAndYear: {
         type: String,
+        required: true,
       },
       previousReadingDate: {
         type: String,
+        required: true,
       },
       previousReading: {
         type: Number,
+        required: true,
     },
     currentReadingDate: {
       type: String, 
+      required: true,
     },
     currentReading: {
       type: Number,
+      required: true,
     },
     currentBillAmount: {
       type: Number,
+      required: true,
     },
     netBillAmount: {
       type: Number,
+      required: true,
     },
     roundedBillAmount: {
       type: Number,
+      required: true,
     },
    
     paymentStatus: {
@@ -105,26 +119,26 @@ const billSchema = new mongoose.Schema(
     lastReceiptAmount: {
       type: Number,
     },
-    // pendingAmount: {
-    //   type: Number,
-    // },
+    
     lastReceiptDate: {
       type: String,
     },
-    // receiptNoBillPayment: {
-    //   type: String,
-    // },
+   
     promptPaymentDate: {
       type: String,
+      required: true,
     },
     promptPaymentAmount: {
       type: Number,
+      required: true,
     },
     dueDate: {
       type: String, 
+      required: true,
     },
     overDueAmount: {
       type: Number,
+      required: true,
     },
     dueAlert: {
       type: Boolean,
