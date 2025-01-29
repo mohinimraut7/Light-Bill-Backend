@@ -52,9 +52,9 @@ const billSchema = new mongoose.Schema(
       phaseType: {
         type: String,
     },
-      meterPurpose: {
-        type: String,
-      },
+      // meterPurpose: {
+      //   type: String,
+      // },
     
       billingUnit: {
         type: String,
@@ -102,18 +102,18 @@ const billSchema = new mongoose.Schema(
     approvedStatus: {
       type: String,
     },
-    paidAmount: {
+    lastReceiptAmount: {
       type: Number,
     },
-    pendingAmount: {
-      type: Number,
-    },
-    billPaymentDate: {
+    // pendingAmount: {
+    //   type: Number,
+    // },
+    lastReceiptDate: {
       type: String,
     },
-    receiptNoBillPayment: {
-      type: String,
-    },
+    // receiptNoBillPayment: {
+    //   type: String,
+    // },
     promptPaymentDate: {
       type: String,
     },
