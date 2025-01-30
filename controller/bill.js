@@ -89,7 +89,7 @@ exports.addBill = async (req, res) => {
       tarriffDescription,
       meterNumber,
       meterPurpose,
-      place,
+     
       meterStatus,
       phaseType,
       billingUnit,
