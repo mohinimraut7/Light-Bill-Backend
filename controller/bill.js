@@ -24,6 +24,8 @@ exports.addBill = async (req, res) => {
       installationDate,
       tarriffDescription,
       meterNumber,
+      meterPurpose,
+      place,
       meterStatus,
       phaseType,
      
@@ -86,6 +88,8 @@ exports.addBill = async (req, res) => {
       installationDate,
       tarriffDescription,
       meterNumber,
+      meterPurpose,
+      place,
       meterStatus,
       phaseType,
       billingUnit,

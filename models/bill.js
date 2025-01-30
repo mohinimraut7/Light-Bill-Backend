@@ -44,10 +44,14 @@ const billSchema = new mongoose.Schema(
       },
       meterNumber: {
         type: String,
-       
         required: true,
       },
-
+      meterPurpose: {
+        type: String,
+    },
+    place: {
+      type: String,
+  },
       meterStatus: {
         type: String,
         trim: true,
