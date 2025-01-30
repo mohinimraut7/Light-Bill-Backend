@@ -251,17 +251,11 @@ exports.editBill = async (req, res) => {
   }
   try {
     const billId = req.params.billId;
-    
-   
     const {
-      
       role,
       ward,
       meterNumber,
-      
-      
       netLoad='',
-      
       totalConsumption,
       meterStatus,
       previousReadingDate,

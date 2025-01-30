@@ -145,7 +145,9 @@ const billSchema = new mongoose.Schema(
       default: false,
     },
 
-
+    receiptNoBillPayment:{
+      type: String, 
+    },
     juniorEngineerContactNumber: {
       type: Number,
     }
