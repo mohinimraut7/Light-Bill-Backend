@@ -15,7 +15,7 @@ exports.addBill = async (req, res) => {
     const {
       consumerNumber,
       consumerName,
-      consumerAddress,
+      // consumerAddress,
       email,
       contactNumber,
       ward,
@@ -79,7 +79,7 @@ exports.addBill = async (req, res) => {
     const bill = new Bill({
       consumerNumber,
       consumerName,
-      consumerAddress,
+      // consumerAddress,
       email,
       contactNumber,
       ward,
