@@ -2,8 +2,10 @@ const express=require('express');
 const router=express.Router();
 const {addBill,editBill,getBills,updateBillStatus,deleteBill,updateFlagStatus, massUpdateBillStatus,reverseMassBillStatus,addBillFromThirdPartyAPI}=require('../controller/bill');
 const authMiddleware = require('../middleware/authMiddleware');
+const verifyStaticHeader=require('../middleware/verifyStaticHeader');
 // router.post('/addBill',authMiddleware,addBill);
-router.post('/addBill',addBill);
+router.post('/addBill',verifyStaticHeader,addBill);
+console.log("verifyStaticHeader",verifyStaticHeader)
 router.put('/editBill/:billId',authMiddleware,editBill);
 router.get("/getBills",getBills);
 router.put('/updateBillStatus',authMiddleware,updateBillStatus);

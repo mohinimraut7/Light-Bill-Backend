@@ -6,163 +6,389 @@ const bcrypt=require('bcryptjs');
 
 const axios = require('axios');
 
-exports.addBill = async (req, res) => {
-  const requesterRole = req?.user?.role;
-  if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterRole !=='Executive Engineer' && requesterRole !=='Junior Engineer') { 
-    return res.status(403).json({ message: "You don't have authority to add bill" }); 
-  }
-  try {
-    const {
-      consumerNumber,
-      consumerName,
-      consumerAddress,
-      contactNumber,
-      ward,
-      adjustmentUnit,
-      totalConsumption,
-      installationDate,
-      tarriffDescription,
-      meterNumber,
-      meterStatus,
-      phaseType,
-      billingUnit,
-      netLoad,  
-      sanctionedLoad,
-      billDate,
-      billNo,
-      monthAndYear,
-      previousReadingDate,
-      previousReading,
-      currentReadingDate,
-      currentReading,
-      netBillAmount,
-      paymentStatus,
-      approvedStatus,
-      lastReceiptAmount,
-      lastReceiptDate,
-      promptPaymentDate,
-      promptPaymentAmount,
-      dueDate,
-      netBillAmountWithDPC,
-      dueAlert,
-      forwardForGeneration,
-    } = req.body;
+// exports.addBill = async (req, res) => {
+//   // const requesterRole = req?.user?.role;
+//   // if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterRole !=='Executive Engineer' && requesterRole !=='Junior Engineer') { 
+//   //   return res.status(403).json({ message: "You don't have authority to add bill" }); 
+//   // }
+//   try {
+//     const {
+//       consumerNumber,
+//       consumerName,
+//       consumerAddress,
+//       contactNumber,
+//       ward,
+//       adjustmentUnit,
+//       totalConsumption,
+//       installationDate,
+//       tarriffDescription,
+//       meterNumber,
+//       meterStatus,
+//       phaseType,
+//       billingUnit,
+//       netLoad,  
+//       sanctionedLoad,
+//       billDate,
+//       billNo,
+//       monthAndYear,
+//       previousReadingDate,
+//       previousReading,
+//       currentReadingDate,
+//       currentReading,
+//       netBillAmount,
+//       paymentStatus,
+//       approvedStatus,
+//       lastReceiptAmount,
+//       lastReceiptDate,
+//       promptPaymentDate,
+//       promptPaymentAmount,
+//       dueDate,
+//       netBillAmountWithDPC,
+//       dueAlert,
+//       forwardForGeneration,
+//     } = req.body;
 
 
-    let juniorEngineerContactNumber = null;
-    if (req.body.ward) {
-      try {
-               const juniorEngineer = await User.findOne({
-          role: 'Junior Engineer',
-          ward: req.body.ward,
-        });
+//     let juniorEngineerContactNumber = null;
+//     if (req.body.ward) {
+//       try {
+//                const juniorEngineer = await User.findOne({
+//           role: 'Junior Engineer',
+//           ward: req.body.ward,
+//         });
 
         
-        if (juniorEngineer && juniorEngineer.ward === req.body.ward) {
+//         if (juniorEngineer && juniorEngineer.ward === req.body.ward) {
           
-          juniorEngineerContactNumber = juniorEngineer.contactNumber;
-        }
-      } catch (error) {
-        console.error('Error fetching Junior Engineer contact:', error);
-      }
-    }
+//           juniorEngineerContactNumber = juniorEngineer.contactNumber;
+//         }
+//       } catch (error) {
+//         console.error('Error fetching Junior Engineer contact:', error);
+//       }
+//     }
 
-    const bill = new Bill({
-      consumerNumber,
-      consumerName,
-      consumerAddress,
-      contactNumber,
-      ward,
-      adjustmentUnit,
-      totalConsumption,
-      installationDate,
-      tarriffDescription,
-      meterNumber,
-      meterStatus,
-      phaseType,
-      billingUnit,
-      netLoad,  
-      sanctionedLoad,
-      billDate,
-      billNo,
-      monthAndYear,
-      previousReadingDate,
-      previousReading,
-      currentReadingDate,
-      currentReading,
-      netBillAmount,
-      paymentStatus,
-      lastReceiptAmount,
-      lastReceiptDate,
-      promptPaymentDate,
-      promptPaymentAmount,
-      dueDate,
-      netBillAmountWithDPC,
-      dueAlert,
-      approvedStatus,
-      forwardForGeneration,
-      juniorEngineerContactNumber,
-    });
-    // if (lastReceiptAmount === roundedBillAmount) {
-    //   bill.paymentStatus = 'Paid';
-    //   switch (requesterRole) {
-    //     case 'Junior Engineer':
-    //       bill.approvedStatus = 'PendingForExecutiveEngineer';
-    //       bill.paymentStatus = 'Paid';
-    //       break;
-    //     case 'Executive Engineer':
-    //       bill.approvedStatus = 'PendingForAdmin';
-    //       bill.paymentStatus = 'Paid';
-    //       break;
-    //     case 'Admin':
-    //       bill.approvedStatus = 'PendingForSuperAdmin';
-    //       bill.paymentStatus = 'Paid';
-    //       break;
-    //     case 'Super Admin':
-    //       bill.approvedStatus = 'Done';
-    //       bill.paymentStatus = 'Paid';
-    //       break;
-    //     default:
-    //       console.error(`Unexpected role: ${requesterRole}`);
-    //       break;
-    //   }
-    // }else if (lastReceiptAmount > 0 && lastReceiptAmount < roundedBillAmount) {
-    //   bill.paymentStatus = 'Partial';
-    //   switch (requesterRole) {
-    //     case 'Junior Engineer':
-    //       bill.approvedStatus = 'PendingForExecutiveEngineer';
-    //       bill.paymentStatus = 'Partial';
-    //       break;
-    //     case 'Executive Engineer':
-    //       bill.approvedStatus = 'PendingForAdmin';
-    //       bill.paymentStatus = 'Partial';
+//     const bill = new Bill({
+//       consumerNumber,
+//       consumerName,
+//       consumerAddress,
+//       contactNumber,
+//       ward,
+//       adjustmentUnit,
+//       totalConsumption,
+//       installationDate,
+//       tarriffDescription,
+//       meterNumber,
+//       meterStatus,
+//       phaseType,
+//       billingUnit,
+//       netLoad,  
+//       sanctionedLoad,
+//       billDate,
+//       billNo,
+//       monthAndYear,
+//       previousReadingDate,
+//       previousReading,
+//       currentReadingDate,
+//       currentReading,
+//       netBillAmount,
+//       paymentStatus,
+//       lastReceiptAmount,
+//       lastReceiptDate,
+//       promptPaymentDate,
+//       promptPaymentAmount,
+//       dueDate,
+//       netBillAmountWithDPC,
+//       dueAlert,
+//       approvedStatus,
+//       forwardForGeneration,
+//       juniorEngineerContactNumber,
+//     });
+//     // if (lastReceiptAmount === roundedBillAmount) {
+//     //   bill.paymentStatus = 'Paid';
+//     //   switch (requesterRole) {
+//     //     case 'Junior Engineer':
+//     //       bill.approvedStatus = 'PendingForExecutiveEngineer';
+//     //       bill.paymentStatus = 'Paid';
+//     //       break;
+//     //     case 'Executive Engineer':
+//     //       bill.approvedStatus = 'PendingForAdmin';
+//     //       bill.paymentStatus = 'Paid';
+//     //       break;
+//     //     case 'Admin':
+//     //       bill.approvedStatus = 'PendingForSuperAdmin';
+//     //       bill.paymentStatus = 'Paid';
+//     //       break;
+//     //     case 'Super Admin':
+//     //       bill.approvedStatus = 'Done';
+//     //       bill.paymentStatus = 'Paid';
+//     //       break;
+//     //     default:
+//     //       console.error(`Unexpected role: ${requesterRole}`);
+//     //       break;
+//     //   }
+//     // }else if (lastReceiptAmount > 0 && lastReceiptAmount < roundedBillAmount) {
+//     //   bill.paymentStatus = 'Partial';
+//     //   switch (requesterRole) {
+//     //     case 'Junior Engineer':
+//     //       bill.approvedStatus = 'PendingForExecutiveEngineer';
+//     //       bill.paymentStatus = 'Partial';
+//     //       break;
+//     //     case 'Executive Engineer':
+//     //       bill.approvedStatus = 'PendingForAdmin';
+//     //       bill.paymentStatus = 'Partial';
 
-    //       break;
-    //     case 'Admin':
-    //       bill.approvedStatus = 'PendingForSuperAdmin';
-    //       bill.paymentStatus = 'Partial';
-    //       break;
-    //     case 'Super Admin':
-    //       bill.approvedStatus = 'PartialDone';
-    //       bill.paymentStatus = 'Partial';
-    //       break;
-    //     default:
-    //       console.error(`Unexpected role: ${requesterRole}`);
-    //       break;
-    //   }
-    // } else {
+//     //       break;
+//     //     case 'Admin':
+//     //       bill.approvedStatus = 'PendingForSuperAdmin';
+//     //       bill.paymentStatus = 'Partial';
+//     //       break;
+//     //     case 'Super Admin':
+//     //       bill.approvedStatus = 'PartialDone';
+//     //       bill.paymentStatus = 'Partial';
+//     //       break;
+//     //     default:
+//     //       console.error(`Unexpected role: ${requesterRole}`);
+//     //       break;
+//     //   }
+//     // } else {
       
-    //     bill.paymentStatus = 'Pending';
+//     //     bill.paymentStatus = 'Pending';
     
-    // }
-    await bill.save();
-    res.status(201).json({
-      message: 'Bill created successfully',
-      bill: {
+//     // }
+//     await bill.save();
+//     res.status(201).json({
+//       message: 'Bill created successfully',
+//       bill: {
+//         consumerNumber: bill.consumerNumber,
+//         monthAndYear: bill.monthAndYear,
+//       },
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       message: 'Failed to create bill',
+//       error: error.message,
+//     });
+//   }
+// };
+
+// ------------------------------------------------------------------------------------------
+
+// exports.addBill = async (req, res) => {
+//   try {
+//     const bills = Array.isArray(req.body) ? req.body : [req.body]; 
+
+//     const createdBills = []; 
+
+//     for (const billData of bills) {
+//       const {
+//         consumerNumber,
+//         consumerName,
+//         consumerAddress,
+//         contactNumber,
+//         ward,
+//         adjustmentUnit,
+//         totalConsumption,
+//         installationDate,
+//         tarriffDescription,
+//         meterNumber,
+//         meterStatus,
+//         phaseType,
+//         billingUnit,
+//         netLoad,
+//         sanctionedLoad,
+//         billDate,
+//         billNo,
+//         monthAndYear,
+//         previousReadingDate,
+//         previousReading,
+//         currentReadingDate,
+//         currentReading,
+//         netBillAmount,
+//         paymentStatus,
+//         lastReceiptAmount,
+//         lastReceiptDate,
+//         promptPaymentDate,
+//         promptPaymentAmount,
+//         dueDate,
+//         netBillAmountWithDPC,
+//         dueAlert,
+//       } = billData;
+
+//       let juniorEngineerContactNumber = null;
+//       if (billData.ward) {
+//         try {
+//           const juniorEngineer = await User.findOne({
+//             role: 'Junior Engineer',
+//             ward: billData.ward,
+//           });
+
+//           if (juniorEngineer && juniorEngineer.ward === billData.ward) {
+//             juniorEngineerContactNumber = juniorEngineer.contactNumber;
+//           }
+//         } catch (error) {
+//           console.error('Error fetching Junior Engineer contact:', error);
+//         }
+//       }
+
+//       const bill = new Bill({
+//         consumerNumber,
+//         consumerName,
+//         consumerAddress,
+//         contactNumber,
+//         ward,
+//         adjustmentUnit,
+//         totalConsumption,
+//         installationDate,
+//         tarriffDescription,
+//         meterNumber,
+//         meterStatus,
+//         phaseType,
+//         billingUnit,
+//         netLoad,
+//         sanctionedLoad,
+//         billDate,
+//         billNo,
+//         monthAndYear,
+//         previousReadingDate,
+//         previousReading,
+//         currentReadingDate,
+//         currentReading,
+//         netBillAmount,
+//         paymentStatus,
+//         lastReceiptAmount,
+//         lastReceiptDate,
+//         promptPaymentDate,
+//         promptPaymentAmount,
+//         dueDate,
+//         netBillAmountWithDPC,
+//         dueAlert,
+//         juniorEngineerContactNumber,
+//       });
+
+//       await bill.save();
+//       createdBills.push({
+//         consumerNumber: bill.consumerNumber,
+//         monthAndYear: bill.monthAndYear,
+//       });
+//     }
+
+//     // Send response based on the number of bills created
+//     if (createdBills.length === 1) {
+//       res.status(201).json({
+//         message: 'Bill created successfully',
+//         bill: createdBills[0],  // Single bill response
+//       });
+//     } else {
+//       res.status(201).json(
+//         createdBills,
+//       );
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       message: 'Failed to create bill',
+//       error: error.message,
+//     });
+//   }
+// };
+// -------------------------------------------------------
+exports.addBill = async (req, res) => {
+  try {
+    const bills = Array.isArray(req.body) ? req.body : [req.body];
+
+    const createdBills = [];
+
+    for (const billData of bills) {
+      const {
+        consumerNumber,
+        consumerName,
+        consumerAddress,
+        contactNumber,
+        ward,
+        adjustmentUnit,
+        totalConsumption,
+        installationDate,
+        tarriffDescription,
+        meterNumber,
+        meterStatus,
+        phaseType,
+        billingUnit,
+        netLoad,
+        sanctionedLoad,
+        billDate,
+        billNo,
+        monthAndYear,
+        previousReadingDate,
+        previousReading,
+        currentReadingDate,
+        currentReading,
+        netBillAmount,
+        paymentStatus,
+        lastReceiptAmount,
+        lastReceiptDate,
+        promptPaymentDate,
+        promptPaymentAmount,
+        dueDate,
+        netBillAmountWithDPC,
+        dueAlert,
+      } = billData;
+
+      let status = "Success";  
+
+      
+      if (!consumerNumber || !monthAndYear) {
+        status = "Failure";  
+      }
+
+      const bill = new Bill({
+        consumerNumber,
+        consumerName,
+        consumerAddress,
+        contactNumber,
+        ward,
+        adjustmentUnit,
+        totalConsumption,
+        installationDate,
+        tarriffDescription,
+        meterNumber,
+        meterStatus,
+        phaseType,
+        billingUnit,
+        netLoad,
+        sanctionedLoad,
+        billDate,
+        billNo,
+        monthAndYear,
+        previousReadingDate,
+        previousReading,
+        currentReadingDate,
+        currentReading,
+        netBillAmount,
+        paymentStatus,
+        lastReceiptAmount,
+        lastReceiptDate,
+        promptPaymentDate,
+        promptPaymentAmount,
+        dueDate,
+        netBillAmountWithDPC,
+        dueAlert,
+      });
+
+      await bill.save();
+      createdBills.push({
         consumerNumber: bill.consumerNumber,
         monthAndYear: bill.monthAndYear,
-      },
-    });
+        status: status, 
+      });
+    }
+
+    
+    if (createdBills.length === 1) {
+      res.status(201).json(createdBills[0]); 
+    } else {
+      res.status(201).json(createdBills);  
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -171,7 +397,6 @@ exports.addBill = async (req, res) => {
     });
   }
 };
-
 
 
 exports.addBillFromThirdPartyAPI = async (req, res) => {
