@@ -15,10 +15,7 @@ const billSchema = new mongoose.Schema(
       consumerAddress: {
         type: String,
       },
-      email: {
-        type: String,
-        trim: true,
-      },
+      
       contactNumber: {
         type: String,
         required: true,
@@ -46,12 +43,7 @@ const billSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
-      meterPurpose: {
-        type: String,
-    },
-    place: {
-      type: String,
-  },
+  
       meterStatus: {
         type: String,
         trim: true,
@@ -101,19 +93,11 @@ const billSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    currentBillAmount: {
-      type: Number,
-      required: true,
-    },
+    
     netBillAmount: {
       type: Number,
       required: true,
     },
-    roundedBillAmount: {
-      type: Number,
-      required: true,
-    },
-   
     paymentStatus: {
       type: String,
     },
@@ -140,7 +124,7 @@ const billSchema = new mongoose.Schema(
       type: String, 
       required: true,
     },
-    overDueAmount: {
+    netBillAmountWithDPC: {
       type: Number,
       required: true,
     },
