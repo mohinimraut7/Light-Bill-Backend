@@ -4,5 +4,5 @@ const {addConsumer,getConsumers,deleteConsumer,editConsumer}=require('../control
 router.post('/addConsumer',addConsumer);
 router.get('/getConsumers',getConsumers)
 router.delete('/deleteConsumer/:consumer_id',deleteConsumer)
-router.post('/editConsumer/:consumer_id',editConsumer)
+router.put('/editConsumer/:consumerid',editConsumer)
 module.exports=router;

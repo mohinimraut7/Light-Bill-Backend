@@ -48,7 +48,7 @@ exports.addConsumer = async (req, res) => {
 
 exports.getConsumers = async (req, res) => {
     try {
-        const consumers = await consumerNumber.find();
+        const consumers = await Consumer.find();
         res.status(200).json(consumers);
     } catch (error) {
         console.log(error);
@@ -84,7 +84,8 @@ exports.deleteConsumer = async (req, res) => {
 
 
 exports.editConsumer = async (req, res) => {
-    const { consumer_id } = req.params;
+    const {consumerid } = req.params;
+    
     const {
         consumerNumber,
         consumerAddress,
@@ -112,7 +113,7 @@ exports.editConsumer = async (req, res) => {
 
         
         const updatedConsumer = await Consumer.findByIdAndUpdate(
-            consumer_id,
+            consumerid,
             consumerUpdateData,
             { new: true, runValidators: true }
         );
