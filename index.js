@@ -10,6 +10,7 @@ const addRoleRoutes=require('./routes/role');
 const addBillRoutes=require('./routes/bill');
 const addMasterRoutes=require('./routes/master');
 const addMeterRoutes=require('./routes/meter');
+const addConsumersRoutes=require('./routes/consumer');
 const addTarriffRoutes=require('./routes/tarriff');
 
 const imageRoutes = require('./routes/imageRoute'); 
@@ -30,6 +31,7 @@ mongoose
   app.use('/api',addBillRoutes)
   app.use('/api',addMasterRoutes)
   app.use('/api',addMeterRoutes)
+  app.use('/api',addConsumersRoutes)
   app.use('/api',addTarriffRoutes)
   
   app.use('/api',imageRoutes)
