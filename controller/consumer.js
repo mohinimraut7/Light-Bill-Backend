@@ -1,9 +1,25 @@
 const Consumer = require('../models/consumer');
 const User = require('../models/user'); 
 
+// async function removeUniqueIndexes() {
+//     try {
+//         await Consumer.collection.dropIndex("consumerAddress_1");
+//         await Consumer.collection.dropIndex("ward_1");
+//         console.log("✅ Unique indexes on 'consumerAddress' and 'ward' removed");
+//     } catch (err) {
+//         console.log("⚠️ Error dropping indexes:", err.message);
+//     }
+// }
+
+// // Call this function once, then remove it after execution
+// removeUniqueIndexes();
 exports.addConsumer = async (req, res) => {
     try {
-        const { consumerNumber,consumerAddress,meterPurpose, ward, phaseType  } = req.body;
+        var { consumerNumber,consumerAddress,meterPurpose, ward, phaseType  } = req.body;
+        consumerNumber = consumerNumber.trim();
+        consumerAddress = consumerAddress.trim();
+        ward = ward?.trim(); // Handle undefined case
+
       
         const existingConsumer = await Consumer.findOne({
             $or: [

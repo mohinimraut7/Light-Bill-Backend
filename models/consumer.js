@@ -16,8 +16,7 @@ const consumerSchema = new mongoose.Schema({
     },
     ward: {
         type: String,
-        unique: true,
-    } ,
+     } ,
     phaseType: {
         type: String,
     },
