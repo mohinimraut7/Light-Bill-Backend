@@ -2,7 +2,7 @@ const Bill = require('../models/bill');
 const User = require('../models/user'); 
 const Meter = require('../models/meter'); 
 const bcrypt=require('bcryptjs');
-
+const Consumer = require('../models/consumer'); 
 
 const axios = require('axios');
 
@@ -293,11 +293,119 @@ const axios = require('axios');
 //   }
 // };
 // -------------------------------------------------------
+// exports.addBill = async (req, res) => {
+//   try {
+//     const bills = Array.isArray(req.body) ? req.body : [req.body];
+
+//     const createdBills = [];
+
+//     for (const billData of bills) {
+//       const {
+//         consumerNumber,
+//         consumerName,
+//         consumerAddress,
+//         contactNumber,
+//         ward,
+//         adjustmentUnit,
+//         totalConsumption,
+//         installationDate,
+//         tarriffDescription,
+//         meterNumber,
+//         meterStatus,
+//         phaseType,
+//         billingUnit,
+//         netLoad,
+//         sanctionedLoad,
+//         billDate,
+//         billNo,
+//         monthAndYear,
+//         previousReadingDate,
+//         previousReading,
+//         currentReadingDate,
+//         currentReading,
+//         netBillAmount,
+//         paymentStatus,
+//         lastReceiptAmount,
+//         lastReceiptDate,
+//         promptPaymentDate,
+//         promptPaymentAmount,
+//         dueDate,
+//         netBillAmountWithDPC,
+//         dueAlert,
+//       } = billData;
+
+//       let status = "Success";  
+
+      
+//       if (!consumerNumber || !monthAndYear) {
+//         status = "Failure";  
+//       }
+
+//       const bill = new Bill({
+//         consumerNumber,
+//         consumerName,
+//         consumerAddress,
+//         contactNumber,
+//         ward,
+//         adjustmentUnit,
+//         totalConsumption,
+//         installationDate,
+//         tarriffDescription,
+//         meterNumber,
+//         meterStatus,
+//         phaseType,
+//         billingUnit,
+//         netLoad,
+//         sanctionedLoad,
+//         billDate,
+//         billNo,
+//         monthAndYear,
+//         previousReadingDate,
+//         previousReading,
+//         currentReadingDate,
+//         currentReading,
+//         netBillAmount,
+//         paymentStatus,
+//         lastReceiptAmount,
+//         lastReceiptDate,
+//         promptPaymentDate,
+//         promptPaymentAmount,
+//         dueDate,
+//         netBillAmountWithDPC,
+//         dueAlert,
+//       });
+
+//       await bill.save();
+//       createdBills.push({
+//         consumerNumber: bill.consumerNumber,
+//         monthAndYear: bill.monthAndYear,
+//         status: status, 
+//       });
+//     }
+
+    
+//     if (createdBills.length === 1) {
+//       res.status(201).json(createdBills[0]); 
+//     } else {
+//       res.status(201).json(createdBills);  
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       message: 'Failed to create bill',
+//       error: error.message,
+//     });
+//   }
+// };
+// -----------------------------------------------------------------
+
+
 exports.addBill = async (req, res) => {
   try {
     const bills = Array.isArray(req.body) ? req.body : [req.body];
 
     const createdBills = [];
+    const failedBills = [];
 
     for (const billData of bills) {
       const {
@@ -334,13 +442,33 @@ exports.addBill = async (req, res) => {
         dueAlert,
       } = billData;
 
-      let status = "Success";  
+      // 🔹 Check if consumerNumber exists in the Consumer collection
+      const consumerExists = await Consumer.findOne({ consumerNumber });
 
-      
-      if (!consumerNumber || !monthAndYear) {
-        status = "Failure";  
+      if (!consumerExists) {
+        failedBills.push({
+          consumerNo: consumerNumber,
+          errorMessage: "The provided consumer number does not exist",
+          errorCode: "2002",
+          status: "FAILURE",
+        });
+        continue; // Skip this bill, move to the next one
       }
 
+      // 🔹 Check for duplicate bill (same consumerNumber & monthAndYear)
+      const duplicateBill = await Bill.findOne({ consumerNumber, monthAndYear });
+
+      if (duplicateBill) {
+        failedBills.push({
+          consumerNo: consumerNumber,
+          errorMessage: "Duplicate meter reading detected for the same month and consumer.",
+          errorCode: "2004",
+          status: "FAILURE",
+        });
+        continue; // Skip duplicate bill
+      }
+
+      // ✅ If consumer exists & no duplicate bill, insert the bill
       const bill = new Bill({
         consumerNumber,
         consumerName,
@@ -379,20 +507,23 @@ exports.addBill = async (req, res) => {
       createdBills.push({
         consumerNumber: bill.consumerNumber,
         monthAndYear: bill.monthAndYear,
-        status: status, 
+        status: "SUCCESS",
       });
     }
 
-    
-    if (createdBills.length === 1) {
-      res.status(201).json(createdBills[0]); 
-    } else {
-      res.status(201).json(createdBills);  
-    }
+    // 🔹 Send Response with Success & Failure Messages
+    res.status(201).json({
+      message: "Bill processing completed",
+      successCount: createdBills.length,
+      failureCount: failedBills.length,
+      successBills: createdBills,
+      failedBills: failedBills,
+    });
+
   } catch (error) {
-    console.error(error);
+    console.error("Error inserting bills:", error);
     res.status(500).json({
-      message: 'Failed to create bill',
+      message: "Failed to create bills",
       error: error.message,
     });
   }
