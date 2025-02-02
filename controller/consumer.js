@@ -19,7 +19,10 @@ exports.addConsumer = async (req, res) => {
           
         }
 
-        
+        if (!consumerNumber || consumerNumber.length !== 12) {
+            return res.status(400).json({ message: "Consumer Number must be exactly 12 digits long" });
+        }
+
         const newConsumer = new Consumer({
             consumerNumber,
             consumerAddress,
