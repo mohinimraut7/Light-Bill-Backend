@@ -9,7 +9,7 @@ const consumerSchema = new mongoose.Schema({
     } ,
     consumerAddress: {
         type: String,
-        unique: true,
+       
     },  
     meterPurpose: {
         type: String,
