@@ -529,6 +529,66 @@ exports.addBill = async (req, res) => {
   }
 };
 
+exports.addReceipt = async (req,res) => {
+    try {
+        const {
+          receiptNoBillPayment,
+           
+            } = req.body;
+        const newReceipt = new Bill({
+          receiptNoBillPayment
+         });
+
+        await newReceipt.save();
+       
+        res.status(201).json({
+            message: "Receipt added successfully.",
+            receipt:newReceipt,
+        });
+    } catch (error) {
+        console.error('Error adding receipt:', error);
+        res.status(500).json({
+            message: "An error occurred while adding the receipt.",
+            error: error.message,
+        });
+    }
+};
+
+
+
+exports.editReceipt = async (req, res) => {
+  try {
+      const { _id, receiptNoBillPayment } = req.body;
+
+      if (!_id) {
+          return res.status(400).json({ message: "Receipt ID (_id) is required." });
+      }
+
+      const updatedReceipt = await Bill.findByIdAndUpdate(
+          _id,
+          { receiptNoBillPayment },
+          { new: true } // Return the updated document
+      );
+
+      if (!updatedReceipt) {
+          return res.status(404).json({ message: "Receipt not found." });
+      }
+
+      res.status(200).json({
+          message: "Receipt updated successfully.",
+          receipt: updatedReceipt,
+      });
+  } catch (error) {
+      console.error('Error updating receipt:', error);
+      res.status(500).json({
+          message: "An error occurred while updating the receipt.",
+          error: error.message,
+      });
+  }
+};
+
+
+
 
 exports.addBillFromThirdPartyAPI = async (req, res) => {
   try {
