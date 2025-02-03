@@ -513,11 +513,11 @@ exports.addBill = async (req, res) => {
     }
 
     // 🔹 Send Response with Success & Failure Messages
-    res.status(201).json({
+    let allBills = [...createdBills, ...failedBills];
+    res.status(201).json(
       
-      createdBills,
-      failedBills,
-    });
+      allBills
+    );
 
   } catch (error) {
     console.error("Error inserting bills:", error);
