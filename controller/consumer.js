@@ -19,6 +19,7 @@ exports.addConsumer = async (req, res) => {
         consumerNumber = consumerNumber.trim();
         consumerAddress = consumerAddress.trim();
         ward = ward?.trim(); // Handle undefined case
+        phaseType = phaseType?.trim();
 
       
         const existingConsumer = await Consumer.findOne({
