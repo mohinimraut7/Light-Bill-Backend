@@ -6,7 +6,6 @@ const billSchema = new mongoose.Schema(
       consumerNumber: {
         type: String,
         trim: true,
-        // required: true,
       },
 
       consumerName: {

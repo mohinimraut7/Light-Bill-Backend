@@ -1,10 +1,12 @@
 const express=require('express');
 const router=express.Router();
-const {addBill,editBill,getBills,updateBillStatus,deleteBill,updateFlagStatus, massUpdateBillStatus,reverseMassBillStatus,addBillFromThirdPartyAPI,addReceipt,editReceipt}=require('../controller/bill');
+const {addBill,editBill,getBills,updateBillStatus,deleteBill,updateFlagStatus, massUpdateBillStatus,reverseMassBillStatus,addBillFromThirdPartyAPI,addReceipt,editReceipt,dropBillsCollection}=require('../controller/bill');
 const authMiddleware = require('../middleware/authMiddleware');
 const verifyStaticHeader=require('../middleware/verifyStaticHeader');
 // router.post('/addBill',authMiddleware,addBill);
 router.post('/addBill',verifyStaticHeader,addBill);
+router.delete("/dropBills", dropBillsCollection);
+
 router.post('/addReceipt',addReceipt)
 router.put('/editReceipt',editReceipt)
 console.log("verifyStaticHeader",verifyStaticHeader)

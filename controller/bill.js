@@ -1,4 +1,5 @@
 const Bill = require('../models/bill');
+const mongoose = require("mongoose");
 const User = require('../models/user'); 
 const Meter = require('../models/meter'); 
 const bcrypt=require('bcryptjs');
@@ -528,6 +529,18 @@ exports.addBill = async (req, res) => {
     });
   }
 };
+
+
+exports.dropBillsCollection = async (req, res) => {
+  try {
+      await mongoose.connection.db.collection("bills").drop();
+      res.status(200).json({ message: "Bills collection dropped successfully." });
+  } catch (error) {
+      console.error("Error dropping bills collection:", error);
+      res.status(500).json({ message: "An error occurred while dropping the collection.", error: error.message });
+  }
+};
+
 
 exports.addReceipt = async (req,res) => {
     try {
