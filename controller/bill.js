@@ -514,11 +514,9 @@ exports.addBill = async (req, res) => {
 
     // 🔹 Send Response with Success & Failure Messages
     res.status(201).json({
-      message: "Bill processing completed",
-      successCount: createdBills.length,
-      failureCount: failedBills.length,
-      successBills: createdBills,
-      failedBills: failedBills,
+      
+      createdBills,
+      failedBills,
     });
 
   } catch (error) {
