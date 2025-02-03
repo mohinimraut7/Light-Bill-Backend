@@ -443,6 +443,9 @@ exports.addBill = async (req, res) => {
         dueAlert,
       } = billData;
 
+      var validContactNumber = contactNumber || "N/A";
+
+
       // 🔹 Check if consumerNumber exists in the Consumer collection
       const consumerExists = await Consumer.findOne({ consumerNumber });
 
@@ -474,7 +477,7 @@ exports.addBill = async (req, res) => {
         consumerNumber,
         consumerName,
         consumerAddress,
-        contactNumber,
+        contactNumber: validContactNumber,
         ward,
         adjustmentUnit,
         totalConsumption,
