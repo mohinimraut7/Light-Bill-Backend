@@ -418,7 +418,7 @@ exports.addBill = async (req, res) => {
         adjustmentUnit,
         totalConsumption,
         installationDate,
-        tarriffDescription,
+        tariffDescription,
         meterNumber,
         meterStatus,
         phaseType,
@@ -444,6 +444,7 @@ exports.addBill = async (req, res) => {
       } = billData;
 
       var validContactNumber = contactNumber || "N/A";
+      var duealertvalue = dueAlert || false;
 
 
       // 🔹 Check if consumerNumber exists in the Consumer collection
@@ -482,7 +483,7 @@ exports.addBill = async (req, res) => {
         adjustmentUnit,
         totalConsumption,
         installationDate,
-        tarriffDescription,
+        tariffDescription,
         meterNumber,
         meterStatus,
         phaseType,
@@ -504,7 +505,7 @@ exports.addBill = async (req, res) => {
         promptPaymentAmount,
         dueDate,
         netBillAmountWithDPC,
-        dueAlert,
+        dueAlert:duealertvalue
       });
 
       await bill.save();

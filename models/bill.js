@@ -35,7 +35,7 @@ const billSchema = new mongoose.Schema(
         type: String,
       },
     
-      tarriffDescription: {
+      tariffDescription: {
         type: String,
       },
       meterNumber: {
