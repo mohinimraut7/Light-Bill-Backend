@@ -68,6 +68,9 @@ const billSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
+      billType: {
+        type: String,
+      },
       billNo: {
         type: String,
         required: true,
