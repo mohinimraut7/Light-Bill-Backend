@@ -821,15 +821,15 @@ bill.netLoad = netLoad || bill.netLoad || '';
 
 
 
-exports.getBills = async (req, res) => {
-  try {
-    const bills = await Bill.find();
-    res.status(200).json(bills);
-  } catch (error) {
-    console.error('Error fetching bills:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-};
+  exports.getBills = async (req, res) => {
+    try {
+      const bills = await Bill.find();
+      res.status(200).json(bills);
+    } catch (error) {
+      console.error('Error fetching bills:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  };
 
 exports.updateBillStatus = async (req, res) => {
   const { id, approvedStatus, paymentStatus, yesno } = req.body;
