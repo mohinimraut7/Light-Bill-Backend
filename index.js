@@ -4,6 +4,8 @@ const app=express();
 const mongoose=require('mongoose');
 const path=require('path');
 const cors = require("cors");
+// const { verifyEmail} = require("./controller/user");
+
 app.use(cors());
 const addUserRoutes = require("./routes/user");
 const addRoleRoutes=require('./routes/role');
@@ -37,6 +39,8 @@ mongoose
   app.use('/api',imageRoutes)
 app.get('/',(req,res)=>{
 res.send("Hello world....")
+// app.get(`${process.env.BASEURL}/api/verify-email/:token`, verifyEmail);
+
 });
 app.listen(port,()=>{
     console.log(`Server is running on port ${port}`)

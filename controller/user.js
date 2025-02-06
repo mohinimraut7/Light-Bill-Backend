@@ -5,7 +5,15 @@ const jwt = require('jsonwebtoken');
 const user = require("../models/user");
 const Bill = require("../models/bill");
 const Role = require("../models/role");
+const path = require('path');
+// const viewfile=require('../views/verified.html')
+const viewfile = path.join(__dirname, "../views/verified.html"); 
+
 const fetch = require('node-fetch');
+
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+
 env.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -45,11 +53,114 @@ exports.addUser = async (req, res) => {
       ward
     });
     const savedUser = await newUser.save();
-    res.status(201).json({ message: "User added successfully", user: savedUser });
+    const verificationToken = crypto.randomBytes(32).toString('hex'); // Generate a random token
+    newUser.verificationToken = verificationToken;
+await newUser.save();
+
+// Send Verification Email
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: "mohinimraut7@gmail.com",
+    pass: "enpz swmp tycr ryhh",
+
+  },
+});
+
+const verificationLink = `${process.env.BASEURL}/api/verify-email/${verificationToken}`;
+
+await transporter.sendMail({
+  from: process.env.EMAIL,
+  to: newUser.email,
+  subject: 'Email Verification',
+  html: `<p>Click <a href="${verificationLink}">here</a> to verify your email address.</p>`,
+});
+
+    // res.status(201).json({ message: "User added successfully", user: savedUser });
+    res.status(201).json({ message: "User added successfully. Check your email to verify your account." });
+
   } catch (error) {
     res.status(400).json({ message: "Error adding user", error });
   }
 };
+
+
+
+
+exports.verifyEmail = async (req, res) => {
+  console.log("verifyemail",req,"\n",req.query)
+  const { token } = req.query;
+ 
+
+  try {
+    const user = await User.findOne({ verificationToken: token });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined; // Remove the verification token after successful verification
+    await user.save();
+    res.sendFile(viewfile)
+    // res.status(200).json({ message: "Email verified successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+
+exports.verifiedPage=async(req,res)=>{
+  res.sendFile(path.join(_dirname, "./../views/verified.html"))
+}
+
+exports.resendVerificationEmail = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: "Email is already verified" });
+    }
+
+    // Generate a new verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    user.verificationToken = verificationToken;
+    await user.save();
+
+    // Send the verification email again
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD,
+      },
+    });
+
+    const verificationLink = `${process.env.BASE_URL}/verify-email/${verificationToken}`;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL,
+      to: user.email,
+      subject: 'Email Verification',
+      html: `<p>Click <a href="${verificationLink}">here</a> to verify your email address.</p>`,
+    });
+
+    res.status(200).json({ message: "Verification email resent successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+
+
+
+
 
 exports.deleteUser = async (req, res) => {
   const { user_id } = req.params;
