@@ -71,6 +71,18 @@ const billSchema = new mongoose.Schema(
       billType: {
         type: String,
       },
+      billDisplayParameter1:{
+        type: String,
+      },
+      billDisplayParameter2:{
+        type: String,
+      },
+      billDisplayParameter3:{
+        type: String,
+      },
+      billDisplayParameter4:{
+        type: String,
+      },
       billNo: {
         type: String,
         required: true,
