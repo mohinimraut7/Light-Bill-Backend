@@ -242,24 +242,63 @@ exports.editRole = async (req, res) => {
 };
 
 
+// exports.deleteRole = async (req, res) => {
+//     const { role_id } = req.params;
+//     try {
+//         const deletedRole = await Role.findByIdAndDelete(role_id);
+//         if (!deletedRole) {
+//             return res.status(404).json({
+//                 message: "Role not found",
+//             });
+//         }
+//         const user = await User.findById(deletedRole.userId);
+//         if (user) {
+//             await User.findByIdAndDelete(user._id);
+//         }
+//         res.status(200).json({
+//             message: "Role and associated user deleted successfully",
+//             role: deletedRole,
+//             userId: deletedRole.userId, 
+//         });
+//     } catch (error) {
+//         console.error('Error deleting role', error);
+//         res.status(500).json({
+//             message: "Internal Server Error"
+//         });
+//     }
+// };
+
+
 exports.deleteRole = async (req, res) => {
     const { role_id } = req.params;
+    
     try {
         const deletedRole = await Role.findByIdAndDelete(role_id);
+
         if (!deletedRole) {
             return res.status(404).json({
                 message: "Role not found",
             });
         }
-        const user = await User.findById(deletedRole.userId);
+
+        // User सापडतोय का ते तपासा
+        const user = await User.findOne({ email: deletedRole.email });
+
         if (user) {
-            await User.findByIdAndDelete(user._id);
+            // User मधून फक्त Role रिकामा करायचा
+            await User.findByIdAndUpdate(
+                user._id,
+                { role: "" },  // फक्त Role काढून टाका, User डिलीट करू नका
+                { new: true, runValidators: true }
+            );
         }
+
         res.status(200).json({
-            message: "Role and associated user deleted successfully",
+            message: "Role deleted successfully, user role removed",
             role: deletedRole,
-            userId: deletedRole.userId, 
+            userId: deletedRole.userId,
         });
+
     } catch (error) {
         console.error('Error deleting role', error);
         res.status(500).json({
@@ -267,6 +306,8 @@ exports.deleteRole = async (req, res) => {
         });
     }
 };
+
+
 
 exports.getRoles = async (req, res) => {
     try {
