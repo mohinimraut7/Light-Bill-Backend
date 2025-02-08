@@ -2,53 +2,106 @@ const Role = require('../models/role');
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 
+// exports.addRole = async (req, res) => {
+//     const { name,email,ward } = req.body;
+//     const requesterRole = req?.user?.role;
+//     if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin') {
+//         return res.status(403).json({ message: "You don't have authority to add user" });
+//     }
+//     try {
+        
+//         const existingRole = await Role.findOne({ name, email, ward });
+//         if (existingRole) {
+//             return res.status(400).json({
+//                 message: "Role is already exists"
+                
+//             });
+//         }
+
+
+//         let user = await User.findOne({ email });
+//         if (!user) {
+//             const salt = await bcrypt.genSalt(10);
+//             const hashedPassword = await bcrypt.hash(password, salt);
+//             user = new User({
+               
+               
+//                 role: name,
+              
+//             });
+//             await user.save();
+//         } else {
+//             await User.findByIdAndUpdate(
+//                 user._id,
+//                 {username,email, contactNumber, password, ward, role: name },
+//                 { new: true, runValidators: true }
+//             );
+//         }
+//         const newRole = new Role({
+//             userId: user._id,
+//             name,
+           
+//             email,
+           
+//             ward
+//         });
+//         const savedRole = await newRole.save();
+//         res.status(201).json({
+//             message: "Role added successfully",
+//             Role: savedRole
+//         });
+//     } catch (error) {
+//         console.error('Error adding role', error);
+//         res.status(500).json({
+//             message: 'Internal Server Error'
+//         });
+//     }
+// };
+
+
+
 exports.addRole = async (req, res) => {
-    const { name,username,email, contactNumber, password, ward } = req.body;
+    const { name, email, ward } = req.body; // फक्त आवश्यक फील्ड्स घेतले
     const requesterRole = req?.user?.role;
+
     if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin') {
         return res.status(403).json({ message: "You don't have authority to add user" });
     }
+
     try {
-        
+        // Role आधीपासून अस्तित्वात आहे का ते तपासा
         const existingRole = await Role.findOne({ name, email, ward });
         if (existingRole) {
             return res.status(400).json({
-                message: "Role is already exists"
-                
+                message: "Role already exists"
             });
         }
-
 
         let user = await User.findOne({ email });
-        if (!user) {
-            const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash(password, salt);
-            user = new User({
-                username,
-                email,
-                password: hashedPassword,
-                contactNumber,
-                role: name,
-                ward
-            });
-            await user.save();
-        } else {
+
+        // जर `User` सापडला, तर फक्त त्याचा Role अपडेट करा
+        if (user) {
             await User.findByIdAndUpdate(
                 user._id,
-                {username,email, contactNumber, password, ward, role: name },
+                { role: name },  // फक्त Role अपडेट
                 { new: true, runValidators: true }
             );
+        } else {
+            return res.status(400).json({
+                message: "User not found. Please register the user first."
+            });
         }
+
+        // नवीन Role तयार करा
         const newRole = new Role({
             userId: user._id,
-            name,
-            username,
+            name,  // `name` म्हणजे Role चे नाव
             email,
-            contactNumber,
-            password,
             ward
         });
+
         const savedRole = await newRole.save();
+
         res.status(201).json({
             message: "Role added successfully",
             Role: savedRole
@@ -61,9 +114,10 @@ exports.addRole = async (req, res) => {
     }
 };
 
+
 exports.editRole = async (req, res) => {
     const { role_id } = req.params;
-    const { name,username,email, contactNumber, password, ward } = req.body;
+    const { name,email,ward } = req.body;
     const requesterRole = req?.user?.role;
     if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin') {
         return res.status(403).json({ message: "You don't have authority to edit role" });
@@ -74,7 +128,7 @@ exports.editRole = async (req, res) => {
         });
     }
     try {
-        const roleUpdateData = { name,email,contactNumber,ward };
+        const roleUpdateData = { name,email,ward };
         const updatedRole = await Role.findByIdAndUpdate(
             role_id,
             roleUpdateData,
@@ -101,14 +155,7 @@ exports.editRole = async (req, res) => {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
             user = new User({
-                // firstName,
-                // lastName,
-                username,
-                email,
-                password: hashedPassword,
-                contactNumber,
                 role: name,
-                ward
             });
             await user.save();
         } else {
