@@ -87,11 +87,33 @@ await transporter.sendMail({
 
 
 
-exports.verifyEmail = async (req, res) => {
-  console.log("verifyemail",req,"\n",req.query)
-  const { token } = req.query;
+// exports.verifyEmail = async (req, res) => {
+//   console.log("verifyemail",req,"\n",req.query)
+//   const { token } = req.query;
  
 
+//   try {
+//     const user = await User.findOne({ verificationToken: token });
+
+//     if (!user) {
+//       return res.status(400).json({ message: "Invalid or expired token" });
+//     }
+
+//     user.isVerified = true;
+//     user.verificationToken = undefined; // Remove the verification token after successful verification
+//     await user.save();
+//     res.sendFile(viewfile)
+//     // res.status(200).json({ message: "Email verified successfully" });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error });
+//   }
+// };
+
+
+
+exports.verifyEmail = async (req, res) => {
+  // Extract token from route parameters
+  const { token } = req.params;
   try {
     const user = await User.findOne({ verificationToken: token });
 
@@ -100,10 +122,11 @@ exports.verifyEmail = async (req, res) => {
     }
 
     user.isVerified = true;
-    user.verificationToken = undefined; // Remove the verification token after successful verification
+    user.verificationToken = undefined; // Clear the token after verification
     await user.save();
-    res.sendFile(viewfile)
-    // res.status(200).json({ message: "Email verified successfully" });
+
+    // Send the verified HTML page
+    res.sendFile(viewfile);
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
@@ -277,9 +300,17 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
+
+    // Check if the user's email is verified
+    if (!user.isVerified) {
+      return res.status(403).json({
+        message: "Email is not verified. Please verify your email to login."
+      });
+    }
+
     if (email === "mohinimraut7@gmail.com" && user.role !== "Super Admin") {
       user.role = "Super Admin";
-      await user.save(); // Update the role in the database
+      await user.save();
     }
     const token = jwt.sign(
       { id: user._id, role: user.role },
