@@ -115,61 +115,120 @@ exports.addRole = async (req, res) => {
 };
 
 
+// exports.editRole = async (req, res) => {
+//     const { role_id } = req.params;
+//     const { name,email,ward } = req.body;
+//     const requesterRole = req?.user?.role;
+//     if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin') {
+//         return res.status(403).json({ message: "You don't have authority to edit role" });
+//     }
+//     if (!name) {
+//         return res.status(400).json({
+//             message: "Role name is required",
+//         });
+//     }
+//     try {
+//         const roleUpdateData = { name,email,ward };
+//         const updatedRole = await Role.findByIdAndUpdate(
+//             role_id,
+//             roleUpdateData,
+//             { new: true, runValidators: true }
+//         );
+//         if (!updatedRole) {
+//             return res.status(404).json({
+//                 message: "Role not found",
+//             });
+//         }
+//         let user = await User.findOne({
+//             $or: [
+//                 { email },
+//                 { _id: updatedRole.userId }
+//             ]
+//         });
+
+//         if (!user) {
+//             if (!password) {
+//                 return res.status(400).json({
+//                     message: "Password is required to create a new user",
+//                 });
+//             }
+//             const salt = await bcrypt.genSalt(10);
+//             const hashedPassword = await bcrypt.hash(password, salt);
+//             user = new User({
+//                 role: name,
+//             });
+//             await user.save();
+//         } else {
+//             const userUpdateData = { role: name, ward };
+//             // if (firstName) userUpdateData.firstName = firstName;
+//             if (username) userUpdateData.username = username;
+//             if (email) userUpdateData.email = email;
+//             if (contactNumber) userUpdateData.contactNumber = contactNumber;
+//             if (password) {
+//                 const salt = await bcrypt.genSalt(10);
+//                 userUpdateData.password = await bcrypt.hash(password, salt);
+//             }
+//             await User.findByIdAndUpdate(user._id, userUpdateData, { new: true, runValidators: true });
+//         }
+//         res.status(200).json({
+//             message: "Role updated successfully",
+//             role: updatedRole,
+//         });
+//     } catch (error) {
+//         console.error('Error updating role', error);
+//         res.status(500).json({
+//             message: "Internal Server Error"
+//         });
+//     }
+// };
+
+
+
 exports.editRole = async (req, res) => {
     const { role_id } = req.params;
-    const { name,email,ward } = req.body;
+    const { name, email, ward } = req.body;
     const requesterRole = req?.user?.role;
+
     if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin') {
         return res.status(403).json({ message: "You don't have authority to edit role" });
     }
+
     if (!name) {
         return res.status(400).json({
             message: "Role name is required",
         });
     }
+
     try {
-        const roleUpdateData = { name,email,ward };
+        // Role अपडेट करणे
         const updatedRole = await Role.findByIdAndUpdate(
             role_id,
-            roleUpdateData,
+            { name, email, ward },
             { new: true, runValidators: true }
         );
+
         if (!updatedRole) {
             return res.status(404).json({
                 message: "Role not found",
             });
         }
-        let user = await User.findOne({
-            $or: [
-                { email },
-                { _id: updatedRole.userId }
-            ]
-        });
+
+        // User सापडतोय का तपासा
+        let user = await User.findOne({ email });
 
         if (!user) {
-            if (!password) {
-                return res.status(400).json({
-                    message: "Password is required to create a new user",
-                });
-            }
-            const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash(password, salt);
-            user = new User({
-                role: name,
+            return res.status(400).json({
+                message: "User not found. Please register the user first.",
             });
-            await user.save();
-        } else {
-            const userUpdateData = { role: name, ward };
-            // if (firstName) userUpdateData.firstName = firstName;
-            if (username) userUpdateData.username = username;
-            if (email) userUpdateData.email = email;
-            if (contactNumber) userUpdateData.contactNumber = contactNumber;
-            if (password) {
-                const salt = await bcrypt.genSalt(10);
-                userUpdateData.password = await bcrypt.hash(password, salt);
-            }
-            await User.findByIdAndUpdate(user._id, userUpdateData, { new: true, runValidators: true });
         }
+
+        // User मध्ये फक्त `role` आणि `ward` अपडेट करा
+        await User.findByIdAndUpdate(
+            user._id,
+            { role: name, ward },
+            { new: true, runValidators: true }
+        );
+
         res.status(200).json({
             message: "Role updated successfully",
             role: updatedRole,
@@ -181,7 +240,6 @@ exports.editRole = async (req, res) => {
         });
     }
 };
-
 
 
 exports.deleteRole = async (req, res) => {
