@@ -9,22 +9,14 @@ const roleSchema=new mongoose.Schema({
         type:String,
        
     },
-    username:{
-        type:String,
-    },
+   
     
     email:{
         type:String,
         required:true 
     },
-    contactNumber:{
-        type:String,
-        
-    },
-    password:{
-        type:String,
-        required:true 
-    },
+   
+   
     ward:{
         type:String,
         required:true 
