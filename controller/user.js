@@ -185,28 +185,52 @@ exports.resendVerificationEmail = async (req, res) => {
 
 
 
+// exports.deleteUser = async (req, res) => {
+//   const { user_id } = req.params;
+//   try {
+//     const deletedUser = await user.findByIdAndDelete(user_id);
+//     if (!deletedUser) {
+//       return res.status(404).json({
+//         message: "User not found",
+//       });
+//     }
+//     await Bill.deleteMany({ userId: user_id });
+//     res.status(200).json({
+//       message: "User and corresponding bills deleted successfully",
+//       user: deletedUser,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Internal Server Error"
+//     });
+//   }
+// }
+
 exports.deleteUser = async (req, res) => {
   const { user_id } = req.params;
+
   try {
-    const deletedUser = await user.findByIdAndDelete(user_id);
+    // Find the user first
+    const deletedUser = await User.findByIdAndDelete(user_id);
+
     if (!deletedUser) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      return res.status(404).json({ message: "User not found" });
     }
-    await Bill.deleteMany({ userId: user_id });
+
+    // Delete associated role
+    await Role.deleteOne({ _id: deletedUser.roleId });
+
+    
     res.status(200).json({
-      message: "User and corresponding bills deleted successfully",
+      message: "User, associated role, and bills deleted successfully",
       user: deletedUser,
     });
+
   } catch (error) {
-    res.status(500).json({
-      message: "Internal Server Error"
-    });
+    console.error("Error deleting user:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
-}
-
-
+};
 
 exports.editProfile = async (req, res) => {
   const { userId } = req.params;
