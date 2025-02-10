@@ -454,6 +454,7 @@ exports.addBill = async (req, res) => {
 
       // 🔹 Check if consumerNumber exists in the Consumer collection
       const consumerExists = await Consumer.findOne({ consumerNumber });
+      let wardname=consumerExists?.ward;
 
       if (!consumerExists) {
         failedBills.push({
@@ -484,7 +485,7 @@ exports.addBill = async (req, res) => {
         consumerName,
         consumerAddress,
         contactNumber: validContactNumber,
-        ward,
+        ward:wardname,
         adjustmentUnit,
         totalConsumption,
         installationDate,
@@ -520,7 +521,7 @@ exports.addBill = async (req, res) => {
 
       await bill.save();
       createdBills.push({
-        consumerNumber: bill.consumerNumber,
+        consumerNo: bill.consumerNumber,
         monthAndYear: bill.monthAndYear,
         status: "SUCCESS",
       });
