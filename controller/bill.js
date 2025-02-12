@@ -4,7 +4,7 @@ const User = require('../models/user');
 const Meter = require('../models/meter'); 
 const bcrypt=require('bcryptjs');
 const Consumer = require('../models/consumer'); 
-
+const cron = require("node-cron");
 const axios = require('axios');
 
 // exports.addBill = async (req, res) => {
@@ -399,6 +399,27 @@ const axios = require('axios');
 //   }
 // };
 // -----------------------------------------------------------------
+
+
+cron.schedule("42 16 * * *", async () => {
+  console.log("its 12")
+  try {
+    const today = new Date();
+    
+    today.setDate(today.getDate() + 2); // Find bills due in 2 days
+    const dueDateString = today.toISOString().split("T")[0];
+
+    // Update only bills where paymentStatus is "unpaid" (case insensitive)
+    await Bill.updateMany(
+      { dueDate: dueDateString, paymentStatus: "unpaid" },
+      { dueAlert: true }
+    );
+
+    console.log("Due alerts updated successfully for unpaid bills!");
+  } catch (error) {
+    console.error("Error updating due alerts:", error);
+  }
+});
 
 
 exports.addBill = async (req, res) => {

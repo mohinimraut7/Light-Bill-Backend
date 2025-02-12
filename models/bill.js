@@ -1,6 +1,8 @@
 
 const mongoose = require("mongoose");
 
+const todayDate = new Date().toISOString().split("T")[0]; // आजची तारीख YYYY-MM-DD
+
 const billSchema = new mongoose.Schema(
   {
       consumerNumber: {
@@ -112,9 +114,7 @@ const billSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    paymentStatus: {
-      type: String,
-    },
+    paymentStatus: { type: String, trim: true, lowercase: true },
     approvedStatus: {
       type: String,
     },
@@ -146,8 +146,7 @@ const billSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-
-    receiptNoBillPayment:{
+      receiptNoBillPayment:{
       type: String, 
     },
     juniorEngineerContactNumber: {
@@ -156,22 +155,53 @@ const billSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+// billSchema.pre('save', function (next) {
+//   if (this.dueDate) { 
+//     const today = new Date();
+//     const dueDate = new Date(this.dueDate); 
+//     const twoDaysBeforeDue = new Date(dueDate);
+//     twoDaysBeforeDue.setDate(dueDate.getDate() - 2);
+//     if (today.toDateString() === twoDaysBeforeDue.toDateString()) {
+//       this.dueAlert = true;
+//     } else {
+//       this.dueAlert = false;
+//     }
+//   } else {
+//     this.dueAlert = false; 
+//   }
+//   next();
+// });
+
+// billSchema.pre('save', function (next) {
+//   if (this.paymentStatus) {
+//     this.paymentStatus = this.paymentStatus.toLowerCase().trim();
+//   }
+//   next();
+// });
+
 billSchema.pre('save', function (next) {
-  if (this.dueDate) { 
-    const today = new Date();
-    const dueDate = new Date(this.dueDate); 
-    const twoDaysBeforeDue = new Date(dueDate);
-    twoDaysBeforeDue.setDate(dueDate.getDate() - 2);
-    if (today.toDateString() === twoDaysBeforeDue.toDateString()) {
-      this.dueAlert = true;
-    } else {
-      this.dueAlert = false;
-    }
+  if (this.dueDate && this.paymentStatus === "unpaid") {
+    const today = new Date().toISOString().split("T")[0]; // Get today's date (YYYY-MM-DD)
+    const dueDate = new Date(this.dueDate);
+    
+    // Calculate two days before dueDate
+    dueDate.setDate(dueDate.getDate() - 2);
+    const twoDaysBeforeDue = dueDate.toISOString().split("T")[0];
+
+    // Set dueAlert if today matches two days before dueDate
+    this.dueAlert = today === twoDaysBeforeDue;
   } else {
-    this.dueAlert = false; 
+    this.dueAlert = false;
   }
+
+  if (this.paymentStatus) {
+    this.paymentStatus = this.paymentStatus.toLowerCase().trim();
+  }
+
   next();
 });
+
+
 
 module.exports = mongoose.model("Bill", billSchema);
 
