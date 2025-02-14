@@ -422,14 +422,13 @@ cron.schedule("42 16 * * *", async () => {
 });
 
 
-// Helper function to dynamically calculate the previous month-year (format: "JAN-2025")
 const getPreviousMonthYear = (monthAndYear) => {
   const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   const [month, year] = monthAndYear.split('-');
   let monthIndex = months.indexOf(month.toUpperCase());
   let prevYear = parseInt(year, 10);
 
-  // If current month is JAN, then previous month is DEC of the previous year
+  // If current month is JAN, then previous month is DEC of the previous year.
   if (monthIndex === 0) {
     monthIndex = 11; // DEC
     prevYear -= 1;
@@ -443,10 +442,10 @@ const getPreviousMonthYear = (monthAndYear) => {
 exports.addBill = async (req, res) => {
   try {
     const bills = Array.isArray(req.body) ? req.body : [req.body];
-
     const createdBills = [];
     const failedBills = [];
 
+    // Process each bill from the request
     for (const billData of bills) {
       const {
         consumerNumber,
@@ -467,10 +466,10 @@ exports.addBill = async (req, res) => {
         billDate,
         billNo,
         billType,
-        billDisplayParameter1 = null, 
-        billDisplayParameter2 = null,  
-        billDisplayParameter3 = null,  
-        billDisplayParameter4 = null, 
+        billDisplayParameter1 = null,
+        billDisplayParameter2 = null,
+        billDisplayParameter3 = null,
+        billDisplayParameter4 = null,
         monthAndYear,
         previousReadingDate,
         previousReading,
@@ -487,13 +486,12 @@ exports.addBill = async (req, res) => {
         dueAlert,
       } = billData;
 
-      var validContactNumber = contactNumber || "N/A";
-      var duealertvalue = dueAlert || false;
+      const validContactNumber = contactNumber || "N/A";
+      const duealertvalue = dueAlert || false;
 
-
-      // 🔹 Check if consumerNumber exists in the Consumer collection
+      // Check if consumerNumber exists in the Consumer collection
       const consumerExists = await Consumer.findOne({ consumerNumber });
-      let wardname=consumerExists?.ward;
+      const wardname = consumerExists?.ward;
 
       if (!consumerExists) {
         failedBills.push({
@@ -505,9 +503,8 @@ exports.addBill = async (req, res) => {
         continue; // Skip this bill, move to the next one
       }
 
-      // 🔹 Check for duplicate bill (same consumerNumber & monthAndYear)
+      // Check for duplicate bill (same consumerNumber & monthAndYear)
       const duplicateBill = await Bill.findOne({ consumerNumber, monthAndYear });
-
       if (duplicateBill) {
         failedBills.push({
           consumerNo: consumerNumber,
@@ -518,13 +515,13 @@ exports.addBill = async (req, res) => {
         continue; // Skip duplicate bill
       }
 
-      // ✅ If consumer exists & no duplicate bill, insert the bill
+      // Create the new (current month) bill
       const bill = new Bill({
         consumerNumber,
         consumerName,
         consumerAddress,
         contactNumber: validContactNumber,
-        ward:wardname,
+        ward: wardname,
         adjustmentUnit,
         totalConsumption,
         installationDate,
@@ -555,7 +552,7 @@ exports.addBill = async (req, res) => {
         promptPaymentAmount,
         dueDate,
         netBillAmountWithDPC,
-        dueAlert:duealertvalue
+        dueAlert: duealertvalue,
       });
 
       await bill.save();
@@ -564,41 +561,31 @@ exports.addBill = async (req, res) => {
         monthAndYear: bill.monthAndYear,
         status: "SUCCESS",
       });
-    }
 
-    // Proceed only if the current bill has a lastReceiptAmount and lastReceiptDate
-    if (lastReceiptAmount != null && lastReceiptDate) {
-      // Dynamically calculate the previous month-year (for example, if current is "FEB-2025", previous is "JAN-2025")
+      // Dynamic check: Update the previous month's bill
       const prevMonthYear = getPreviousMonthYear(monthAndYear);
-
-      // Find the previous month's bill for the same consumer
       const prevBill = await Bill.findOne({ consumerNumber, monthAndYear: prevMonthYear });
       if (prevBill) {
-        // Check if the current bill's lastReceiptAmount matches one of the previous bill's amounts:
-        //   netBillAmount, netBillAmountWithDPC, or promptPaymentAmount
-        const amountMatches = (
-          lastReceiptAmount === prevBill.netBillAmount ||
-          lastReceiptAmount === prevBill.netBillAmountWithDPC ||
-          lastReceiptAmount === prevBill.promptPaymentAmount
-        );
-        // Check that the previous bill's billDate is earlier than the current bill's lastReceiptDate
-        if (amountMatches && new Date(prevBill.billDate) < new Date(lastReceiptDate)) {
-          // Update the previous month's bill's paymentStatus to "paid"
-          prevBill.paymentStatus = "paid";
+        if (lastReceiptAmount != null && lastReceiptDate) {
+          const amountMatches =
+            lastReceiptAmount === prevBill.netBillAmount ||
+            lastReceiptAmount === prevBill.netBillAmountWithDPC ||
+            lastReceiptAmount === prevBill.promptPaymentAmount;
+          if (amountMatches && new Date(prevBill.billDate) < new Date(lastReceiptDate)) {
+            prevBill.paymentStatus = "paid";
+            await prevBill.save();
+          }
+        } else {
+          // If lastReceiptAmount or lastReceiptDate is missing, mark the previous bill as "unpaid"
+          prevBill.paymentStatus = "unpaid";
           await prevBill.save();
         }
       }
     }
-  
 
-
-    // 🔹 Send Response with Success & Failure Messages
-    let allBills = [...createdBills, ...failedBills];
-    res.status(201).json(
-      
-      allBills
-    );
-
+    // Send Response with Success & Failure Messages
+    const allBills = [...createdBills, ...failedBills];
+    res.status(201).json(allBills);
   } catch (error) {
     console.error("Error inserting bills:", error);
     res.status(500).json({
@@ -607,6 +594,7 @@ exports.addBill = async (req, res) => {
     });
   }
 };
+
 
 
 exports.dropBillsCollection = async (req, res) => {
