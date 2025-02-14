@@ -807,7 +807,7 @@ bill.netLoad = netLoad || bill.netLoad || '';
       bill.billPaymentDate=billPaymentDate||bill.billPaymentDate,
     bill.forwardForGeneration = forwardForGeneration || bill.forwardForGeneration;
     if (paidAmount === roundedBillAmount && pendingAmount === 0 && requesterRole === 'Super Admin') {
-      bill.paymentStatus = 'Paid';
+      bill.paymentStatus = 'paid';
       bill.approvedStatus = 'Done';
       bill.yesno='Yes';
     }
@@ -817,23 +817,23 @@ bill.netLoad = netLoad || bill.netLoad || '';
       bill.password = bill.password;
     }
     if (paidAmount === roundedBillAmount && pendingAmount === 0) {
-      bill.paymentStatus = 'Paid';
+      bill.paymentStatus = 'paid';
       switch (requesterRole) {
         case 'Junior Engineer':
           bill.approvedStatus = 'PendingForExecutiveEngineer';
-          bill.paymentStatus = 'Paid';
+          bill.paymentStatus = 'paid';
           break;
         case 'Executive Engineer':
           bill.approvedStatus = 'PendingForAdmin';
-          bill.paymentStatus = 'Paid';
+          bill.paymentStatus = 'paid';
           break;
         case 'Admin':
           bill.approvedStatus = 'PendingForSuperAdmin';
-          bill.paymentStatus = 'Paid';
+          bill.paymentStatus = 'paid';
           break;
         case 'Super Admin':
           bill.approvedStatus = 'Done';
-          bill.paymentStatus = 'Paid';
+          bill.paymentStatus = 'paid';
           break;
         default:
           console.error(`Unexpected role: ${requesterRole}`);
@@ -865,7 +865,7 @@ bill.netLoad = netLoad || bill.netLoad || '';
       }
     } else {
       if (pendingAmount === roundedBillAmount) {
-        bill.paymentStatus = 'UnPaid';
+        bill.paymentStatus = 'unpaid';
       } else {
         bill.paymentStatus = 'Pending';
       }
@@ -908,12 +908,12 @@ exports.updateBillStatus = async (req, res) => {
       return res.status(404).json({ message: 'Bill not found' });
     }
      if (req?.user?.role === 'Super Admin'){
-      if(approvedStatus === 'Done' && yesno === 'Yes' && paymentStatus==='Paid'){
+      if(approvedStatus === 'Done' && yesno === 'Yes' && paymentStatus==='paid'){
           totalArrearsval=bill.totalArrears;
           netBillAmountval=bill.netBillAmount;
           roundedBillAmountval=bill.roundedBillAmount;
           
-        bill.paymentStatus = 'Paid';
+        bill.paymentStatus = 'paid';
         bill.approvedStatus = 'Done';
       }else if(approvedStatus === 'PendingForSuperAdmin' && yesno === 'No'&& paymentStatus==='Pending'){
         bill.paymentStatus = 'Pending';
@@ -929,7 +929,7 @@ exports.updateBillStatus = async (req, res) => {
         bill.approvedStatus = 'PendingForExecutiveEngineer';
       } else if (req?.user?.role === 'Junior Engineer' && approvedStatus === 'PendingForExecutiveEngineer' && yesno === 'No') {
         bill.approvedStatus = 'PendingForJuniorEngineer';
-        bill.paymentStatus = 'UnPaid';
+        bill.paymentStatus = 'unpaid';
       } else if (req?.user?.role === 'Admin' && yesno === 'Yes') {
         
         bill.approvedStatus = 'PendingForSuperAdmin';
@@ -1015,7 +1015,7 @@ exports.massUpdateBillStatus = async (req, res) => {
         paymentStatus = 'Pending';
       } else if (requesterRole === 'Super Admin') {
         approvedStatus = 'Done';
-        paymentStatus = 'Paid';
+        paymentStatus = 'paid';
       }
       await Bill.findByIdAndUpdate(bill._id, {
         approvedStatus,
