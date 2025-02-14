@@ -422,6 +422,24 @@ cron.schedule("42 16 * * *", async () => {
 });
 
 
+// Helper function to dynamically calculate the previous month-year (format: "JAN-2025")
+const getPreviousMonthYear = (monthAndYear) => {
+  const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+  const [month, year] = monthAndYear.split('-');
+  let monthIndex = months.indexOf(month.toUpperCase());
+  let prevYear = parseInt(year, 10);
+
+  // If current month is JAN, then previous month is DEC of the previous year
+  if (monthIndex === 0) {
+    monthIndex = 11; // DEC
+    prevYear -= 1;
+  } else {
+    monthIndex -= 1;
+  }
+  return `${months[monthIndex]}-${prevYear}`;
+};
+
+
 exports.addBill = async (req, res) => {
   try {
     const bills = Array.isArray(req.body) ? req.body : [req.body];
@@ -547,6 +565,32 @@ exports.addBill = async (req, res) => {
         status: "SUCCESS",
       });
     }
+
+    // Proceed only if the current bill has a lastReceiptAmount and lastReceiptDate
+    if (lastReceiptAmount != null && lastReceiptDate) {
+      // Dynamically calculate the previous month-year (for example, if current is "FEB-2025", previous is "JAN-2025")
+      const prevMonthYear = getPreviousMonthYear(monthAndYear);
+
+      // Find the previous month's bill for the same consumer
+      const prevBill = await Bill.findOne({ consumerNumber, monthAndYear: prevMonthYear });
+      if (prevBill) {
+        // Check if the current bill's lastReceiptAmount matches one of the previous bill's amounts:
+        //   netBillAmount, netBillAmountWithDPC, or promptPaymentAmount
+        const amountMatches = (
+          lastReceiptAmount === prevBill.netBillAmount ||
+          lastReceiptAmount === prevBill.netBillAmountWithDPC ||
+          lastReceiptAmount === prevBill.promptPaymentAmount
+        );
+        // Check that the previous bill's billDate is earlier than the current bill's lastReceiptDate
+        if (amountMatches && new Date(prevBill.billDate) < new Date(lastReceiptDate)) {
+          // Update the previous month's bill's paymentStatus to "paid"
+          prevBill.paymentStatus = "paid";
+          await prevBill.save();
+        }
+      }
+    }
+  
+
 
     // 🔹 Send Response with Success & Failure Messages
     let allBills = [...createdBills, ...failedBills];
