@@ -401,7 +401,7 @@ const axios = require('axios');
 // -----------------------------------------------------------------
 
 
-cron.schedule("18 15 * * *", async () => {
+cron.schedule("40 16 * * *", async () => {
   console.log("its 12")
   try {
     const today = new Date();
@@ -422,64 +422,34 @@ cron.schedule("18 15 * * *", async () => {
 });
 
 
-// cron.schedule("26 14 * * *", async () => { // Runs daily at 1:23 PM
-//   console.log("Updating due and overdue alerts...");
-//   try {
-//     const yesterday = new Date();
-//     yesterday.setDate(yesterday.getDate() - 1); // Find bills whose due date has passed
 
-//     const oldDueDateString = yesterday.toISOString().split("T")[0];
-
-//     // 1️⃣ Unpaid bills: dueAlert -> false, overdueAlert -> true
-//     await Bill.updateMany(
-//       { dueDate: oldDueDateString, dueAlert: true, paymentStatus: { $regex: /^unpaid$/i } },
-//       { $set: { dueAlert: false, overdueAlert: true } } // Set overdueAlert only for unpaid bills
-//     );
-
-//     console.log("Due alerts reset & overdue alerts set for unpaid bills!");
-
-//     // 2️⃣ Paid bills: overdueAlert -> false, dueAlert -> false
-//     await Bill.updateMany(
-//       { overdueAlert: true, paymentStatus: { $regex: /^paid$/i } },
-//       { $set: { dueAlert: false, overdueAlert: false } } // Reset alerts for paid bills
-//     );
-
-//     console.log("Overdue alerts reset for paid bills!");
-//   } catch (error) {
-//     console.error("Error updating alerts:", error);
-//   }
-// });
-
-
-
-cron.schedule("26 14 * * *", async () => { // Runs daily at 2:26 PM
-  console.log("Updating due and overdue alerts...");
+cron.schedule("46 16 * * *", async () => { 
+  console.log("Updating due alerts...");
   try {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1); // Find bills whose due date has passed
     const oldDueDateString = yesterday.toISOString().split("T")[0];
 
-    // 1️⃣ Unpaid bills: Convert dueAlert to false and set overdueAlert to true
+    // 1️⃣ Unpaid bills: Convert dueAlert to false (Overdue alert removed)
     const unpaidUpdate = await Bill.updateMany(
       { dueDate: oldDueDateString, dueAlert: true, paymentStatus: { $regex: /^unpaid$/i } },
-      { $set: { dueAlert: false, overdueAlert: true } } // Unpaid bills become overdue
+      { $set: { dueAlert: false } } // Overdue alert is removed
     );
 
-    console.log(`✅ ${unpaidUpdate.modifiedCount} unpaid bills marked as overdue!`);
+    console.log(`✅ ${unpaidUpdate.modifiedCount} unpaid bills updated!`);
 
-    // 2️⃣ Paid bills: Reset both dueAlert and overdueAlert to false
+    // 2️⃣ Paid bills: Reset dueAlert to false (No overdue alert check)
     const paidUpdate = await Bill.updateMany(
-      { overdueAlert: true, paymentStatus: { $regex: /^paid$/i } },
-      { $set: { dueAlert: false, overdueAlert: false } } // If paid, reset all alerts
+      { dueAlert: true, paymentStatus: { $regex: /^paid$/i } },
+      { $set: { dueAlert: false } } // Reset due alerts
     );
 
-    console.log(`✅ ${paidUpdate.modifiedCount} paid bills cleared from overdue alerts!`);
+    console.log(`✅ ${paidUpdate.modifiedCount} paid bills cleared from alerts!`);
     
   } catch (error) {
     console.error("❌ Error updating alerts:", error);
   }
 });
-
 
 const getPreviousMonthYear = (monthAndYear) => {
   const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
