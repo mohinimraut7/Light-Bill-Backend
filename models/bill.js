@@ -146,6 +146,10 @@ const billSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    overdueAlert: {
+      type: Boolean,
+      default: false,
+    },
       receiptNoBillPayment:{
       type: String, 
     },
