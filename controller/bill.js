@@ -1035,16 +1035,16 @@ exports.massUpdateBillStatus = async (req, res) => {
       let paymentStatus;
       if (requesterRole === 'Junior Engineer') {
         approvedStatus = 'PendingForExecutiveEngineer';
-        paymentStatus = 'Pending';
+        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       } else if (requesterRole === 'Executive Engineer') {
         approvedStatus = 'PendingForAdmin';
-        paymentStatus = 'Pending';
+        paymentStatus =bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       } else if (requesterRole === 'Admin') {
         approvedStatus = 'PendingForSuperAdmin';
-        paymentStatus = 'Pending';
+        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       } else if (requesterRole === 'Super Admin') {
         approvedStatus = 'Done';
-        paymentStatus = 'paid';
+        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       }
       await Bill.findByIdAndUpdate(bill._id, {
         approvedStatus,
@@ -1063,7 +1063,6 @@ exports.massUpdateBillStatus = async (req, res) => {
     });
   }
 };
-
 
 exports.reverseMassBillStatus = async (req, res) => {
   try {
@@ -1084,16 +1083,16 @@ exports.reverseMassBillStatus = async (req, res) => {
       let paymentStatus;
       if (requesterRole === 'Super Admin' && bill?.approvedStatus==='Done') {
         approvedStatus = 'PendingForSuperAdmin'; 
-        paymentStatus = 'Pending';
+        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       } else if (requesterRole === 'Admin' && bill?.approvedStatus==='PendingForSuperAdmin') {
         approvedStatus = 'PendingForAdmin'; 
-        paymentStatus = 'Pending';
+        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       } else if (requesterRole === 'Executive Engineer' && bill?.approvedStatus==='PendingForAdmin') {
         approvedStatus = 'PendingForExecutiveEngineer';
-        paymentStatus = 'Pending';
+        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       } else if (requesterRole === 'Junior Engineer' && bill?.approvedStatus==='PendingForExecutiveEngineer') {
         approvedStatus = 'PendingForJuniorEngineer';
-        paymentStatus = 'Pending';
+        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       }
       await Bill.findByIdAndUpdate(bill._id, {
         approvedStatus,
