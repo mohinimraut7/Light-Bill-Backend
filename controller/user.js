@@ -87,27 +87,7 @@ await transporter.sendMail({
 
 
 
-// exports.verifyEmail = async (req, res) => {
-//   console.log("verifyemail",req,"\n",req.query)
-//   const { token } = req.query;
- 
 
-//   try {
-//     const user = await User.findOne({ verificationToken: token });
-
-//     if (!user) {
-//       return res.status(400).json({ message: "Invalid or expired token" });
-//     }
-
-//     user.isVerified = true;
-//     user.verificationToken = undefined; // Remove the verification token after successful verification
-//     await user.save();
-//     res.sendFile(viewfile)
-//     // res.status(200).json({ message: "Email verified successfully" });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error });
-//   }
-// };
 
 
 
