@@ -944,11 +944,11 @@ exports.updateBillStatus = async (req, res) => {
           
         bill.paymentStatus = 'paid';
         bill.approvedStatus = 'Done';
-      }else if(approvedStatus === 'PendingForSuperAdmin' && yesno === 'No'&& paymentStatus==='Pending'){
-        bill.paymentStatus = 'Pending';
+      }else if(approvedStatus === 'PendingForSuperAdmin' && yesno === 'No'&& paymentStatus==='unpaid'){
+        bill.paymentStatus = 'unpaid';
         bill.approvedStatus = 'PendingForSuperAdmin';
       }else if(approvedStatus === 'PartialDone' && yesno === 'Yes'&& paymentStatus==='Partial'){
-        bill.paymentStatus = 'Partial';
+        bill.paymentStatus = 'unpaid';
         bill.approvedStatus = 'PartialDone';
       }
      }
@@ -964,7 +964,7 @@ exports.updateBillStatus = async (req, res) => {
         bill.approvedStatus = 'PendingForSuperAdmin';
       } else if (req?.user?.role === 'Admin' && yesno === 'No' && approvedStatus === 'PendingForSuperAdmin') {
         bill.approvedStatus = 'PendingForAdmin';
-        bill.paymentStatus = 'Pending';
+        bill.paymentStatus = 'unpaid';
       } else {
         bill.approvedStatus = approvedStatus;
       }
