@@ -83,7 +83,7 @@ exports.addRole = async (req, res) => {
         if (user) {
             await User.findByIdAndUpdate(
                 user._id,
-                { role: name },  // फक्त Role अपडेट
+                { role: name,ward:ward },  // फक्त Role अपडेट
                 { new: true, runValidators: true }
             );
         } else {

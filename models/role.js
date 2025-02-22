@@ -19,7 +19,7 @@ const roleSchema=new mongoose.Schema({
    
     ward:{
         type:String,
-        required:true 
+        // required:true 
     }
 })
 module.exports=mongoose.model('Role',roleSchema)
