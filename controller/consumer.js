@@ -15,8 +15,9 @@ const User = require('../models/user');
 // removeUniqueIndexes();
 exports.addConsumer = async (req, res) => {
     try {
-        var { consumerNumber,consumerAddress,meterPurpose, ward, phaseType  } = req.body;
+        var { consumerNumber,consumerPlace,consumerAddress,meterPurpose, ward, phaseType  } = req.body;
         consumerNumber = consumerNumber.trim();
+        consumerPlace=consumerPlace.trim();
         consumerAddress = consumerAddress.trim();
         ward = ward?.trim(); // Handle undefined case
         phaseType = phaseType?.trim();
@@ -42,6 +43,7 @@ exports.addConsumer = async (req, res) => {
 
         const newConsumer = new Consumer({
             consumerNumber,
+            consumerPlace,
             consumerAddress,
            ward,
             meterPurpose,
@@ -197,6 +199,7 @@ exports.editConsumer = async (req, res) => {
     
     const {
         consumerNumber,
+        consumerPlace,
         consumerAddress,
         ward,
         meterPurpose,
@@ -213,6 +216,7 @@ exports.editConsumer = async (req, res) => {
         
         const consumerUpdateData = {
             ...(consumerNumber && { consumerNumber }),
+            ...(consumerPlace && { consumerPlace }),
             ...(consumerAddress && { consumerAddress }),
             ...(ward && { ward }),
             ...(meterPurpose && { meterPurpose }),

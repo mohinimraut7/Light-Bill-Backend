@@ -7,9 +7,11 @@ const consumerSchema = new mongoose.Schema({
         required: true,
         match: [/^\d{12}$/, 'Consumer Number must be exactly 12 digits'],
     } ,
+    consumerPlace: {
+        type: String,
+    },  
     consumerAddress: {
         type: String,
-       
     },  
     meterPurpose: {
         type: String,
