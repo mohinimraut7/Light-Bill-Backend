@@ -137,15 +137,22 @@ exports.resendVerificationEmail = async (req, res) => {
     await user.save();
 
     // Send the verification email again
+
+
+
+    
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASSWORD,
+
+        user: "mohinimraut7@gmail.com",
+        pass: "enpz swmp tycr ryhh",
+        // user: process.env.EMAIL,
+        // pass: process.env.PASSWORD,
       },
     });
 
-    const verificationLink = `${process.env.BASE_URL}/verify-email/${verificationToken}`;
+    const verificationLink = `${process.env.BASEURL}/api/verify-email/${verificationToken}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL,
@@ -154,6 +161,9 @@ exports.resendVerificationEmail = async (req, res) => {
       html: `<p>Click <a href="${verificationLink}">here</a> to verify your email address.</p>`,
     });
 
+
+
+    
     res.status(200).json({ message: "Verification email resent successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
@@ -308,7 +318,8 @@ exports.login = async (req, res) => {
     // Check if the user's email is verified
     if (!user.isVerified) {
       return res.status(403).json({
-        message: "Email is not verified. Please verify your email to login."
+        message: "Email is not verified. Please verify your email to login.",
+        resendOption: true
       });
     }
 
