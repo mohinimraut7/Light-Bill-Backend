@@ -92,54 +92,6 @@ exports.deleteAll=async(req,res)=>{
     } 
 }
 
-
-// exports.importExcel=async(req,res)=>{
-
-//     try {
-//         const consumers = req.body;
-
-//         // Validate and save data to MongoDB
-//         const insertedConsumers = await Consumer.insertMany(consumers, { ordered: false });
-
-//         res.status(201).json({ message: 'Excel data imported successfully', data: insertedConsumers });
-//     } catch (error) {
-//         console.error("Error importing data:", error);
-//         res.status(500).json({ message: 'Error importing data', error });
-//     }
-// }
-// ==========================================================
-// exports.importExcel=async(req,res)=>{
-// try {
-//     const consumers = req.body; // Received data from frontend
-
-//     // Process the data to remove duplicates by consumerNumber
-//     const uniqueConsumers = [];
-//     const consumerNumbers = new Set();
-
-//     consumers.forEach(consumer => {
-//         if (!consumerNumbers.has(consumer.consumerNumber)) {
-//             uniqueConsumers.push(consumer);
-//             consumerNumbers.add(consumer.consumerNumber);
-//         }
-//     });
-
-//     // Insert only unique consumers
-//     const insertedConsumers = await Consumer.insertMany(uniqueConsumers, { ordered: false });
-
-//     res.status(201).json({
-//         message: 'Excel data imported successfully',
-//         data: insertedConsumers,
-//     });
-// } 
-// catch (error) {
-//     console.error('Error importing data:', error);
-//     res.status(500).json({
-//         message: 'Error importing data',
-//         error: error.message,
-//     });
-// }
-// }
-// --------------------------------------
 exports.importExcel=async(req,res)=>{
 try {
     const consumers = req.body;
