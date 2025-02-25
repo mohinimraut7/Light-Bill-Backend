@@ -16,7 +16,7 @@ const addConsumersRoutes=require('./routes/consumer');
 const addTarriffRoutes=require('./routes/tarriff');
 
 const imageRoutes = require('./routes/imageRoute'); 
-const port = process.env.PORT || 2000;
+const port = process.env.PORT || 5000;
 
 env.config();
 mongoose
