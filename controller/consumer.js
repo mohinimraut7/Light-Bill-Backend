@@ -92,23 +92,80 @@ exports.deleteAll=async(req,res)=>{
     } 
 }
 
-exports.importExcel=async(req,res)=>{
-try {
-    const consumers = req.body;
-    const insertedConsumers = await Consumer.insertMany(consumers, { ordered: false });
+// exports.importExcel=async(req,res)=>{
+// try {
+//     const consumers = req.body;
+//     const insertedConsumers = await Consumer.insertMany(consumers, { ordered: false });
 
-    res.status(201).json({
-        message: 'Batch imported successfully',
-        count: insertedConsumers.length,
-    });
-} catch (error) {
-    console.error('Error importing data:', error);
-    res.status(500).json({
-        message: 'Error importing data',
-        error: error.message,
-    });
-}
-}
+//     res.status(201).json({
+//         message: 'Batch imported successfully',
+//         count: insertedConsumers.length,
+//     });
+// } catch (error) {
+//     console.error('Error importing data:', error);
+//     res.status(500).json({
+//         message: 'Error importing data',
+//         error: error.message,
+//     });
+// }
+// }
+exports.importExcel = async (req, res) => {
+    try {
+        const consumers = req.body;
+
+        if (!Array.isArray(consumers) || consumers.length === 0) {
+            return res.status(400).json({ message: "Invalid data. Please provide an array of consumers." });
+        }
+
+        let insertedCount = 0;
+        let updatedCount = 0;
+
+        for (const consumerData of consumers) {
+            const { consumerNumber, consumerPlace, ward, consumerAddress,meterPurpose } = consumerData;
+
+            // Validate consumerNumber
+            if (!consumerNumber || consumerNumber.length !== 12) {
+                continue; // Skip invalid consumerNumbers
+            }
+
+            // Check if the consumer already exists
+            const existingConsumer = await Consumer.findOne({ consumerNumber });
+
+            if (existingConsumer) {
+                // Update only if consumerPlace, ward, or consumerAddress is missing in DB but present in Excel
+                const updateFields = {};
+
+                if (!existingConsumer.consumerPlace && consumerPlace) updateFields.consumerPlace = consumerPlace;
+                if (!existingConsumer.ward && ward) updateFields.ward = ward;
+                if (!existingConsumer.consumerAddress && consumerAddress) updateFields.consumerAddress = consumerAddress;
+                if (!existingConsumer.meterPurpose && meterPurpose) updateFields.meterPurpose = meterPurpose;
+                
+                if (Object.keys(updateFields).length > 0) {
+                    await Consumer.updateOne({ consumerNumber }, { $set: updateFields });
+                    updatedCount++;
+                }
+            } else {
+                // Insert new consumer
+                await Consumer.create(consumerData);
+                insertedCount++;
+            }
+        }
+
+        res.status(201).json({
+            message: "Batch import completed",
+            insertedCount,
+            updatedCount,
+        });
+
+    } catch (error) {
+        console.error("Error importing data:", error);
+        res.status(500).json({
+            message: "Error importing data",
+            error: error.message,
+        });
+    }
+};
+
 exports.getConsumers = async (req, res) => {
     try {
         const consumers = await Consumer.find();
