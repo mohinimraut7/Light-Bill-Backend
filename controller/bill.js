@@ -532,6 +532,15 @@ exports.addBill = async (req, res) => {
         continue; // Skip this bill, move to the next one
       }
 
+      await Consumer.findOneAndUpdate(
+        { consumerNumber }, // Search by consumerNumber
+        { 
+          consumerAddress: billData.consumerAddress, // Bill मधून घेऊन अपडेट
+          phaseType: billData.phaseType 
+        },
+        { new: true } // Return updated consumer
+      );
+
       // Check for duplicate bill (same consumerNumber & monthAndYear)
       const duplicateBill = await Bill.findOne({ consumerNumber, monthAndYear });
       if (duplicateBill) {
