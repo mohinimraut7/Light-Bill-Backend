@@ -155,6 +155,9 @@ const billSchema = new mongoose.Schema(
     },
     juniorEngineerContactNumber: {
       type: Number,
+    },
+    remark:{
+      type:String
     }
   },
   { timestamps: true }
