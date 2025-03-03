@@ -156,9 +156,16 @@ const billSchema = new mongoose.Schema(
     juniorEngineerContactNumber: {
       type: Number,
     },
-    remark:{
-      type:String
-    }
+    // remark:{
+    //   type:String
+    // }
+    remarks: [
+      {
+        role: { type: String, required: true }, // Example: "Super Admin", "Junior Engineer"
+        remark: { type: String, required: true }, // Example: "Checked meter status"
+        date: { type: Date, default: Date.now } // Timestamp of remark
+      }
+    ]
   },
   { timestamps: true }
 );

@@ -705,6 +705,143 @@ exports.editReceipt = async (req, res) => {
 };
 
 
+exports.addRemark = async (req,res) => {
+ 
+  try {
+      const {
+        remark,role
+          } = req.body;
+      
+      const newRemark = new Bill({
+        remark,role
+       });
+
+      await newRemark.save();
+     
+      res.status(201).json({
+          message: "Remark added successfully.",
+          remark:newRemark,
+      });
+  } catch (error) {
+      console.error('Error adding receipt:', error);
+      res.status(500).json({
+          message: "An error occurred while adding the receipt.",
+          error: error.message,
+      });
+  }
+};
+
+
+
+
+
+// exports.editRemark = async (req, res) => {
+//   console.log("role is >>>>>>>>>", req.body.role);
+//   try {
+//       const { _id, remark, role } = req.body;
+
+//       if (!_id || !role || !remark) {
+//           return res.status(400).json({ message: "Receipt ID (_id), role, and remark are required." });
+//       }
+
+//       // Find existing bill
+//       const existingBill = await Bill.findById(_id);
+//       if (!existingBill) {
+//           return res.status(404).json({ message: "Receipt not found." });
+//       }
+
+//       // If `remarks` array doesn't exist, initialize it
+//       existingBill.remarks = existingBill.remarks || [];
+
+//       // Check if the role already exists in remarks
+//       const roleIndex = existingBill.remarks.findIndex(r => r.role === role);
+
+//       if (roleIndex !== -1) {
+//           // Update existing role remark
+//           existingBill.remarks[roleIndex].remark = remark;
+//       } else {
+//           // Add new remark with role
+//           existingBill.remarks.push({ role, remark: remark });
+//       }
+
+//       // Save the updated bill with new remarks array
+//       await existingBill.save();
+
+//       res.status(200).json({
+//           message: "Remark updated successfully.",
+//           remarks: existingBill.remarks, // Return updated remarks array
+//       });
+//   } catch (error) {
+//       console.error("Error updating remark:", error);
+//       res.status(500).json({
+//           message: "An error occurred while updating the remark.",
+//           error: error.message,
+//       });
+//   }
+// };
+
+
+
+
+
+exports.editRemark = async (req, res) => {
+    console.log("role is >>>>>>>>>", req.body.role);
+    console.log("Id is >>>>>>>>>", req.body._id);
+
+    try {
+        const { _id, remark, role } = req.body;
+
+        if (!_id || !role || !remark) {
+            return res.status(400).json({ message: "Bill ID (_id), role, and remark are required." });
+        }
+
+        // Find the existing bill
+        const existingBill = await Bill.findById(_id);
+        if (!existingBill) {
+            return res.status(404).json({ message: "Bill not found." });
+        }
+
+        // Ensure `remarks` array exists
+        existingBill.remarks = existingBill.remarks || [];
+
+        // Check if the role already exists in remarks
+        const existingRemark = existingBill.remarks.find(r => r.role === role);
+
+        if (existingRemark) {
+            // Update the existing remark for the role
+            existingRemark.remark = remark;
+            existingRemark.date = new Date(); // Update timestamp
+        } else {
+            // Add a new remark for the role
+            existingBill.remarks.push({ 
+                _id: new mongoose.Types.ObjectId(), 
+                role, 
+                remark, 
+                date: new Date() 
+            });
+        }
+
+        // Save the updated bill
+        await existingBill.save();
+
+        res.status(200).json({
+            message: "Remark updated successfully.",
+            remarks: existingBill.remarks, // Return updated remarks array
+        });
+    } catch (error) {
+        console.error("Error updating remark:", error);
+        res.status(500).json({
+            message: "An error occurred while updating the remark.",
+            error: error.message,
+        });
+    }
+};
+
+
+
+
+
+
 
 
 exports.addBillFromThirdPartyAPI = async (req, res) => {
