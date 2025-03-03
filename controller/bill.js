@@ -784,62 +784,120 @@ exports.addRemark = async (req,res) => {
 
 
 
+// exports.editRemark = async (req, res) => {
+//     console.log("role is >>>>>>>>>", req.body.role);
+//     console.log("Id is >>>>>>>>>", req.body._id);
+
+//     try {
+//         const { _id, remark, role } = req.body;
+
+//         if (!_id || !role || !remark) {
+//             return res.status(400).json({ message: "Bill ID (_id), role, and remark are required." });
+//         }
+
+//         // Find the existing bill
+//         const existingBill = await Bill.findById(_id);
+//         if (!existingBill) {
+//             return res.status(404).json({ message: "Bill not found." });
+//         }
+
+//         // Ensure `remarks` array exists
+//         existingBill.remarks = existingBill.remarks || [];
+
+//         // Check if the role already exists in remarks
+//         const existingRemark = existingBill.remarks.find(r => r.role === role);
+
+//         if (existingRemark) {
+//             // Update the existing remark for the role
+//             existingRemark.remark = remark;
+//             existingRemark.date = new Date(); // Update timestamp
+//         } else {
+//             // Add a new remark for the role
+//             existingBill.remarks.push({ 
+//                 _id: new mongoose.Types.ObjectId(), 
+//                 role, 
+//                 remark, 
+//                 date: new Date() 
+//             });
+//         }
+
+//         // Save the updated bill
+//         await existingBill.save();
+
+//         res.status(200).json({
+//             message: "Remark updated successfully.",
+//             remarks: existingBill.remarks, // Return updated remarks array
+//         });
+//     } catch (error) {
+//         console.error("Error updating remark:", error);
+//         res.status(500).json({
+//             message: "An error occurred while updating the remark.",
+//             error: error.message,
+//         });
+//     }
+// };
+
+
+
+
+
+
+
+
+
+
 exports.editRemark = async (req, res) => {
-    console.log("role is >>>>>>>>>", req.body.role);
-    console.log("Id is >>>>>>>>>", req.body._id);
+  console.log("role is >>>>>>>>>", req.body.role);
+  console.log("Id is >>>>>>>>>", req.body._id);
 
-    try {
-        const { _id, remark, role } = req.body;
+  try {
+      const { _id, remark, role } = req.body;
 
-        if (!_id || !role || !remark) {
-            return res.status(400).json({ message: "Bill ID (_id), role, and remark are required." });
-        }
+      if (!_id || !role || !remark) {
+          return res.status(400).json({ message: "Bill ID (_id), role, and remark are required." });
+      }
 
-        // Find the existing bill
-        const existingBill = await Bill.findById(_id);
-        if (!existingBill) {
-            return res.status(404).json({ message: "Bill not found." });
-        }
+      // Find the existing bill
+      const existingBill = await Bill.findById(_id);
+      if (!existingBill) {
+          return res.status(404).json({ message: "Bill not found." });
+      }
 
-        // Ensure `remarks` array exists
-        existingBill.remarks = existingBill.remarks || [];
+      // Ensure `remarks` array exists
+      existingBill.remarks = existingBill.remarks || [];
 
-        // Check if the role already exists in remarks
-        const existingRemark = existingBill.remarks.find(r => r.role === role);
+      // Check if the role already exists in remarks
+      const existingRemark = existingBill.remarks.find(r => r.role === role);
 
-        if (existingRemark) {
-            // Update the existing remark for the role
-            existingRemark.remark = remark;
-            existingRemark.date = new Date(); // Update timestamp
-        } else {
-            // Add a new remark for the role
-            existingBill.remarks.push({ 
-                _id: new mongoose.Types.ObjectId(), 
-                role, 
-                remark, 
-                date: new Date() 
-            });
-        }
+      if (existingRemark) {
+          // Update the existing remark for the role
+          existingRemark.remark = remark;
+          existingRemark.date = new Date(); // Update timestamp
+      } else {
+          // Add a new remark for the role
+          existingBill.remarks.push({ 
+              _id: new mongoose.Types.ObjectId(), 
+              role, 
+              remark, 
+              date: new Date() 
+          });
+      }
 
-        // Save the updated bill
-        await existingBill.save();
+      // Save the updated bill
+      const updatedBill = await existingBill.save();
 
-        res.status(200).json({
-            message: "Remark updated successfully.",
-            remarks: existingBill.remarks, // Return updated remarks array
-        });
-    } catch (error) {
-        console.error("Error updating remark:", error);
-        res.status(500).json({
-            message: "An error occurred while updating the remark.",
-            error: error.message,
-        });
-    }
+      res.status(200).json({
+          message: "Remark updated successfully.",
+          remarks: updatedBill.remarks, // Return updated remarks array
+      });
+  } catch (error) {
+      console.error("Error updating remark:", error);
+      res.status(500).json({
+          message: "An error occurred while updating the remark.",
+          error: error.message,
+      });
+  }
 };
-
-
-
-
 
 
 
