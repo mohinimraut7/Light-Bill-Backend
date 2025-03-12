@@ -69,6 +69,13 @@ exports.addRole = async (req, res) => {
     }
 
     try {
+
+        if (name === "Admin") {
+            const adminCount = await User.countDocuments({ role: "Admin" });
+            if (adminCount >= 2) {
+                return res.status(400).json({ message: "A maximum of 2 Admins are allowed." });
+            }
+        }
         // Role आधीपासून अस्तित्वात आहे का ते तपासा
         const existingRole = await Role.findOne({ name, email, ward });
         if (existingRole) {
@@ -280,6 +287,16 @@ exports.deleteRole = async (req, res) => {
                 message: "Role not found",
             });
         }
+
+         // If the role being deleted is "Admin", check the count
+         if (deletedRole.name === "Admin") {
+            const adminCount = await User.countDocuments({ role: "Admin" });
+
+            if (adminCount <= 1) {
+                return res.status(400).json({ message: "At least one Admin must exist." });
+            }
+        }
+
 
         // User सापडतोय का ते तपासा
         const user = await User.findOne({ email: deletedRole.email });
