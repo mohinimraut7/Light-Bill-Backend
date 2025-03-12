@@ -275,37 +275,80 @@ exports.editRole = async (req, res) => {
 //     }
 // };
 
+// ===============================================================
+// exports.deleteRole = async (req, res) => {
+//     const { role_id } = req.params;
+    
+//     try {
+//         const deletedRole = await Role.findByIdAndDelete(role_id);
 
+//         if (!deletedRole) {
+//             return res.status(404).json({
+//                 message: "Role not found",
+//             });
+//         }
+
+         
+
+//         // User सापडतोय का ते तपासा
+//         const user = await User.findOne({ email: deletedRole.email });
+
+//         if (user) {
+//             // User मधून फक्त Role रिकामा करायचा
+//             await User.findByIdAndUpdate(
+//                 user._id,
+//                 { role: "" },  // फक्त Role काढून टाका, User डिलीट करू नका
+//                 { new: true, runValidators: true }
+//             );
+//         }
+
+//         res.status(200).json({
+//             message: "Role deleted successfully, user role removed",
+//             role: deletedRole,
+//             userId: deletedRole.userId,
+//         });
+
+//     } catch (error) {
+//         console.error('Error deleting role', error);
+//         res.status(500).json({
+//             message: "Internal Server Error"
+//         });
+//     }
+// };
+// ----------------------------------------------------------------------
 exports.deleteRole = async (req, res) => {
     const { role_id } = req.params;
     
     try {
-        const deletedRole = await Role.findByIdAndDelete(role_id);
-
+        // Find the role before deleting
+        const deletedRole = await Role.findById(role_id);
+        
         if (!deletedRole) {
             return res.status(404).json({
                 message: "Role not found",
             });
         }
 
-         // If the role being deleted is "Admin", check the count
-         if (deletedRole.name === "Admin") {
-            const adminCount = await User.countDocuments({ role: "Admin" });
+        // Prevent deletion of the last Admin role
+        if (deletedRole.name === "Admin") {
+            const adminRoleCount = await Role.countDocuments({ name: "Admin" });
 
-            if (adminCount <= 1) {
-                return res.status(400).json({ message: "At least one Admin must exist." });
+            if (adminRoleCount == 1) {
+                return res.status(400).json({ message: "At least one Admin role must exist." });
             }
         }
 
+        // Delete the role from the Role collection
+        await Role.findByIdAndDelete(role_id);
 
-        // User सापडतोय का ते तपासा
+        // Find the user associated with the deleted role
         const user = await User.findOne({ email: deletedRole.email });
 
         if (user) {
-            // User मधून फक्त Role रिकामा करायचा
+            // Remove the role from the user (but don't delete the user)
             await User.findByIdAndUpdate(
                 user._id,
-                { role: "" },  // फक्त Role काढून टाका, User डिलीट करू नका
+                { role: "" },  
                 { new: true, runValidators: true }
             );
         }
@@ -317,7 +360,7 @@ exports.deleteRole = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error deleting role', error);
+        console.error('Error deleting role:', error);
         res.status(500).json({
             message: "Internal Server Error"
         });
