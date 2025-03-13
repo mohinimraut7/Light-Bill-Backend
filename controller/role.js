@@ -61,7 +61,7 @@ const bcrypt = require('bcryptjs');
 
 
 exports.addRole = async (req, res) => {
-    const { name, email, ward } = req.body; // फक्त आवश्यक फील्ड्स घेतले
+    const { name, email, ward } = req.body; // फक्त आवश्यक फील्ड्स घेतल
     const requesterRole = req?.user?.role;
 
     if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin') {
@@ -77,6 +77,16 @@ exports.addRole = async (req, res) => {
             }
         }
         // Role आधीपासून अस्तित्वात आहे का ते तपासा
+
+  // ✅ `requesterRole !== 'Junior Engineer'` आणि `ward` आधीच अस्तित्वात असल्यास, भूमिका तयार होऊ नये
+  if (requesterRole !== 'Junior Engineer') {
+    const existingWard = await Role.findOne({ ward });
+    if (existingWard) {
+        return res.status(400).json({ message: `A role for ward ${ward} already exists` });
+    }
+}
+
+
         const existingRole = await Role.findOne({ name, email, ward });
         if (existingRole) {
             return res.status(400).json({
