@@ -709,11 +709,11 @@ exports.addRemark = async (req,res) => {
  
   try {
       const {
-        remark,role
+        remark,role,signature
           } = req.body;
       
       const newRemark = new Bill({
-        remark,role
+        remark,role,signature
        });
 
       await newRemark.save();
@@ -837,21 +837,12 @@ exports.addRemark = async (req,res) => {
 //     }
 // };
 
-
-
-
-
-
-
-
-
-
 exports.editRemark = async (req, res) => {
   console.log("role is >>>>>>>>>", req.body.role);
   console.log("Id is >>>>>>>>>", req.body._id);
 
   try {
-      const { _id, remark, role } = req.body;
+      const { _id, remark, role,signature } = req.body;
 
       if (!_id || !role || !remark) {
           return res.status(400).json({ message: "Bill ID (_id), role, and remark are required." });
@@ -872,6 +863,7 @@ exports.editRemark = async (req, res) => {
       if (existingRemark) {
           // Update the existing remark for the role
           existingRemark.remark = remark;
+          existingRemark.signature = signature; // Update signature
           existingRemark.date = new Date(); // Update timestamp
       } else {
           // Add a new remark for the role
@@ -879,6 +871,7 @@ exports.editRemark = async (req, res) => {
               _id: new mongoose.Types.ObjectId(), 
               role, 
               remark, 
+              signature,
               date: new Date() 
           });
       }
@@ -898,9 +891,6 @@ exports.editRemark = async (req, res) => {
       });
   }
 };
-
-
-
 
 exports.addBillFromThirdPartyAPI = async (req, res) => {
   try {
