@@ -1051,7 +1051,8 @@ bill.netLoad = netLoad || bill.netLoad || '';
           bill.paymentStatus = 'paid';
           break;
         case 'Admin':
-          bill.approvedStatus = 'PendingForSuperAdmin';
+          // bill.approvedStatus = 'PendingForSuperAdmin';
+          bill.approvedStatus = 'PendingForAdmin';
           bill.paymentStatus = 'paid';
           break;
         case 'Super Admin':
@@ -1075,7 +1076,8 @@ bill.netLoad = netLoad || bill.netLoad || '';
 
           break;
         case 'Admin':
-          bill.approvedStatus = 'PendingForSuperAdmin';
+          bill.approvedStatus = 'PendingForAdmin';
+          // bill.approvedStatus = 'PendingForSuperAdmin';
           bill.paymentStatus = 'Partial';
           break;
         case 'Super Admin':
@@ -1154,8 +1156,8 @@ exports.updateBillStatus = async (req, res) => {
         bill.approvedStatus = 'PendingForJuniorEngineer';
         bill.paymentStatus = 'unpaid';
       } else if (req?.user?.role === 'Admin' && yesno === 'Yes') {
-        
-        bill.approvedStatus = 'PendingForSuperAdmin';
+        // bill.approvedStatus = 'PendingForSuperAdmin';
+        bill.approvedStatus = 'PendingForAdmin';
       } else if (req?.user?.role === 'Admin' && yesno === 'No' && approvedStatus === 'PendingForSuperAdmin') {
         bill.approvedStatus = 'PendingForAdmin';
         bill.paymentStatus = 'unpaid';
@@ -1234,7 +1236,8 @@ exports.massUpdateBillStatus = async (req, res) => {
         approvedStatus = 'PendingForAdmin';
         paymentStatus =bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       } else if (requesterRole === 'Admin') {
-        approvedStatus = 'PendingForSuperAdmin';
+        approvedStatus = 'PendingForAdmin';
+        // approvedStatus = 'PendingForSuperAdmin';
         paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       } else if (requesterRole === 'Super Admin') {
         approvedStatus = 'Done';
