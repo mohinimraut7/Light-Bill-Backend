@@ -1121,32 +1121,34 @@ bill.netLoad = netLoad || bill.netLoad || '';
 exports.updateBillStatus = async (req, res) => {
   const { id, approvedStatus, paymentStatus, yesno } = req.body;
   
-  let totalArrearsval;
+  // let totalArrearsval;
   let netBillAmountval;
-  let roundedBillAmountval;
+  // let roundedBillAmountval;
   if (!id || !approvedStatus) {
     return res.status(400).json({ message: 'Bill ID and approved status are required' });
   }
   try {
     const bill = await Bill.findById(id);
+
     if (!bill) {
       return res.status(404).json({ message: 'Bill not found' });
     }
+
      if (req?.user?.role === 'Super Admin'){
-      if(approvedStatus === 'Done' && yesno === 'Yes' && paymentStatus==='paid'){
-          totalArrearsval=bill.totalArrears;
-          netBillAmountval=bill.netBillAmount;
-          roundedBillAmountval=bill.roundedBillAmount;
+      // if(approvedStatus === 'Done' && yesno === 'Yes' && paymentStatus==='paid'){
+      //     // totalArrearsval=bill.totalArrears;
+      //     netBillAmountval=bill.netBillAmount;
+      //     // roundedBillAmountval=bill.roundedBillAmount;
           
-        bill.paymentStatus = 'paid';
-        bill.approvedStatus = 'Done';
-      }else if(approvedStatus === 'PendingForSuperAdmin' && yesno === 'No'&& paymentStatus==='unpaid'){
-        bill.paymentStatus = 'unpaid';
-        bill.approvedStatus = 'PendingForSuperAdmin';
-      }else if(approvedStatus === 'PartialDone' && yesno === 'Yes'&& paymentStatus==='Partial'){
-        bill.paymentStatus = 'unpaid';
-        bill.approvedStatus = 'PartialDone';
-      }
+      //   bill.paymentStatus = 'paid';
+      //   bill.approvedStatus = 'Done';
+      // }else if(approvedStatus === 'PendingForSuperAdmin' && yesno === 'No'&& paymentStatus==='unpaid'){
+      //   bill.paymentStatus = 'unpaid';
+      //   bill.approvedStatus = 'PendingForSuperAdmin';
+      // }else if(approvedStatus === 'PartialDone' && yesno === 'Yes'&& paymentStatus==='Partial'){
+      //   bill.paymentStatus = 'unpaid';
+      //   bill.approvedStatus = 'PartialDone';
+      // }
      }
         else {
       bill.paymentStatus = paymentStatus;
