@@ -1118,6 +1118,35 @@ bill.netLoad = netLoad || bill.netLoad || '';
     }
   };
 
+  exports.getBillsWithMeterPurpose = async (req, res) => {
+    try {
+        const bills = await Bill.find();
+        
+        // Get all consumers
+        const consumers = await Consumer.find();
+
+        // Create a map of consumerNumber to meterPurpose for quick lookup
+        const consumerMap = new Map();
+        consumers.forEach(consumer => {
+            consumerMap.set(consumer.consumerNumber, consumer.meterPurpose);
+        });
+
+        // Update each bill's meterPurpose if consumerNumber matches
+        const updatedBills = bills.map(bill => {
+            if (consumerMap.has(bill.consumerNumber)) {
+                return { ...bill.toObject(), meterPurpose: consumerMap.get(bill.consumerNumber) };
+            }
+            return bill.toObject();
+        });
+
+        res.status(200).json(updatedBills);
+    } catch (error) {
+        console.error('Error fetching bills:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+
 exports.updateBillStatus = async (req, res) => {
   const { id, approvedStatus, paymentStatus, yesno } = req.body;
   
