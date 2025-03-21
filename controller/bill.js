@@ -513,6 +513,8 @@ exports.addBill = async (req, res) => {
         dueDate,
         netBillAmountWithDPC,
         dueAlert,
+        billPaymentDate,  // Added new field
+        paidAmount,   
       } = billData;
 
       const validContactNumber = contactNumber || "N/A";
@@ -611,6 +613,8 @@ exports.addBill = async (req, res) => {
             lastReceiptAmount === prevBill.promptPaymentAmount;
           if (amountMatches && new Date(prevBill.billDate) < new Date(lastReceiptDate)) {
             prevBill.paymentStatus = "paid";
+            prevBill.paidAmount = lastReceiptAmount; // Paid amount update
+            prevBill.billPaymentDate = lastReceiptDate; // Bill payment date update
             await prevBill.save();
           }
         } else {
@@ -633,6 +637,42 @@ exports.addBill = async (req, res) => {
   }
 };
 
+
+
+cron.schedule("0 20 * * *", async () => {
+  console.log("🔄 Running cron job to update paid bills at 3:36 PM...");
+
+  try {
+    // Find bills where previous month exists & paymentStatus is "paid"
+    const bills = await Bill.find();
+
+    for (const bill of bills) {
+      const prevMonthYear = getPreviousMonthYear(bill.monthAndYear);
+      const prevBill = await Bill.findOne({ consumerNumber: bill.consumerNumber, monthAndYear: prevMonthYear });
+
+      if (prevBill && prevBill.paymentStatus !== "paid") {
+        if (bill.lastReceiptAmount != null && bill.lastReceiptDate) {
+          const amountMatches =
+            bill.lastReceiptAmount === prevBill.netBillAmount ||
+            bill.lastReceiptAmount === prevBill.netBillAmountWithDPC ||
+            bill.lastReceiptAmount === prevBill.promptPaymentAmount;
+
+          if (amountMatches && new Date(prevBill.billDate) < new Date(bill.lastReceiptDate)) {
+            prevBill.paymentStatus = "paid";
+            prevBill.paidAmount = bill.lastReceiptAmount; // Paid amount update
+            prevBill.billPaymentDate = bill.lastReceiptDate; // Bill payment date update
+            await prevBill.save();
+            console.log(`✅ Updated bill for Consumer ${bill.consumerNumber} for ${prevMonthYear}`);
+          }
+        }
+      }
+    }
+
+    console.log("✅ Successfully updated all applicable paid bills!");
+  } catch (error) {
+    console.error("❌ Error updating paid bills:", error);
+  }
+});
 
 
 exports.dropBillsCollection = async (req, res) => {

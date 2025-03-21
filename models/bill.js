@@ -125,7 +125,12 @@ const billSchema = new mongoose.Schema(
     lastReceiptDate: {
       type: String,
     },
-   
+    billPaymentDate: {
+      type: String,
+    },
+    paidAmount: {
+      type: Number,
+    },
     promptPaymentDate: {
       type: String,
       required: true,
