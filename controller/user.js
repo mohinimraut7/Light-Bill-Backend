@@ -18,7 +18,8 @@ env.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.addUser = async (req, res) => {
-  const {cn,username, email, password, contactNumber, address, role,ward } = req.body;
+  // signature,
+  const {cn,username, email, password, contactNumber, address,role,ward } = req.body;
  
   try {
     if (!/^\d{10}$/.test(contactNumber.toString())) {
@@ -49,6 +50,7 @@ exports.addUser = async (req, res) => {
       password: hashedPassword,
       contactNumber,
       address,
+      // signature,
       role,
       ward
     });

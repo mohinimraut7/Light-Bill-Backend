@@ -34,6 +34,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    // signature: { type: String }, // Base64 signature image
     city: {
       type: String,
       trim: true,
