@@ -18,8 +18,8 @@ env.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.addUser = async (req, res) => {
-  // signature,
-  const {cn,username, email, password, contactNumber, address,role,ward } = req.body;
+  
+  const {cn,username, email, password, contactNumber, address,signature,role,ward } = req.body;
  
   try {
     if (!/^\d{10}$/.test(contactNumber.toString())) {
@@ -50,7 +50,7 @@ exports.addUser = async (req, res) => {
       password: hashedPassword,
       contactNumber,
       address,
-      // signature,
+      signature,
       role,
       ward
     });
@@ -229,7 +229,7 @@ exports.editProfile = async (req, res) => {
 
   const {
     cn,username, email, password, contactNumber,
-    address, city, country, postalCode, role, roleSupervisor, ward, wardsection, description
+    address,signature,city, country, postalCode, role, roleSupervisor, ward, wardsection, description
   } = req.body;
   const requesterRole = req?.user?.role;
   const requesterId = req?.user?._id;
@@ -262,6 +262,7 @@ exports.editProfile = async (req, res) => {
     user.city = city || user.city;
     user.country = country || user.country;
     user.postalCode = postalCode || user.postalCode;
+    user.signature = signature || user.signature;
     user.role = role || user.role;
     user.roleSupervisor = roleSupervisor || user.roleSupervisor;
     user.ward = ward || user.ward;

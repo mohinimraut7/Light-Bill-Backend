@@ -639,7 +639,7 @@ exports.addBill = async (req, res) => {
 
 
 
-cron.schedule("0 20 * * *", async () => {
+cron.schedule("10 16 * * *", async () => {
   console.log("🔄 Running cron job to update paid bills at 3:36 PM...");
 
   try {
