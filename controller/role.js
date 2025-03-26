@@ -62,6 +62,8 @@ const bcrypt = require('bcryptjs');
 
 exports.addRole = async (req, res) => {
     const { name, email, ward } = req.body; // फक्त आवश्यक फील्ड्स घेतल
+
+    console.log("name, email, ward",name, email, ward)
     const requesterRole = req?.user?.role;
 
     if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin') {
@@ -79,10 +81,51 @@ exports.addRole = async (req, res) => {
         // Role आधीपासून अस्तित्वात आहे का ते तपासा
 
   // ✅ `requesterRole !== 'Junior Engineer'` आणि `ward` आधीच अस्तित्वात असल्यास, भूमिका तयार होऊ नये
-  if (requesterRole !== 'Junior Engineer') {
-    const existingWard = await Role.findOne({ ward });
-    if (existingWard) {
-        return res.status(400).json({ message: `A role for ward ${ward} already exists` });
+//   if (requesterRole !== 'Junior Engineer') {
+//     const existingWard = await Role.findOne({ ward });
+//     if (existingWard) {
+//         return res.status(400).json({ message: `A role for ward ${ward} already exists` });
+//     }
+// }
+// --------------------------------------------------------------------------------------
+// if (requesterRole !== 'Junior Engineer') {
+//    console.log("requesterRole",requesterRole)
+//     if (name === 'Lipik') {
+//         console.log("Inside")
+//         const existingLipikWard = await Role.findOne({ ward,name: 'Lipik' });
+//         if (existingLipikWard) {
+//             return res.status(400).json({ message: `A Lipik for ${ward} already exists for this Lipik` });
+//         }
+//     } else {
+//         const existingWard = await Role.findOne({ ward });
+//         if (existingWard) {
+//             return res.status(400).json({ message: `A role for ward ${ward} already exists` });
+//         }
+//     }
+// }
+
+if (requesterRole !== 'Junior Engineer') {
+    console.log("requesterRole", requesterRole);
+
+    if (name === 'Lipik') {
+        console.log("Inside Lipik");
+        const existingLipikWard = await Role.findOne({ ward, name: 'Lipik' });
+        if (existingLipikWard) {
+            return res.status(400).json({ message: `A Lipik for ${ward} already exists for this ward` });
+        }
+    } 
+    else if (name === 'Accountant') {
+        console.log("Inside Accountant");
+        const existingAccountantWard = await Role.findOne({ ward, name: 'Accountant' });
+        if (existingAccountantWard) {
+            return res.status(400).json({ message: `An Accountant for ${ward} already exists for this ward` });
+        }
+    } 
+    else {
+        const existingWard = await Role.findOne({ ward });
+        if (existingWard) {
+            return res.status(400).json({ message: `A role for ward ${ward} already exists` });
+        }
     }
 }
 
