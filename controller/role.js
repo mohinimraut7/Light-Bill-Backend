@@ -121,6 +121,20 @@ if (requesterRole !== 'Junior Engineer') {
             return res.status(400).json({ message: `An Accountant for ${ward} already exists for this ward` });
         }
     } 
+    else if (name === 'Assistant Municipal Commissioner') {
+        console.log("Inside Assistant Municipal Commissioner");
+        const existingAMCWard = await Role.findOne({ ward, name: 'Assistant Municipal Commissioner' });
+        if (existingAMCWard) {
+            return res.status(400).json({ message: `An Assistant Municipal Commissioner for ${ward} already exists for this ward` });
+        }
+    } 
+    else if (name === 'Dy.Municipal Commissioner') {
+        console.log("Inside Dy.Municipal Commissioner");
+        const existingDMCWard = await Role.findOne({ ward, name: 'Dy.Municipal Commissioner' });
+        if (existingDMCWard) {
+            return res.status(400).json({ message: `An Dy.Municipal Commissioner for ${ward} already exists for this ward` });
+        }
+    } 
     else {
         const existingWard = await Role.findOne({ ward });
         if (existingWard) {
