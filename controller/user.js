@@ -233,7 +233,7 @@ exports.editProfile = async (req, res) => {
   } = req.body;
   const requesterRole = req?.user?.role;
   const requesterId = req?.user?._id;
-  if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterId.toString() !== userId) {
+  if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterRole !== 'Executive Engineer'&& requesterId.toString() !== userId) {
     return res.status(403).json({ message: "You don't have authority to edit this user" });
   }
   try {
