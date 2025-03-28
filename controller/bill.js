@@ -1283,6 +1283,61 @@ exports.updateFlagStatus = async (req, res) => {
     }
   };
 
+
+
+// ------------------old massupdate
+// exports.massUpdateBillStatus = async (req, res) => {
+//   try {
+//     const requesterRole = req?.user?.role;
+//     if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterRole !== 'Executive Engineer' && requesterRole !== 'Junior Engineer') {
+//       return res.status(403).json({ message: "You don't have authority to approve bills" });
+//     }
+//     const { bills } = req.body;
+//     if (!bills || bills.length === 0) {
+//       return res.status(400).json({ message: 'No bills provided' });
+//     }
+//     const billsToUpdate = await Bill.find({ _id: { $in: bills.map(bill => bill._id) } });
+//     if (!billsToUpdate || billsToUpdate.length === 0) {
+//       return res.status(404).json({ message: 'No bills found' });
+//     }
+//     await Promise.all(bills.map(async (bill) => {
+//       let approvedStatus;
+//       let paymentStatus;
+//       if (requesterRole === 'Junior Engineer') {
+//         approvedStatus = 'PendingForExecutiveEngineer';
+//         paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
+//       } else if (requesterRole === 'Executive Engineer') {
+//         approvedStatus = 'PendingForAdmin';
+//         paymentStatus =bill.paymentStatus ? bill.paymentStatus : 'unpaid';
+//       } else if (requesterRole === 'Admin') {
+//         approvedStatus = 'PendingForAdmin';
+//         // approvedStatus = 'PendingForSuperAdmin';
+//         paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
+//       } else if (requesterRole === 'Super Admin') {
+//         approvedStatus = 'Done';
+//         paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
+//       }
+//       await Bill.findByIdAndUpdate(bill._id, {
+//         approvedStatus,
+//         paymentStatus,
+//         flagStatus: true 
+//       }, { new: true });
+//     }));
+//     res.status(200).json({
+//       message: 'Bills updated successfully',
+//     });
+
+//   } catch (error) {
+//     console.error("Error updating bills:", error);
+//     res.status(500).json({
+//       message: 'Error updating bills',
+//     });
+//   }
+// };
+
+
+
+
 exports.massUpdateBillStatus = async (req, res) => {
   try {
     const requesterRole = req?.user?.role;
@@ -1298,22 +1353,30 @@ exports.massUpdateBillStatus = async (req, res) => {
       return res.status(404).json({ message: 'No bills found' });
     }
     await Promise.all(bills.map(async (bill) => {
+      console.log("bill--->>>",bill)
       let approvedStatus;
       let paymentStatus;
-      if (requesterRole === 'Junior Engineer') {
+      if (requesterRole === 'Junior Engineer' && bill.ward !== 'Head Office') {
+        approvedStatus = 'PendingForJuniorEngineerHO';
+        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
+      }else if (requesterRole === 'Junior Engineer'&& ward === 'Head Office') {
         approvedStatus = 'PendingForExecutiveEngineer';
-        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-      } else if (requesterRole === 'Executive Engineer') {
-        approvedStatus = 'PendingForAdmin';
         paymentStatus =bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-      } else if (requesterRole === 'Admin') {
-        approvedStatus = 'PendingForAdmin';
-        // approvedStatus = 'PendingForSuperAdmin';
-        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-      } else if (requesterRole === 'Super Admin') {
-        approvedStatus = 'Done';
-        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       }
+      
+      else if (requesterRole === 'Executive Engineer') {
+        approvedStatus = 'PendingForExecutiveEngineer';
+        paymentStatus =bill.paymentStatus ? bill.paymentStatus : 'unpaid';
+      } 
+      // else if (requesterRole === 'Admin') {
+      //   approvedStatus = 'PendingForAdmin';
+      //   // approvedStatus = 'PendingForSuperAdmin';
+      //   paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
+      // }
+      //  else if (requesterRole === 'Super Admin') {
+      //   approvedStatus = 'Done';
+      //   paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
+      // }
       await Bill.findByIdAndUpdate(bill._id, {
         approvedStatus,
         paymentStatus,
@@ -1349,16 +1412,23 @@ exports.reverseMassBillStatus = async (req, res) => {
     await Promise.all(bills.map(async (bill) => {
       let approvedStatus;
       let paymentStatus;
-      if (requesterRole === 'Super Admin' && bill?.approvedStatus==='Done') {
-        approvedStatus = 'PendingForSuperAdmin'; 
-        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-      } else if (requesterRole === 'Admin' && bill?.approvedStatus==='PendingForSuperAdmin') {
-        approvedStatus = 'PendingForAdmin'; 
-        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-      } else if (requesterRole === 'Executive Engineer' && bill?.approvedStatus==='PendingForAdmin') {
+      // if (requesterRole === 'Super Admin' && bill?.approvedStatus==='Done') {
+      //   approvedStatus = 'PendingForSuperAdmin'; 
+      //   paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
+      // } 
+      //   if(requesterRole === 'Admin' && bill?.approvedStatus==='PendingForSuperAdmin') {
+      //   approvedStatus = 'PendingForAdmin'; 
+      //   paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
+      // } 
+     if (requesterRole === 'Executive Engineer' && bill?.approvedStatus==='PendingForExecutiveEngineer') {
         approvedStatus = 'PendingForExecutiveEngineer';
         paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-      } else if (requesterRole === 'Junior Engineer' && bill?.approvedStatus==='PendingForExecutiveEngineer') {
+      } 
+      else if (requesterRole === 'Junior Engineer' && bill.approvedStatus==='PendingForExecutiveEngineer' && bill.ward === 'Head Office') {
+        approvedStatus = 'PendingForJuniorEngineerHO';
+        paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
+      }
+      else if (requesterRole === 'Junior Engineer' && bill?.approvedStatus==='PendingForJuniorEngineerHO') {
         approvedStatus = 'PendingForJuniorEngineer';
         paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       }
