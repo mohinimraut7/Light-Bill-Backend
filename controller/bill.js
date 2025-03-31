@@ -878,15 +878,13 @@ exports.addRemark = async (req,res) => {
 // };
 
 exports.editRemark = async (req, res) => {
-  // console.log("req==========",req.body)
-  // console.log("role is >>>>>>>>>", req.body.role);
-  // console.log("ward is >>>>>>>>>", req.body.ward);
-  // console.log("Id is >>>>>>>>>", req.body._id);
-
+ 
   try {
       const { _id, remark, role,signature,ward } = req.body;
-      console.log("Incoming ward from request:", ward); // Debugging साठी print
-      const userward=ward;
+    
+      const userward=req.body.ward;
+
+      console.log("userward<<<<",userward)
       if (!_id || !role || !remark) {
           return res.status(400).json({ message: "Bill ID (_id), role, and remark are required." });
       }
