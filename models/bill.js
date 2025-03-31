@@ -168,6 +168,7 @@ const billSchema = new mongoose.Schema(
       {
         role: { type: String, required: true }, // Example: "Super Admin", "Junior Engineer"
         remark: { type: String, required: true }, // Example: "Checked meter status"
+        ward: { type: String, required: true },
         signature: {type: String, 
           required: false},
         date: { type: Date, default: Date.now } // Timestamp of remark

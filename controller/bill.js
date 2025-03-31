@@ -878,12 +878,15 @@ exports.addRemark = async (req,res) => {
 // };
 
 exports.editRemark = async (req, res) => {
-  console.log("role is >>>>>>>>>", req.body.role);
-  console.log("Id is >>>>>>>>>", req.body._id);
+  // console.log("req==========",req.body)
+  // console.log("role is >>>>>>>>>", req.body.role);
+  // console.log("ward is >>>>>>>>>", req.body.ward);
+  // console.log("Id is >>>>>>>>>", req.body._id);
 
   try {
-      const { _id, remark, role,signature } = req.body;
-
+      const { _id, remark, role,signature,ward } = req.body;
+      console.log("Incoming ward from request:", ward); // Debugging साठी print
+      const userward=ward;
       if (!_id || !role || !remark) {
           return res.status(400).json({ message: "Bill ID (_id), role, and remark are required." });
       }
@@ -903,6 +906,7 @@ exports.editRemark = async (req, res) => {
       if (existingRemark) {
           // Update the existing remark for the role
           existingRemark.remark = remark;
+          existingRemark.ward = userward;
           existingRemark.signature = signature; // Update signature
           existingRemark.date = new Date(); // Update timestamp
       } else {
@@ -911,6 +915,7 @@ exports.editRemark = async (req, res) => {
               _id: new mongoose.Types.ObjectId(), 
               role, 
               remark, 
+              ward:userward,
               signature,
               date: new Date() 
           });
