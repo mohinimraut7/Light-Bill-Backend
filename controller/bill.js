@@ -1344,6 +1344,7 @@ exports.updateFlagStatus = async (req, res) => {
 exports.massUpdateBillStatus = async (req, res) => {
   try {
     const requesterRole = req?.user?.role;
+    const requesterWard = req?.user?.ward;
     if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterRole !== 'Executive Engineer' && requesterRole !== 'Junior Engineer') {
       return res.status(403).json({ message: "You don't have authority to approve bills" });
     }
@@ -1359,10 +1360,10 @@ exports.massUpdateBillStatus = async (req, res) => {
       console.log("bill--->>>",bill)
       let approvedStatus;
       let paymentStatus;
-      if (requesterRole === 'Junior Engineer' && bill.ward !== 'Head Office') {
+      if (requesterRole === 'Junior Engineer' && requesterWard !== 'Head Office') {
         approvedStatus = 'PendingForJuniorEngineerHO';
         paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-      }else if (requesterRole === 'Junior Engineer'&& ward === 'Head Office') {
+      }else if (requesterRole === 'Junior Engineer'&& requesterWard === 'Head Office') {
         approvedStatus = 'PendingForExecutiveEngineer';
         paymentStatus =bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       }
