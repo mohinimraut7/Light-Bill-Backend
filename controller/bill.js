@@ -1369,7 +1369,7 @@ exports.massUpdateBillStatus = async (req, res) => {
       }
       
       else if (requesterRole === 'Executive Engineer') {
-        approvedStatus = 'PendingForExecutiveEngineer';
+        approvedStatus = 'Approved';
         paymentStatus =bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       } 
       // else if (requesterRole === 'Admin') {
