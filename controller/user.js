@@ -231,9 +231,14 @@ exports.editProfile = async (req, res) => {
     cn,username, email, password, contactNumber,
     address,signature,city, country, postalCode, role, roleSupervisor, ward, wardsection, description
   } = req.body;
+
+  console.log("ward-----<<<",ward)
   const requesterRole = req?.user?.role;
+const reqward=req?.user?.ward;
+  console.log("requesterRole<<<<<",requesterRole)
+  console.log("requesterRole<<<<<",req.ward)
   const requesterId = req?.user?._id;
-  if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterRole !== 'Executive Engineer'&& requesterId.toString() !== userId) {
+  if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterRole !== 'Executive Engineer' && !(requesterRole === 'Junior Engineer' && reqward === 'Head Office') && requesterId.toString() !== userId) {
     return res.status(403).json({ message: "You don't have authority to edit this user" });
   }
   try {
@@ -335,11 +340,11 @@ exports.login = async (req, res) => {
       JWT_SECRET,
       { expiresIn: '30d' }
     );
-    const { _id,cn,username, email: userEmail, contactNumber, address, ward, role, city, country, postalCode, section, description } = user;
+    const { _id,cn,username, email: userEmail, contactNumber, address, ward, role, city, country, postalCode, section, description,signature } = user;
     res.status(200).json({
       message: "Login successful",
       token,
-      user: { _id,cn,username, email: userEmail, contactNumber, address, ward, role, city, country, postalCode, section, description }
+      user: { _id,cn,username, email: userEmail, contactNumber, address, ward, role, city, country, postalCode, section, description,signature}
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
