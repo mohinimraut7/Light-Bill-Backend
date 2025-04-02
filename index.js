@@ -14,7 +14,7 @@ const addMasterRoutes=require('./routes/master');
 const addMeterRoutes=require('./routes/meter');
 const addConsumersRoutes=require('./routes/consumer');
 const addTarriffRoutes=require('./routes/tarriff');
-
+const addReportRoutes = require('./routes/report');
 const imageRoutes = require('./routes/imageRoute'); 
 const port = process.env.PORT || 5000;
 
@@ -35,7 +35,7 @@ mongoose
   app.use('/api',addMeterRoutes)
   app.use('/api',addConsumersRoutes)
   app.use('/api',addTarriffRoutes)
-  
+  app.use('/api',addReportRoutes)
   app.use('/api',imageRoutes)
 app.get('/',(req,res)=>{
 res.send("Hello world....")
