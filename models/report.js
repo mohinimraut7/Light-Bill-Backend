@@ -11,6 +11,14 @@ const reportSchema = new mongoose.Schema({
           date: { type: Date, default: Date.now } // Timestamp of remark
         }
       ],
+      documents: [
+        {
+            formType: { type: String}, // Example: "Form-22", "Karyalayin Tipani"
+            formNumber: { type: String}, // Unique ID for each form
+            pdfFile: { type: String }, // PDF file stored as Base64 or File Path
+            uploadedAt: { type: Date, default: Date.now }
+        }
+    ]
 }, { timestamps: true }); 
 
 module.exports = mongoose.model('Report', reportSchema);
