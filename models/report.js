@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const reportSchema = new mongoose.Schema({
     reportingRemarks: [
         {
+          userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
           role: { type: String }, // Example: "Super Admin", "Junior Engineer"
           remark: { type: String }, // Example: "Checked meter status"
           ward: { type: String },

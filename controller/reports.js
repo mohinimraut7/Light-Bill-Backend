@@ -256,25 +256,102 @@ exports.getReports = async (req, res) => {
 };
 
 // ✅ Add Remark & Upload PDFs
+// exports.addRemarkReports = async (req, res) => {
+//     try {
+//         console.log("🛠 Incoming request body:", req.body);
+//         console.log("📂 Uploaded File:", req.file);
+
+//         const {userId, remark, role, signature, ward, formType, pdfData } = req.body;
+
+//         // ✅ Validate Required Fields
+//         if (!role || !remark || !formType) {
+//             return res.status(400).json({ message: "Role, remark, and formType are required." });
+//         }
+
+//         // ✅ Generate Unique Form Number (USE `await`)
+//         const formNumber = await generateFormNumber(formType);
+
+//         // ✅ Prepare Document Object
+//         let document = null;
+//         if (req.file) {
+//             // If file is uploaded via multipart/form-data
+//             document = {
+//                 formType,
+//                 formNumber,
+//                 pdfFile: req.file.path,
+//                 uploadedAt: new Date()
+//             };
+//         } else if (pdfData) {
+//             // If Base64 PDF is received
+//             const pdfFilePath = saveBase64File(pdfData, formNumber);
+//             if (pdfFilePath) {
+//                 document = {
+//                     formType,
+//                     formNumber,
+//                     pdfFile: pdfFilePath,
+//                     uploadedAt: new Date()
+//                 };
+//             }
+//         }
+
+//         // ✅ Create a New Report Entry
+//         const newReport = new Report({
+//             reportingRemarks: [
+//                 {
+//                     userId,
+//                     role,
+//                     remark,
+//                     ward,
+//                     signature,
+//                     date: new Date()
+//                 }
+//             ],
+//             documents: document ? [document] : [] // Add uploaded PDF if available
+//         });
+
+//         // ✅ Save the Report in MongoDB
+//         const savedReport = await newReport.save();
+//         console.log("✅ Report Added Successfully:", savedReport);
+
+//         res.status(201).json({
+//             message: "Report added successfully.",
+//             report: savedReport
+//         });
+
+//     } catch (error) {
+//         console.error("🚨 Error adding remark & PDFs:", error);
+//         res.status(500).json({
+//             message: "An error occurred while adding the report.",
+//             error: error.message
+//         });
+//     }
+// };
+
+
+
 exports.addRemarkReports = async (req, res) => {
     try {
         console.log("🛠 Incoming request body:", req.body);
         console.log("📂 Uploaded File:", req.file);
 
-        const { remark, role, signature, ward, formType, pdfData } = req.body;
+        const { userId, remark, role, signature, ward, formType, pdfData } = req.body;
 
         // ✅ Validate Required Fields
-        if (!role || !remark || !formType) {
-            return res.status(400).json({ message: "Role, remark, and formType are required." });
+        if (!userId || !role || !remark || !formType) {
+            return res.status(400).json({ message: "User ID, role, remark, and formType are required." });
         }
 
-        // ✅ Generate Unique Form Number (USE `await`)
+        // ✅ Check if `userId` is valid MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: "Invalid User ID." });
+        }
+
+        // ✅ Generate Unique Form Number
         const formNumber = await generateFormNumber(formType);
 
         // ✅ Prepare Document Object
         let document = null;
         if (req.file) {
-            // If file is uploaded via multipart/form-data
             document = {
                 formType,
                 formNumber,
@@ -282,7 +359,6 @@ exports.addRemarkReports = async (req, res) => {
                 uploadedAt: new Date()
             };
         } else if (pdfData) {
-            // If Base64 PDF is received
             const pdfFilePath = saveBase64File(pdfData, formNumber);
             if (pdfFilePath) {
                 document = {
@@ -298,6 +374,7 @@ exports.addRemarkReports = async (req, res) => {
         const newReport = new Report({
             reportingRemarks: [
                 {
+                    userId: new mongoose.Types.ObjectId(userId), // ✅ Ensure ObjectId format
                     role,
                     remark,
                     ward,
@@ -305,7 +382,7 @@ exports.addRemarkReports = async (req, res) => {
                     date: new Date()
                 }
             ],
-            documents: document ? [document] : [] // Add uploaded PDF if available
+            documents: document ? [document] : []
         });
 
         // ✅ Save the Report in MongoDB
