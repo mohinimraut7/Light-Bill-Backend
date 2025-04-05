@@ -474,10 +474,13 @@ exports.getReports = async (req, res) => {
 // ✅ Add Remark & Upload PDFs
 exports.addRemarkReports = async (req, res) => {
     try {
-        console.log("🛠 Incoming request body:", req.body);
-        console.log("📂 Uploaded File:", req.file);
+        // console.log("🛠 Incoming request body:", req.body);
+        // console.log("📂 Uploaded File:", req.file);
 
-        const { remark, role, signature, ward, formType, pdfData } = req.body;
+        const { userId,remark, role, signature, ward, formType, pdfData,seleMonth } = req.body;
+        // console.log("formType*****",formType)
+        // console.log("userId>>>>",userId)
+        console.log("selected month from frontend",seleMonth)
 
         // ✅ Validate Required Fields
         if (!role || !remark || !formType) {
@@ -495,7 +498,8 @@ exports.addRemarkReports = async (req, res) => {
                 formType,
                 formNumber,
                 pdfFile: req.file.path,
-                uploadedAt: new Date()
+                uploadedAt: new Date(),
+                seleMonth
             };
         } else if (pdfData) {
             // If Base64 PDF is received
@@ -505,7 +509,8 @@ exports.addRemarkReports = async (req, res) => {
                     formType,
                     formNumber,
                     pdfFile: pdfFilePath,
-                    uploadedAt: new Date()
+                    uploadedAt: new Date(),
+                    seleMonth
                 };
             }
         }
@@ -514,11 +519,13 @@ exports.addRemarkReports = async (req, res) => {
         const newReport = new Report({
             reportingRemarks: [
                 {
+                    userId: new mongoose.Types.ObjectId(userId), // ✅ Ensure ObjectId format
                     role,
                     remark,
                     ward,
                     signature,
-                    date: new Date()
+                    date: new Date(),
+                    seleMonth
                 }
             ],
             documents: document ? [document] : [] // Add uploaded PDF if available
@@ -526,11 +533,20 @@ exports.addRemarkReports = async (req, res) => {
 
         // ✅ Save the Report in MongoDB
         const savedReport = await newReport.save();
-        console.log("✅ Report Added Successfully:", savedReport);
+        // console.log("✅ Report Added Successfully:", savedReport);
+
+        // ✅ Remove signature from response
+const reportObject = savedReport.toObject();
+reportObject.reportingRemarks = reportObject.reportingRemarks.map((remark) => {
+    const { signature, ...rest } = remark;
+    return rest;
+});
+
+console.log("reportObject>>>>>>>>>>>>",reportObject)
 
         res.status(201).json({
             message: "Report added successfully.",
-            report: savedReport
+            report: reportObject
         });
 
     } catch (error) {
