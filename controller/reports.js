@@ -536,17 +536,17 @@ exports.addRemarkReports = async (req, res) => {
         // console.log("✅ Report Added Successfully:", savedReport);
 
         // ✅ Remove signature from response
-const reportObject = savedReport.toObject();
-reportObject.reportingRemarks = reportObject.reportingRemarks.map((remark) => {
-    const { signature, ...rest } = remark;
-    return rest;
-});
+// const reportObject = savedReport.toObject();
+// reportObject.reportingRemarks = reportObject.reportingRemarks.map((remark) => {
+//     const { signature, ...rest } = remark;
+//     return rest;
+// });
 
-console.log("reportObject>>>>>>>>>>>>",reportObject)
+// console.log("reportObject>>>>>>>>>>>>",reportObject)
 
         res.status(201).json({
             message: "Report added successfully.",
-            report: reportObject
+            report: savedReport
         });
 
     } catch (error) {
