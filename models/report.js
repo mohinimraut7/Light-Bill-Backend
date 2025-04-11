@@ -1,50 +1,26 @@
 
-// const mongoose = require('mongoose');
-
-// const reportSchema = new mongoose.Schema({
-//     reportingRemarks: [
-//         {
-//           userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-//           role: { type: String }, // Example: "Super Admin", "Junior Engineer"
-//           remark: { type: String }, // Example: "Checked meter status"
-//           ward: { type: String },
-//           signature: { type: String },
-//           date: { type: Date, default: Date.now } // Timestamp of remark
-//         }
-//       ],
-//       documents: [
-//         {
-//             formType: { type: String}, // Example: "Form-22", "Karyalayin Tipani"
-//             formNumber: { type: String}, // Unique ID for each form
-//             pdfFile: { type: String }, // PDF file stored as Base64 or File Path
-//             uploadedAt: { type: Date, default: Date.now }
-//         }
-//     ]
-// }, { timestamps: true }); 
-
-// module.exports = mongoose.model('Report', reportSchema);
-// ============================================================================
-
 const mongoose = require('mongoose');
 
 const reportSchema = new mongoose.Schema({
+  monthReport: { type: String },
+  seleMonth: { type: String },
     reportingRemarks: [
         {
           userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-          role: { type: String }, // Example: "Super Admin", "Junior Engineer"
-          remark: { type: String }, // Example: "Checked meter status"
+          role: { type: String }, 
+          remark: { type: String }, 
           ward: { type: String },
           signature: { type: String },
-          date: { type: Date, default: Date.now }, // Timestamp of remark
+          date: { type: Date, default: Date.now }, 
           
-          seleMonth:{ type: String },
+          // seleMonth:{ type: String },
         }
       ],
       documents: [
         {
-            formType: { type: String}, // Example: "Form-22", "Karyalayin Tipani"
-            formNumber: { type: String}, // Unique ID for each form
-            pdfFile: { type: String }, // PDF file stored as Base64 or File Path
+            formType: { type: String},
+            formNumber: { type: String}, 
+            pdfFile: { type: String }, 
             uploadedAt: { type: Date, default: Date.now },
             seleMonth:{ type: String },
         }
