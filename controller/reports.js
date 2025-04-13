@@ -128,6 +128,27 @@ exports.addRemarkReports = async (req, res) => {
                 r.role === role &&
                 r.documents?.some(doc => doc.formType === formType)
             );
+
+  // 🛡️ Enforce nested rule:
+  if (report.reportingRemarks.length === 0) {
+    if (role !== "Lipik") {
+        return res.status(400).json({
+            message: "The first remark must be from the role 'Lipik'."
+        });
+    }
+} else {
+    const isLipikPresent = report.reportingRemarks.some(
+        r => r.role === "Lipik" && report.ward === ward
+    );
+
+    if (!isLipikPresent) {
+        return res.status(400).json({
+            message: "Lipik's remark is required for this ward before proceeding."
+        });
+    }
+}
+
+
              if (index !== -1) {
                 const existing = report.reportingRemarks[index];
                 existing.remark = remark;
