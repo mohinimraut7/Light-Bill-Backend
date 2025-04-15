@@ -493,6 +493,156 @@ exports.getReports = async (req, res) => {
 
 
 // ---------------------------------------------------------------
+// exports.addRemarkReports = async (req, res) => {
+//     try {
+//         const {
+//             userId,
+//             remark,
+//             role,
+//             signature,
+//             ward,
+//             formType,
+//             pdfData,
+//             seleMonth,
+//             mode
+//         } = req.body;
+
+//         // 🚨 Validate required fields
+//         const missingFields = [];
+//         if (!role) missingFields.push("role");
+//         if (!remark) missingFields.push("remark");
+//         if (!formType) missingFields.push("formType");
+//         if (!seleMonth) missingFields.push("seleMonth");
+//         if (!ward) missingFields.push("ward");
+
+//         if (missingFields.length > 0) {
+//             return res.status(400).json({
+//                 message: `Missing required fields: ${missingFields.join(", ")}`
+//             });
+//         }
+
+//         // 🔢 Generate form number
+//         const formNumber = await generateFormNumber(formType);
+//         let document = null;
+
+//         // 📁 Save PDF either from uploaded file or base64 data
+//         if (req.file) {
+//             document = {
+//                 formType,
+//                 formNumber,
+//                 pdfFile: req.file.path,
+//                 uploadedAt: new Date(),
+//                 seleMonth
+//             };
+//         } else if (pdfData) {
+//             const pdfFilePath = saveBase64File(pdfData, formNumber);
+//             if (pdfFilePath) {
+//                 document = {
+//                     formType,
+//                     formNumber,
+//                     pdfFile: pdfFilePath,
+//                     uploadedAt: new Date(),
+//                     seleMonth
+//                 };
+//             } else {
+//                 return res.status(400).json({
+//                     message: "Invalid base64 PDF data."
+//                 });
+//             }
+//         } else {
+//             return res.status(400).json({
+//                 message: "No file or PDF data provided."
+//             });
+//         }
+
+//         // 🧱 Helper function to create remark object
+//         const createRemark = ({ userId, role, remark, signature, document }) => ({
+//             userId: new mongoose.Types.ObjectId(userId),
+//             role,
+//             remark,
+//             signature,
+//             date: new Date(),
+//             documents: document ? [document] : []
+//         });
+
+//         // 📄 Check if report already exists
+//         let report = await Report.findOne({ seleMonth, ward });
+
+//         if (!report) {
+//             // 🆕 Create new report for this month and ward
+//             report = new Report({
+//                 seleMonth,
+//                 ward,
+//                 monthReport: seleMonth,
+//             });
+//         }
+
+//         // 🛡️ Enforce Lipik-first rule
+//         if (report.reportingRemarks.length === 0) {
+//             if (role !== "Lipik") {
+//                 return res.status(400).json({
+//                     message: "The first remark must be from the role 'Lipik'."
+//                 });
+//             }
+//         }
+
+//         // Find if this user/role combo already exists for this ward
+//         const index = report.reportingRemarks.findIndex(r =>
+//             r.userId.toString() === userId &&
+//             r.role === role &&
+//             report.ward === ward
+//         );
+
+//         if (index !== -1) {
+//             // Update existing remark
+//             const existing = report.reportingRemarks[index];
+//             existing.remark = remark;
+//             existing.signature = signature;
+//             existing.date = new Date();
+//             existing.documents = existing.documents || [];
+
+//             const docIndex = existing.documents.findIndex(doc => doc.formType === formType);
+
+//             if (mode === "edit") {
+//                 if (docIndex !== -1) {
+//                     // Replace existing document
+//                     existing.documents[docIndex] = document;
+//                 } else {
+//                     // Add new document under same remark
+//                     existing.documents.push(document);
+//                 }
+//             } else {
+//                 // Check for duplicate formType in existing documents
+//                 const alreadyExists = existing.documents.some(doc => doc.formType === formType);
+//                 if (!alreadyExists && document) {
+//                     existing.documents.push(document);
+//                 }
+//             }
+
+//             report.reportingRemarks[index] = existing;
+//         } else {
+//             // Add new remark entry
+//             const newRemark = createRemark({ userId, role, remark, signature, document });
+//             report.reportingRemarks.push(newRemark);
+//         }
+
+//         // Save or update report
+//         await report.save();
+
+//         res.status(201).json({
+//             message: "Report added/updated successfully.",
+//             report
+//         });
+
+//     } catch (error) {
+//         console.error("🚨 Error adding/updating report:", error);
+//         res.status(500).json({
+//             message: "An error occurred while adding the report.",
+//             error: error.message
+//         });
+//     }
+// };
+// ----------------------------------------------------------------------------
 exports.addRemarkReports = async (req, res) => {
     try {
         const {
@@ -556,15 +706,32 @@ exports.addRemarkReports = async (req, res) => {
         }
 
         // 🧱 Helper function to create remark object
-        const createRemark = ({ userId, role, remark, signature, document }) => ({
-            userId: new mongoose.Types.ObjectId(userId),
-            role,
-            remark,
-            signature,
-            date: new Date(),
-            documents: document ? [document] : []
-        });
+        // const createRemark = ({ userId, role, remark, signature, document }) => ({
+        //     userId: new mongoose.Types.ObjectId(userId),
+        //     role,
+        //     remark,
+        //     signature,
+        //     date: new Date(),
+        //     documents: document ? [document] : []
+        // });
+        const createRemark = ({ userId, role, remark, signature, document }) => {
+            const remarkObj = {
+                userId: new mongoose.Types.ObjectId(userId),
+                role,
+                remark,
+                signature,
+                date: new Date()
+            };
 
+            // ✅ Only Lipik gets documents array
+            if (role === "Lipik") {
+                remarkObj.documents = document ? [document] : [];
+            }
+
+            return remarkObj;
+        };
+
+        
         // 📄 Check if report already exists
         let report = await Report.findOne({ seleMonth, ward });
 
@@ -642,7 +809,6 @@ exports.addRemarkReports = async (req, res) => {
         });
     }
 };
-
 
 exports.searchReport = async (req, res) => {
     try {
