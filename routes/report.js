@@ -1,7 +1,7 @@
 const express=require('express');
 const multer = require('multer'); 
 
-const { addRemarkReports,getReports } = require('../controller/reports');
+const { addRemarkReports,getReports, searchReport } = require('../controller/reports');
 const router=express.Router();
 
 const storage = multer.diskStorage({
@@ -16,5 +16,5 @@ const storage = multer.diskStorage({
 
 router.post('/addRemarkReport',upload.single("pdfFile"),addRemarkReports)
 router.get('/getReports',getReports)
-
+router.post('/searchReport',searchReport)
 module.exports=router;  
