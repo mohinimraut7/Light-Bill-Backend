@@ -1011,6 +1011,246 @@ exports.getReports = async (req, res) => {
 //     }
 // };
 // ----------------------------------------------------------------------------------
+
+// exports.addRemarkReports = async (req, res) => {
+//     try {
+//         const {
+//             userId,
+//             remark,
+//             role,
+//             signature,
+//             ward,
+//             formType,
+//             pdfData,
+//             seleMonth,
+//             wardName,
+//             mode
+//         } = req.body;
+//         console.log("req.body",req.body.wardName)
+
+//         // 🚨 Validate required fields
+//         const missingFields = [];
+//         if (!role) missingFields.push("role");
+//         if (!remark) missingFields.push("remark");
+//         if (!formType) missingFields.push("formType");
+//         if (!seleMonth) missingFields.push("seleMonth");
+//         if (!ward) missingFields.push("ward");
+
+//         if (missingFields.length > 0) {
+//             return res.status(400).json({
+//                 message: `Missing required fields: ${missingFields.join(", ")}`
+//             });
+//         }
+
+//         // 🔢 Generate form number
+//         const formNumber = await generateFormNumber(formType);
+//         let document = null;
+
+//         // 📁 Save PDF either from uploaded file or base64 data
+//         if (req.file) {
+//             document = {
+//                 formType,
+//                 formNumber,
+//                 pdfFile: req.file.path,
+//                 uploadedAt: new Date(),
+//                 seleMonth
+//             };
+//         } else if (pdfData) {
+//             const pdfFilePath = saveBase64File(pdfData, formNumber);
+//             if (pdfFilePath) {
+//                 document = {
+//                     formType,
+//                     formNumber,
+//                     pdfFile: pdfFilePath,
+//                     uploadedAt: new Date(),
+//                     seleMonth
+//                 };
+//             } else {
+//                 return res.status(400).json({
+//                     message: "Invalid base64 PDF data."
+//                 });
+//             }
+//         } else {
+//             return res.status(400).json({
+//                 message: "No file or PDF data provided."
+//             });
+//         }
+
+//         // 🧱 Helper function to create remark object
+//         const createRemark = ({ userId, role, remark, signature, document }) => {
+//             const remarkObj = {
+//                 userId: new mongoose.Types.ObjectId(userId),
+//                 role,
+//                 remark,
+//                 signature,
+//                 date: new Date()
+//             };
+
+//             // ✅ Only Lipik gets documents array
+//             if (role === "Lipik") {
+//                 remarkObj.documents = document ? [document] : [];
+//             }
+
+//             return remarkObj;
+//         };
+
+//         // 📄 Check if report already exists
+//         let report = await Report.findOne({ seleMonth, ward });
+
+//         if (!report) {
+//             // 🆕 Create new report for this month and ward
+//             report = new Report({
+//                 seleMonth,
+//                 ward,
+//                 monthReport: seleMonth,
+//             });
+//         }
+
+//         // // Handle the case where the role is Junior Engineer and the ward is Head Office
+//         // if (role === "Junior Engineer" && ward === "Head Office") {
+//         //     // List of wards to add "Junior Engineer (Head Office)" remark to
+//         //     const wards = ["Ward-A", "Ward-B", "Ward-C", "Ward-D", "Ward-E", "Ward-F", "Ward-G", "Ward-H", "Ward-I"];
+
+//         //     // Loop through all wards and add Junior Engineer remark to each
+//         //     for (let currentWard of wards) {
+//         //         let wardReport = await Report.findOne({ seleMonth, ward: currentWard });
+
+//         //         if (!wardReport) {
+//         //             // Create new report for the ward if not exists
+//         //             wardReport = new Report({
+//         //                 seleMonth,
+//         //                 ward: currentWard,
+//         //                 monthReport: seleMonth,
+//         //             });
+//         //         }
+
+//         //         // Create remark for Junior Engineer (Head Office)
+//         //         const jeRemark = {
+//         //             userId: new mongoose.Types.ObjectId(userId),
+//         //             role: "Junior Engineer",
+//         //             remark,
+//         //             signature,
+//         //             date: new Date(),
+//         //         };
+
+//         //         // Check if Junior Engineer remark already exists for this ward
+//         //         const jeExists = wardReport.reportingRemarks.some(r => 
+//         //             r.userId.toString() === userId && r.role === "Junior Engineer" && r.remark === remark
+//         //         );
+
+//         //         if (!jeExists) {
+//         //             wardReport.reportingRemarks.push(jeRemark);
+//         //             await wardReport.save(); // Save Junior Engineer remark for the ward
+//         //         }
+//         //     }
+//         // }
+
+
+
+
+//         if (role === "Junior Engineer" && ward === "Head Office" && wardName) {
+//             let wardReport = await Report.findOne({ seleMonth, ward: wardName });
+        
+//             if (!wardReport) {
+//                 // Create new report if not exists for selected wardName
+//                 wardReport = new Report({
+//                     seleMonth,
+//                     ward: wardName,
+//                     monthReport: seleMonth,
+//                 });
+//             }
+        
+//             // Create remark for Junior Engineer
+//             const jeRemark = {
+//                 userId: new mongoose.Types.ObjectId(userId),
+//                 role: "Junior Engineer",
+//                 remark,
+//                 signature,
+//                 date: new Date(),
+//             };
+        
+//             // Avoid duplicate JE remark
+//             const jeExists = wardReport.reportingRemarks.some(r =>
+//                 r.userId.toString() === userId &&
+//                 r.role === "Junior Engineer" &&
+//                 r.remark === remark
+//             );
+        
+//             if (!jeExists) {
+//                 wardReport.reportingRemarks.push(jeRemark);
+//                 await wardReport.save();
+//             }
+        
+//             return res.status(201).json({
+//                 message: `Junior Engineer remark added to ward ${wardName} successfully.`,
+//                 report: wardReport
+//             });
+//         }
+
+//         // 🛡️ Enforce Lipik-first rule only when no remarks are present
+//         if (report.reportingRemarks.length === 0 && role !== "Lipik") {
+//             return res.status(400).json({
+//                 message: "The first remark must be from the role 'Lipik'."
+//             });
+//         }
+
+//         // Find if this user/role combo already exists for this ward
+//         const index = report.reportingRemarks.findIndex(r =>
+//             r.userId.toString() === userId &&
+//             r.role === role &&
+//             report.ward === ward
+//         );
+
+//         if (index !== -1) {
+//             // Update existing remark
+//             const existing = report.reportingRemarks[index];
+//             existing.remark = remark;
+//             existing.signature = signature;
+//             existing.date = new Date();
+//             existing.documents = existing.documents || [];
+
+//             const docIndex = existing.documents.findIndex(doc => doc.formType === formType);
+
+//             if (mode === "edit") {
+//                 if (docIndex !== -1) {
+//                     // Replace existing document
+//                     existing.documents[docIndex] = document;
+//                 } else {
+//                     // Add new document under same remark
+//                     existing.documents.push(document);
+//                 }
+//             } else {
+//                 // Check for duplicate formType in existing documents
+//                 const alreadyExists = existing.documents.some(doc => doc.formType === formType);
+//                 if (!alreadyExists && document) {
+//                     existing.documents.push(document);
+//                 }
+//             }
+
+//             report.reportingRemarks[index] = existing;
+//         } else {
+//             // Add new remark entry
+//             const newRemark = createRemark({ userId, role, remark, signature, document });
+//             report.reportingRemarks.push(newRemark);
+//         }
+
+//         // Save or update report
+//         await report.save();
+
+//         res.status(201).json({
+//             message: "Report added/updated successfully.",
+//             report
+//         });
+
+//     } catch (error) {
+//         console.error("🚨 Error adding/updating report:", error);
+//         res.status(500).json({
+//             message: "An error occurred while adding the report.",
+//             error: error.message
+//         });
+//     }
+// };
+// --------------------------------------------------------------------------------------------
 exports.addRemarkReports = async (req, res) => {
     try {
         const {
@@ -1025,7 +1265,8 @@ exports.addRemarkReports = async (req, res) => {
             wardName,
             mode
         } = req.body;
-        console.log("req.body",req.body.wardName)
+
+        console.log("req.body", req.body.wardName);
 
         // 🚨 Validate required fields
         const missingFields = [];
@@ -1093,73 +1334,18 @@ exports.addRemarkReports = async (req, res) => {
             return remarkObj;
         };
 
-        // 📄 Check if report already exists
-        let report = await Report.findOne({ seleMonth, ward });
-
-        if (!report) {
-            // 🆕 Create new report for this month and ward
-            report = new Report({
-                seleMonth,
-                ward,
-                monthReport: seleMonth,
-            });
-        }
-
-        // // Handle the case where the role is Junior Engineer and the ward is Head Office
-        // if (role === "Junior Engineer" && ward === "Head Office") {
-        //     // List of wards to add "Junior Engineer (Head Office)" remark to
-        //     const wards = ["Ward-A", "Ward-B", "Ward-C", "Ward-D", "Ward-E", "Ward-F", "Ward-G", "Ward-H", "Ward-I"];
-
-        //     // Loop through all wards and add Junior Engineer remark to each
-        //     for (let currentWard of wards) {
-        //         let wardReport = await Report.findOne({ seleMonth, ward: currentWard });
-
-        //         if (!wardReport) {
-        //             // Create new report for the ward if not exists
-        //             wardReport = new Report({
-        //                 seleMonth,
-        //                 ward: currentWard,
-        //                 monthReport: seleMonth,
-        //             });
-        //         }
-
-        //         // Create remark for Junior Engineer (Head Office)
-        //         const jeRemark = {
-        //             userId: new mongoose.Types.ObjectId(userId),
-        //             role: "Junior Engineer",
-        //             remark,
-        //             signature,
-        //             date: new Date(),
-        //         };
-
-        //         // Check if Junior Engineer remark already exists for this ward
-        //         const jeExists = wardReport.reportingRemarks.some(r => 
-        //             r.userId.toString() === userId && r.role === "Junior Engineer" && r.remark === remark
-        //         );
-
-        //         if (!jeExists) {
-        //             wardReport.reportingRemarks.push(jeRemark);
-        //             await wardReport.save(); // Save Junior Engineer remark for the ward
-        //         }
-        //     }
-        // }
-
-
-
-
+        // ✅ Handle Junior Engineer (Head Office) — only in selected ward
         if (role === "Junior Engineer" && ward === "Head Office" && wardName) {
             let wardReport = await Report.findOne({ seleMonth, ward: wardName });
-        
+
             if (!wardReport) {
-                // Create new report if not exists for selected wardName
                 wardReport = new Report({
                     seleMonth,
                     ward: wardName,
                     monthReport: seleMonth,
                 });
             }
-        
-            // Create remark for Junior Engineer
+
             const jeRemark = {
                 userId: new mongoose.Types.ObjectId(userId),
                 role: "Junior Engineer",
@@ -1167,22 +1353,32 @@ exports.addRemarkReports = async (req, res) => {
                 signature,
                 date: new Date(),
             };
-        
-            // Avoid duplicate JE remark
+
             const jeExists = wardReport.reportingRemarks.some(r =>
                 r.userId.toString() === userId &&
                 r.role === "Junior Engineer" &&
                 r.remark === remark
             );
-        
+
             if (!jeExists) {
                 wardReport.reportingRemarks.push(jeRemark);
                 await wardReport.save();
             }
-        
+
             return res.status(201).json({
                 message: `Junior Engineer remark added to ward ${wardName} successfully.`,
                 report: wardReport
+            });
+        }
+
+        // 📄 Check if report already exists
+        let report = await Report.findOne({ seleMonth, ward });
+
+        if (!report) {
+            report = new Report({
+                seleMonth,
+                ward,
+                monthReport: seleMonth,
             });
         }
 
@@ -1193,7 +1389,7 @@ exports.addRemarkReports = async (req, res) => {
             });
         }
 
-        // Find if this user/role combo already exists for this ward
+        // 🔍 Find if this user/role combo already exists
         const index = report.reportingRemarks.findIndex(r =>
             r.userId.toString() === userId &&
             r.role === role &&
@@ -1201,7 +1397,6 @@ exports.addRemarkReports = async (req, res) => {
         );
 
         if (index !== -1) {
-            // Update existing remark
             const existing = report.reportingRemarks[index];
             existing.remark = remark;
             existing.signature = signature;
@@ -1212,14 +1407,11 @@ exports.addRemarkReports = async (req, res) => {
 
             if (mode === "edit") {
                 if (docIndex !== -1) {
-                    // Replace existing document
                     existing.documents[docIndex] = document;
                 } else {
-                    // Add new document under same remark
                     existing.documents.push(document);
                 }
             } else {
-                // Check for duplicate formType in existing documents
                 const alreadyExists = existing.documents.some(doc => doc.formType === formType);
                 if (!alreadyExists && document) {
                     existing.documents.push(document);
@@ -1228,12 +1420,10 @@ exports.addRemarkReports = async (req, res) => {
 
             report.reportingRemarks[index] = existing;
         } else {
-            // Add new remark entry
             const newRemark = createRemark({ userId, role, remark, signature, document });
             report.reportingRemarks.push(newRemark);
         }
 
-        // Save or update report
         await report.save();
 
         res.status(201).json({

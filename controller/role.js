@@ -66,7 +66,8 @@ exports.addRole = async (req, res) => {
     console.log("name, email, ward",name, email, ward)
     const requesterRole = req?.user?.role;
 
-    if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin') {
+    if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterRole === 'Executive Engineer' &&
+        (requesterRole === 'Junior Engineer' && requesterWard === 'Head Office')) {
         return res.status(403).json({ message: "You don't have authority to add user" });
     }
 

@@ -88,11 +88,6 @@ await transporter.sendMail({
 
 
 
-
-
-
-
-
 exports.verifyEmail = async (req, res) => {
   // Extract token from route parameters
   const { token } = req.params;
