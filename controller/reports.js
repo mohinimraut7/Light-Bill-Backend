@@ -1341,6 +1341,7 @@ exports.addRemarkReports = async (req, res) => {
             if (!wardReport) {
                 wardReport = new Report({
                     seleMonth,
+                    userWard:ward,
                     ward: wardName,
                     monthReport: seleMonth,
                 });
