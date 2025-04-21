@@ -7,7 +7,7 @@ const UserVerificationSchema = new Schema(
         uniqueString: { type: String, required: true },
         expiresAt: { type: Date, required: true, index: { expires: 0 } }
     },
-    { timestamps: true } // Adds createdAt and updatedAt
+    { timestamps: true } 
 );
 
 const UserVerification = mongoose.model('UserVerification', UserVerificationSchema);

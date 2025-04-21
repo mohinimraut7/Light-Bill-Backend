@@ -7,409 +7,16 @@ const Consumer = require('../models/consumer');
 const cron = require("node-cron");
 const axios = require('axios');
 
-// exports.addBill = async (req, res) => {
-//   // const requesterRole = req?.user?.role;
-//   // if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterRole !=='Executive Engineer' && requesterRole !=='Junior Engineer') { 
-//   //   return res.status(403).json({ message: "You don't have authority to add bill" }); 
-//   // }
-//   try {
-//     const {
-//       consumerNumber,
-//       consumerName,
-//       consumerAddress,
-//       contactNumber,
-//       ward,
-//       adjustmentUnit,
-//       totalConsumption,
-//       installationDate,
-//       tarriffDescription,
-//       meterNumber,
-//       meterStatus,
-//       phaseType,
-//       billingUnit,
-//       netLoad,  
-//       sanctionedLoad,
-//       billDate,
-//       billNo,
-//       monthAndYear,
-//       previousReadingDate,
-//       previousReading,
-//       currentReadingDate,
-//       currentReading,
-//       netBillAmount,
-//       paymentStatus,
-//       approvedStatus,
-//       lastReceiptAmount,
-//       lastReceiptDate,
-//       promptPaymentDate,
-//       promptPaymentAmount,
-//       dueDate,
-//       netBillAmountWithDPC,
-//       dueAlert,
-//       forwardForGeneration,
-//     } = req.body;
-
-
-//     let juniorEngineerContactNumber = null;
-//     if (req.body.ward) {
-//       try {
-//                const juniorEngineer = await User.findOne({
-//           role: 'Junior Engineer',
-//           ward: req.body.ward,
-//         });
-
-        
-//         if (juniorEngineer && juniorEngineer.ward === req.body.ward) {
-          
-//           juniorEngineerContactNumber = juniorEngineer.contactNumber;
-//         }
-//       } catch (error) {
-//         console.error('Error fetching Junior Engineer contact:', error);
-//       }
-//     }
-
-//     const bill = new Bill({
-//       consumerNumber,
-//       consumerName,
-//       consumerAddress,
-//       contactNumber,
-//       ward,
-//       adjustmentUnit,
-//       totalConsumption,
-//       installationDate,
-//       tarriffDescription,
-//       meterNumber,
-//       meterStatus,
-//       phaseType,
-//       billingUnit,
-//       netLoad,  
-//       sanctionedLoad,
-//       billDate,
-//       billNo,
-//       monthAndYear,
-//       previousReadingDate,
-//       previousReading,
-//       currentReadingDate,
-//       currentReading,
-//       netBillAmount,
-//       paymentStatus,
-//       lastReceiptAmount,
-//       lastReceiptDate,
-//       promptPaymentDate,
-//       promptPaymentAmount,
-//       dueDate,
-//       netBillAmountWithDPC,
-//       dueAlert,
-//       approvedStatus,
-//       forwardForGeneration,
-//       juniorEngineerContactNumber,
-//     });
-//     // if (lastReceiptAmount === roundedBillAmount) {
-//     //   bill.paymentStatus = 'Paid';
-//     //   switch (requesterRole) {
-//     //     case 'Junior Engineer':
-//     //       bill.approvedStatus = 'PendingForExecutiveEngineer';
-//     //       bill.paymentStatus = 'Paid';
-//     //       break;
-//     //     case 'Executive Engineer':
-//     //       bill.approvedStatus = 'PendingForAdmin';
-//     //       bill.paymentStatus = 'Paid';
-//     //       break;
-//     //     case 'Admin':
-//     //       bill.approvedStatus = 'PendingForSuperAdmin';
-//     //       bill.paymentStatus = 'Paid';
-//     //       break;
-//     //     case 'Super Admin':
-//     //       bill.approvedStatus = 'Done';
-//     //       bill.paymentStatus = 'Paid';
-//     //       break;
-//     //     default:
-//     //       console.error(`Unexpected role: ${requesterRole}`);
-//     //       break;
-//     //   }
-//     // }else if (lastReceiptAmount > 0 && lastReceiptAmount < roundedBillAmount) {
-//     //   bill.paymentStatus = 'Partial';
-//     //   switch (requesterRole) {
-//     //     case 'Junior Engineer':
-//     //       bill.approvedStatus = 'PendingForExecutiveEngineer';
-//     //       bill.paymentStatus = 'Partial';
-//     //       break;
-//     //     case 'Executive Engineer':
-//     //       bill.approvedStatus = 'PendingForAdmin';
-//     //       bill.paymentStatus = 'Partial';
-
-//     //       break;
-//     //     case 'Admin':
-//     //       bill.approvedStatus = 'PendingForSuperAdmin';
-//     //       bill.paymentStatus = 'Partial';
-//     //       break;
-//     //     case 'Super Admin':
-//     //       bill.approvedStatus = 'PartialDone';
-//     //       bill.paymentStatus = 'Partial';
-//     //       break;
-//     //     default:
-//     //       console.error(`Unexpected role: ${requesterRole}`);
-//     //       break;
-//     //   }
-//     // } else {
-      
-//     //     bill.paymentStatus = 'Pending';
-    
-//     // }
-//     await bill.save();
-//     res.status(201).json({
-//       message: 'Bill created successfully',
-//       bill: {
-//         consumerNumber: bill.consumerNumber,
-//         monthAndYear: bill.monthAndYear,
-//       },
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       message: 'Failed to create bill',
-//       error: error.message,
-//     });
-//   }
-// };
-
-// ------------------------------------------------------------------------------------------
-
-// exports.addBill = async (req, res) => {
-//   try {
-//     const bills = Array.isArray(req.body) ? req.body : [req.body]; 
-
-//     const createdBills = []; 
-
-//     for (const billData of bills) {
-//       const {
-//         consumerNumber,
-//         consumerName,
-//         consumerAddress,
-//         contactNumber,
-//         ward,
-//         adjustmentUnit,
-//         totalConsumption,
-//         installationDate,
-//         tarriffDescription,
-//         meterNumber,
-//         meterStatus,
-//         phaseType,
-//         billingUnit,
-//         netLoad,
-//         sanctionedLoad,
-//         billDate,
-//         billNo,
-//         monthAndYear,
-//         previousReadingDate,
-//         previousReading,
-//         currentReadingDate,
-//         currentReading,
-//         netBillAmount,
-//         paymentStatus,
-//         lastReceiptAmount,
-//         lastReceiptDate,
-//         promptPaymentDate,
-//         promptPaymentAmount,
-//         dueDate,
-//         netBillAmountWithDPC,
-//         dueAlert,
-//       } = billData;
-
-//       let juniorEngineerContactNumber = null;
-//       if (billData.ward) {
-//         try {
-//           const juniorEngineer = await User.findOne({
-//             role: 'Junior Engineer',
-//             ward: billData.ward,
-//           });
-
-//           if (juniorEngineer && juniorEngineer.ward === billData.ward) {
-//             juniorEngineerContactNumber = juniorEngineer.contactNumber;
-//           }
-//         } catch (error) {
-//           console.error('Error fetching Junior Engineer contact:', error);
-//         }
-//       }
-
-//       const bill = new Bill({
-//         consumerNumber,
-//         consumerName,
-//         consumerAddress,
-//         contactNumber,
-//         ward,
-//         adjustmentUnit,
-//         totalConsumption,
-//         installationDate,
-//         tarriffDescription,
-//         meterNumber,
-//         meterStatus,
-//         phaseType,
-//         billingUnit,
-//         netLoad,
-//         sanctionedLoad,
-//         billDate,
-//         billNo,
-//         monthAndYear,
-//         previousReadingDate,
-//         previousReading,
-//         currentReadingDate,
-//         currentReading,
-//         netBillAmount,
-//         paymentStatus,
-//         lastReceiptAmount,
-//         lastReceiptDate,
-//         promptPaymentDate,
-//         promptPaymentAmount,
-//         dueDate,
-//         netBillAmountWithDPC,
-//         dueAlert,
-//         juniorEngineerContactNumber,
-//       });
-
-//       await bill.save();
-//       createdBills.push({
-//         consumerNumber: bill.consumerNumber,
-//         monthAndYear: bill.monthAndYear,
-//       });
-//     }
-
-//     // Send response based on the number of bills created
-//     if (createdBills.length === 1) {
-//       res.status(201).json({
-//         message: 'Bill created successfully',
-//         bill: createdBills[0],  // Single bill response
-//       });
-//     } else {
-//       res.status(201).json(
-//         createdBills,
-//       );
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       message: 'Failed to create bill',
-//       error: error.message,
-//     });
-//   }
-// };
-// -------------------------------------------------------
-// exports.addBill = async (req, res) => {
-//   try {
-//     const bills = Array.isArray(req.body) ? req.body : [req.body];
-
-//     const createdBills = [];
-
-//     for (const billData of bills) {
-//       const {
-//         consumerNumber,
-//         consumerName,
-//         consumerAddress,
-//         contactNumber,
-//         ward,
-//         adjustmentUnit,
-//         totalConsumption,
-//         installationDate,
-//         tarriffDescription,
-//         meterNumber,
-//         meterStatus,
-//         phaseType,
-//         billingUnit,
-//         netLoad,
-//         sanctionedLoad,
-//         billDate,
-//         billNo,
-//         monthAndYear,
-//         previousReadingDate,
-//         previousReading,
-//         currentReadingDate,
-//         currentReading,
-//         netBillAmount,
-//         paymentStatus,
-//         lastReceiptAmount,
-//         lastReceiptDate,
-//         promptPaymentDate,
-//         promptPaymentAmount,
-//         dueDate,
-//         netBillAmountWithDPC,
-//         dueAlert,
-//       } = billData;
-
-//       let status = "Success";  
-
-      
-//       if (!consumerNumber || !monthAndYear) {
-//         status = "Failure";  
-//       }
-
-//       const bill = new Bill({
-//         consumerNumber,
-//         consumerName,
-//         consumerAddress,
-//         contactNumber,
-//         ward,
-//         adjustmentUnit,
-//         totalConsumption,
-//         installationDate,
-//         tarriffDescription,
-//         meterNumber,
-//         meterStatus,
-//         phaseType,
-//         billingUnit,
-//         netLoad,
-//         sanctionedLoad,
-//         billDate,
-//         billNo,
-//         monthAndYear,
-//         previousReadingDate,
-//         previousReading,
-//         currentReadingDate,
-//         currentReading,
-//         netBillAmount,
-//         paymentStatus,
-//         lastReceiptAmount,
-//         lastReceiptDate,
-//         promptPaymentDate,
-//         promptPaymentAmount,
-//         dueDate,
-//         netBillAmountWithDPC,
-//         dueAlert,
-//       });
-
-//       await bill.save();
-//       createdBills.push({
-//         consumerNumber: bill.consumerNumber,
-//         monthAndYear: bill.monthAndYear,
-//         status: status, 
-//       });
-//     }
-
-    
-//     if (createdBills.length === 1) {
-//       res.status(201).json(createdBills[0]); 
-//     } else {
-//       res.status(201).json(createdBills);  
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       message: 'Failed to create bill',
-//       error: error.message,
-//     });
-//   }
-// };
-// -----------------------------------------------------------------
-
 
 cron.schedule("40 16 * * *", async () => {
-  console.log("its 12")
+ 
   try {
     const today = new Date();
     
-    today.setDate(today.getDate() + 2); // Find bills due in 2 days
+    today.setDate(today.getDate() + 2); 
     const dueDateString = today.toISOString().split("T")[0];
 
-    // Update only bills where paymentStatus is "unpaid" (case insensitive)
+   
     await Bill.updateMany(
       { dueDate: dueDateString, paymentStatus: "unpaid" },
       { dueAlert: true }
@@ -427,21 +34,18 @@ cron.schedule("46 16 * * *", async () => {
   console.log("Updating due alerts...");
   try {
     const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1); // Find bills whose due date has passed
+    yesterday.setDate(yesterday.getDate() - 1); 
     const oldDueDateString = yesterday.toISOString().split("T")[0];
-
-    // 1️⃣ Unpaid bills: Convert dueAlert to false (Overdue alert removed)
     const unpaidUpdate = await Bill.updateMany(
       { dueDate: oldDueDateString, dueAlert: true, paymentStatus: { $regex: /^unpaid$/i } },
-      { $set: { dueAlert: false } } // Overdue alert is removed
+      { $set: { dueAlert: false } } 
     );
 
-    console.log(`✅ ${unpaidUpdate.modifiedCount} unpaid bills updated!`);
-
-    // 2️⃣ Paid bills: Reset dueAlert to false (No overdue alert check)
+  
+  
     const paidUpdate = await Bill.updateMany(
       { dueAlert: true, paymentStatus: { $regex: /^paid$/i } },
-      { $set: { dueAlert: false } } // Reset due alerts
+      { $set: { dueAlert: false } } 
     );
 
     console.log(`✅ ${paidUpdate.modifiedCount} paid bills cleared from alerts!`);
@@ -457,9 +61,9 @@ const getPreviousMonthYear = (monthAndYear) => {
   let monthIndex = months.indexOf(month.toUpperCase());
   let prevYear = parseInt(year, 10);
 
-  // If current month is JAN, then previous month is DEC of the previous year.
+  
   if (monthIndex === 0) {
-    monthIndex = 11; // DEC
+    monthIndex = 11; 
     prevYear -= 1;
   } else {
     monthIndex -= 1;
@@ -473,8 +77,7 @@ exports.addBill = async (req, res) => {
     const bills = Array.isArray(req.body) ? req.body : [req.body];
     const createdBills = [];
     const failedBills = [];
-
-    // Process each bill from the request
+  
     for (const billData of bills) {
       const {
         consumerNumber,
@@ -513,14 +116,14 @@ exports.addBill = async (req, res) => {
         dueDate,
         netBillAmountWithDPC,
         dueAlert,
-        billPaymentDate,  // Added new field
+        billPaymentDate, 
         paidAmount,   
       } = billData;
 
       const validContactNumber = contactNumber || "N/A";
       const duealertvalue = dueAlert || false;
 
-      // Check if consumerNumber exists in the Consumer collection
+    
       const consumerExists = await Consumer.findOne({ consumerNumber });
       const wardname = consumerExists?.ward;
 
@@ -531,19 +134,19 @@ exports.addBill = async (req, res) => {
           errorCode: "2002",
           status: "FAILURE",
         });
-        continue; // Skip this bill, move to the next one
+        continue; 
       }
 
       await Consumer.findOneAndUpdate(
-        { consumerNumber }, // Search by consumerNumber
+        { consumerNumber }, 
         { 
-          consumerAddress: billData.consumerAddress, // Bill मधून घेऊन अपडेट
+          consumerAddress: billData.consumerAddress, 
           phaseType: billData.phaseType 
         },
-        { new: true } // Return updated consumer
+        { new: true } 
       );
 
-      // Check for duplicate bill (same consumerNumber & monthAndYear)
+     
       const duplicateBill = await Bill.findOne({ consumerNumber, monthAndYear });
       if (duplicateBill) {
         failedBills.push({
@@ -552,10 +155,10 @@ exports.addBill = async (req, res) => {
           errorCode: "2004",
           status: "FAILURE",
         });
-        continue; // Skip duplicate bill
+        continue; 
       }
 
-      // Create the new (current month) bill
+      
       const bill = new Bill({
         consumerNumber,
         consumerName,
@@ -602,7 +205,7 @@ exports.addBill = async (req, res) => {
         status: "SUCCESS",
       });
 
-      // Dynamic check: Update the previous month's bill
+     
       const prevMonthYear = getPreviousMonthYear(monthAndYear);
       const prevBill = await Bill.findOne({ consumerNumber, monthAndYear: prevMonthYear });
       if (prevBill) {
@@ -613,19 +216,17 @@ exports.addBill = async (req, res) => {
             lastReceiptAmount === prevBill.promptPaymentAmount;
           if (amountMatches && new Date(prevBill.billDate) < new Date(lastReceiptDate)) {
             prevBill.paymentStatus = "paid";
-            prevBill.paidAmount = lastReceiptAmount; // Paid amount update
-            prevBill.billPaymentDate = lastReceiptDate; // Bill payment date update
+            prevBill.paidAmount = lastReceiptAmount; 
+            prevBill.billPaymentDate = lastReceiptDate; 
             await prevBill.save();
           }
         } else {
-          // If lastReceiptAmount or lastReceiptDate is missing, mark the previous bill as "unpaid"
           prevBill.paymentStatus = "unpaid";
           await prevBill.save();
         }
       }
     }
-
-    // Send Response with Success & Failure Messages
+ 
     const allBills = [...createdBills, ...failedBills];
     res.status(201).json(allBills);
   } catch (error) {
@@ -643,7 +244,7 @@ cron.schedule("10 18 * * *", async () => {
   console.log("🔄 Running cron job to update paid bills at 3:36 PM...");
 
   try {
-    // Find bills where previous month exists & paymentStatus is "paid"
+  
     const bills = await Bill.find();
 
     for (const bill of bills) {
@@ -659,8 +260,8 @@ cron.schedule("10 18 * * *", async () => {
 
           if (amountMatches && new Date(prevBill.billDate) < new Date(bill.lastReceiptDate)) {
             prevBill.paymentStatus = "paid";
-            prevBill.paidAmount = bill.lastReceiptAmount; // Paid amount update
-            prevBill.billPaymentDate = bill.lastReceiptDate; // Bill payment date update
+            prevBill.paidAmount = bill.lastReceiptAmount; 
+            prevBill.billPaymentDate = bill.lastReceiptDate; 
             await prevBill.save();
             console.log(`✅ Updated bill for Consumer ${bill.consumerNumber} for ${prevMonthYear}`);
           }
@@ -724,7 +325,7 @@ exports.editReceipt = async (req, res) => {
       const updatedReceipt = await Bill.findByIdAndUpdate(
           _id,
           { receiptNoBillPayment },
-          { new: true } // Return the updated document
+          { new: true } 
       );
 
       if (!updatedReceipt) {
@@ -771,112 +372,6 @@ exports.addRemark = async (req,res) => {
   }
 };
 
-
-
-
-
-// exports.editRemark = async (req, res) => {
-//   console.log("role is >>>>>>>>>", req.body.role);
-//   try {
-//       const { _id, remark, role } = req.body;
-
-//       if (!_id || !role || !remark) {
-//           return res.status(400).json({ message: "Receipt ID (_id), role, and remark are required." });
-//       }
-
-//       // Find existing bill
-//       const existingBill = await Bill.findById(_id);
-//       if (!existingBill) {
-//           return res.status(404).json({ message: "Receipt not found." });
-//       }
-
-//       // If `remarks` array doesn't exist, initialize it
-//       existingBill.remarks = existingBill.remarks || [];
-
-//       // Check if the role already exists in remarks
-//       const roleIndex = existingBill.remarks.findIndex(r => r.role === role);
-
-//       if (roleIndex !== -1) {
-//           // Update existing role remark
-//           existingBill.remarks[roleIndex].remark = remark;
-//       } else {
-//           // Add new remark with role
-//           existingBill.remarks.push({ role, remark: remark });
-//       }
-
-//       // Save the updated bill with new remarks array
-//       await existingBill.save();
-
-//       res.status(200).json({
-//           message: "Remark updated successfully.",
-//           remarks: existingBill.remarks, // Return updated remarks array
-//       });
-//   } catch (error) {
-//       console.error("Error updating remark:", error);
-//       res.status(500).json({
-//           message: "An error occurred while updating the remark.",
-//           error: error.message,
-//       });
-//   }
-// };
-
-
-
-
-
-// exports.editRemark = async (req, res) => {
-//     console.log("role is >>>>>>>>>", req.body.role);
-//     console.log("Id is >>>>>>>>>", req.body._id);
-
-//     try {
-//         const { _id, remark, role } = req.body;
-
-//         if (!_id || !role || !remark) {
-//             return res.status(400).json({ message: "Bill ID (_id), role, and remark are required." });
-//         }
-
-//         // Find the existing bill
-//         const existingBill = await Bill.findById(_id);
-//         if (!existingBill) {
-//             return res.status(404).json({ message: "Bill not found." });
-//         }
-
-//         // Ensure `remarks` array exists
-//         existingBill.remarks = existingBill.remarks || [];
-
-//         // Check if the role already exists in remarks
-//         const existingRemark = existingBill.remarks.find(r => r.role === role);
-
-//         if (existingRemark) {
-//             // Update the existing remark for the role
-//             existingRemark.remark = remark;
-//             existingRemark.date = new Date(); // Update timestamp
-//         } else {
-//             // Add a new remark for the role
-//             existingBill.remarks.push({ 
-//                 _id: new mongoose.Types.ObjectId(), 
-//                 role, 
-//                 remark, 
-//                 date: new Date() 
-//             });
-//         }
-
-//         // Save the updated bill
-//         await existingBill.save();
-
-//         res.status(200).json({
-//             message: "Remark updated successfully.",
-//             remarks: existingBill.remarks, // Return updated remarks array
-//         });
-//     } catch (error) {
-//         console.error("Error updating remark:", error);
-//         res.status(500).json({
-//             message: "An error occurred while updating the remark.",
-//             error: error.message,
-//         });
-//     }
-// };
-
 exports.editRemark = async (req, res) => {
  
   try {
@@ -884,31 +379,31 @@ exports.editRemark = async (req, res) => {
     
       const userward=req.body.ward;
 
-      console.log("userward<<<<",userward)
+   
       if (!_id || !role || !remark) {
           return res.status(400).json({ message: "Bill ID (_id), role, and remark are required." });
       }
 
-      // Find the existing bill
+      
       const existingBill = await Bill.findById(_id);
       if (!existingBill) {
           return res.status(404).json({ message: "Bill not found." });
       }
 
-      // Ensure `remarks` array exists
+     
       existingBill.remarks = existingBill.remarks || [];
 
-      // Check if the role already exists in remarks
+    
       const existingRemark = existingBill.remarks.find(r => r.role === role);
 
       if (existingRemark) {
-          // Update the existing remark for the role
+        
           existingRemark.remark = remark;
           existingRemark.ward = userward;
-          existingRemark.signature = signature; // Update signature
-          existingRemark.date = new Date(); // Update timestamp
+          existingRemark.signature = signature; 
+          existingRemark.date = new Date(); 
       } else {
-          // Add a new remark for the role
+         
           existingBill.remarks.push({ 
               _id: new mongoose.Types.ObjectId(), 
               role, 
@@ -919,12 +414,12 @@ exports.editRemark = async (req, res) => {
           });
       }
 
-      // Save the updated bill
+     
       const updatedBill = await existingBill.save();
 
       res.status(200).json({
           message: "Remark updated successfully.",
-          remarks: updatedBill.remarks, // Return updated remarks array
+          remarks: updatedBill.remarks, 
       });
   } catch (error) {
       console.error("Error updating remark:", error);
@@ -1094,7 +589,7 @@ bill.netLoad = netLoad || bill.netLoad || '';
           bill.paymentStatus = 'paid';
           break;
         case 'Admin':
-          // bill.approvedStatus = 'PendingForSuperAdmin';
+         
           bill.approvedStatus = 'PendingForAdmin';
           bill.paymentStatus = 'paid';
           break;
@@ -1120,7 +615,7 @@ bill.netLoad = netLoad || bill.netLoad || '';
           break;
         case 'Admin':
           bill.approvedStatus = 'PendingForAdmin';
-          // bill.approvedStatus = 'PendingForSuperAdmin';
+        
           bill.paymentStatus = 'Partial';
           break;
         case 'Super Admin':
@@ -1165,16 +660,16 @@ bill.netLoad = netLoad || bill.netLoad || '';
     try {
         const bills = await Bill.find();
         
-        // Get all consumers
+     
         const consumers = await Consumer.find();
 
-        // Create a map of consumerNumber to meterPurpose for quick lookup
+       
         const consumerMap = new Map();
         consumers.forEach(consumer => {
             consumerMap.set(consumer.consumerNumber, consumer.meterPurpose);
         });
 
-        // Update each bill's meterPurpose if consumerNumber matches
+      
         const updatedBills = bills.map(bill => {
             if (consumerMap.has(bill.consumerNumber)) {
                 return { ...bill.toObject(), meterPurpose: consumerMap.get(bill.consumerNumber) };
@@ -1193,9 +688,9 @@ bill.netLoad = netLoad || bill.netLoad || '';
 exports.updateBillStatus = async (req, res) => {
   const { id, approvedStatus, paymentStatus, yesno } = req.body;
   
-  // let totalArrearsval;
+  
   let netBillAmountval;
-  // let roundedBillAmountval;
+ 
   if (!id || !approvedStatus) {
     return res.status(400).json({ message: 'Bill ID and approved status are required' });
   }
@@ -1207,20 +702,7 @@ exports.updateBillStatus = async (req, res) => {
     }
 
      if (req?.user?.role === 'Super Admin'){
-      // if(approvedStatus === 'Done' && yesno === 'Yes' && paymentStatus==='paid'){
-      //     // totalArrearsval=bill.totalArrears;
-      //     netBillAmountval=bill.netBillAmount;
-      //     // roundedBillAmountval=bill.roundedBillAmount;
-          
-      //   bill.paymentStatus = 'paid';
-      //   bill.approvedStatus = 'Done';
-      // }else if(approvedStatus === 'PendingForSuperAdmin' && yesno === 'No'&& paymentStatus==='unpaid'){
-      //   bill.paymentStatus = 'unpaid';
-      //   bill.approvedStatus = 'PendingForSuperAdmin';
-      // }else if(approvedStatus === 'PartialDone' && yesno === 'Yes'&& paymentStatus==='Partial'){
-      //   bill.paymentStatus = 'unpaid';
-      //   bill.approvedStatus = 'PartialDone';
-      // }
+      
      }
         else {
       bill.paymentStatus = paymentStatus;
@@ -1230,7 +712,7 @@ exports.updateBillStatus = async (req, res) => {
         bill.approvedStatus = 'PendingForJuniorEngineer';
         bill.paymentStatus = 'unpaid';
       } else if (req?.user?.role === 'Admin' && yesno === 'Yes') {
-        // bill.approvedStatus = 'PendingForSuperAdmin';
+       
         bill.approvedStatus = 'PendingForAdmin';
       } else if (req?.user?.role === 'Admin' && yesno === 'No' && approvedStatus === 'PendingForSuperAdmin') {
         bill.approvedStatus = 'PendingForAdmin';
@@ -1288,56 +770,6 @@ exports.updateFlagStatus = async (req, res) => {
 
 
 
-// ------------------old massupdate
-// exports.massUpdateBillStatus = async (req, res) => {
-//   try {
-//     const requesterRole = req?.user?.role;
-//     if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterRole !== 'Executive Engineer' && requesterRole !== 'Junior Engineer') {
-//       return res.status(403).json({ message: "You don't have authority to approve bills" });
-//     }
-//     const { bills } = req.body;
-//     if (!bills || bills.length === 0) {
-//       return res.status(400).json({ message: 'No bills provided' });
-//     }
-//     const billsToUpdate = await Bill.find({ _id: { $in: bills.map(bill => bill._id) } });
-//     if (!billsToUpdate || billsToUpdate.length === 0) {
-//       return res.status(404).json({ message: 'No bills found' });
-//     }
-//     await Promise.all(bills.map(async (bill) => {
-//       let approvedStatus;
-//       let paymentStatus;
-//       if (requesterRole === 'Junior Engineer') {
-//         approvedStatus = 'PendingForExecutiveEngineer';
-//         paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-//       } else if (requesterRole === 'Executive Engineer') {
-//         approvedStatus = 'PendingForAdmin';
-//         paymentStatus =bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-//       } else if (requesterRole === 'Admin') {
-//         approvedStatus = 'PendingForAdmin';
-//         // approvedStatus = 'PendingForSuperAdmin';
-//         paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-//       } else if (requesterRole === 'Super Admin') {
-//         approvedStatus = 'Done';
-//         paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-//       }
-//       await Bill.findByIdAndUpdate(bill._id, {
-//         approvedStatus,
-//         paymentStatus,
-//         flagStatus: true 
-//       }, { new: true });
-//     }));
-//     res.status(200).json({
-//       message: 'Bills updated successfully',
-//     });
-
-//   } catch (error) {
-//     console.error("Error updating bills:", error);
-//     res.status(500).json({
-//       message: 'Error updating bills',
-//     });
-//   }
-// };
-
 
 
 
@@ -1357,7 +789,7 @@ exports.massUpdateBillStatus = async (req, res) => {
       return res.status(404).json({ message: 'No bills found' });
     }
     await Promise.all(bills.map(async (bill) => {
-      console.log("bill--->>>",bill)
+    
       let approvedStatus;
       let paymentStatus;
       if (requesterRole === 'Junior Engineer' && requesterWard !== 'Head Office') {
@@ -1372,15 +804,7 @@ exports.massUpdateBillStatus = async (req, res) => {
         approvedStatus = 'Approved';
         paymentStatus =bill.paymentStatus ? bill.paymentStatus : 'unpaid';
       } 
-      // else if (requesterRole === 'Admin') {
-      //   approvedStatus = 'PendingForAdmin';
-      //   // approvedStatus = 'PendingForSuperAdmin';
-      //   paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-      // }
-      //  else if (requesterRole === 'Super Admin') {
-      //   approvedStatus = 'Done';
-      //   paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-      // }
+      
       await Bill.findByIdAndUpdate(bill._id, {
         approvedStatus,
         paymentStatus,
@@ -1416,14 +840,7 @@ exports.reverseMassBillStatus = async (req, res) => {
     await Promise.all(bills.map(async (bill) => {
       let approvedStatus;
       let paymentStatus;
-      // if (requesterRole === 'Super Admin' && bill?.approvedStatus==='Done') {
-      //   approvedStatus = 'PendingForSuperAdmin'; 
-      //   paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-      // } 
-      //   if(requesterRole === 'Admin' && bill?.approvedStatus==='PendingForSuperAdmin') {
-      //   approvedStatus = 'PendingForAdmin'; 
-      //   paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';
-      // } 
+      
      if (requesterRole === 'Executive Engineer' && bill?.approvedStatus==='PendingForExecutiveEngineer') {
         approvedStatus = 'PendingForExecutiveEngineer';
         paymentStatus = bill.paymentStatus ? bill.paymentStatus : 'unpaid';

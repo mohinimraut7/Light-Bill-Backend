@@ -6,7 +6,7 @@ const router=express.Router();
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, "uploads/"); // ✅ PDF files `uploads/` फोल्डर मध्ये सेव्ह होतील
+      cb(null, "uploads/");
     },
     filename: function (req, file, cb) {
       cb(null, Date.now() + "-" + file.originalname);

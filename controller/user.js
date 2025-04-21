@@ -6,7 +6,7 @@ const user = require("../models/user");
 const Bill = require("../models/bill");
 const Role = require("../models/role");
 const path = require('path');
-// const viewfile=require('../views/verified.html')
+
 const viewfile = path.join(__dirname, "../views/verified.html"); 
 
 const fetch = require('node-fetch');
@@ -55,11 +55,11 @@ exports.addUser = async (req, res) => {
       ward
     });
     const savedUser = await newUser.save();
-    const verificationToken = crypto.randomBytes(32).toString('hex'); // Generate a random token
+    const verificationToken = crypto.randomBytes(32).toString('hex'); 
     newUser.verificationToken = verificationToken;
 await newUser.save();
 
-// Send Verification Email
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -78,7 +78,7 @@ await transporter.sendMail({
   html: `<p>Click <a href="${verificationLink}">here</a> to verify your email address.</p>`,
 });
 
-    // res.status(201).json({ message: "User added successfully", user: savedUser });
+   
     res.status(201).json({ message: "User added successfully. Check your email to verify your account." });
 
   } catch (error) {
@@ -89,7 +89,7 @@ await transporter.sendMail({
 
 
 exports.verifyEmail = async (req, res) => {
-  // Extract token from route parameters
+
   const { token } = req.params;
   try {
     const user = await User.findOne({ verificationToken: token });
@@ -99,10 +99,10 @@ exports.verifyEmail = async (req, res) => {
     }
 
     user.isVerified = true;
-    user.verificationToken = undefined; // Clear the token after verification
+    user.verificationToken = undefined; 
     await user.save();
 
-    // Send the verified HTML page
+   
     res.sendFile(viewfile);
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
@@ -128,13 +128,10 @@ exports.resendVerificationEmail = async (req, res) => {
       return res.status(400).json({ message: "Email is already verified" });
     }
 
-    // Generate a new verification token
+   
     const verificationToken = crypto.randomBytes(32).toString('hex');
     user.verificationToken = verificationToken;
     await user.save();
-
-    // Send the verification email again
-
 
 
     
@@ -144,8 +141,7 @@ exports.resendVerificationEmail = async (req, res) => {
 
         user: "mohinimraut7@gmail.com",
         pass: "enpz swmp tycr ryhh",
-        // user: process.env.EMAIL,
-        // pass: process.env.PASSWORD,
+       
       },
     });
 
@@ -168,43 +164,18 @@ exports.resendVerificationEmail = async (req, res) => {
 };
 
 
-
-
-
-
-// exports.deleteUser = async (req, res) => {
-//   const { user_id } = req.params;
-//   try {
-//     const deletedUser = await user.findByIdAndDelete(user_id);
-//     if (!deletedUser) {
-//       return res.status(404).json({
-//         message: "User not found",
-//       });
-//     }
-//     await Bill.deleteMany({ userId: user_id });
-//     res.status(200).json({
-//       message: "User and corresponding bills deleted successfully",
-//       user: deletedUser,
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       message: "Internal Server Error"
-//     });
-//   }
-// }
-
 exports.deleteUser = async (req, res) => {
   const { user_id } = req.params;
 
   try {
-    // Find the user first
+   
     const deletedUser = await User.findByIdAndDelete(user_id);
 
     if (!deletedUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Delete associated role
+    
     await Role.deleteOne({ _id: deletedUser.roleId });
 
     
@@ -227,11 +198,10 @@ exports.editProfile = async (req, res) => {
     address,signature,city, country, postalCode, role, roleSupervisor, ward, wardsection, description
   } = req.body;
 
-  console.log("ward-----<<<",ward)
+ 
   const requesterRole = req?.user?.role;
 const reqward=req?.user?.ward;
-  console.log("requesterRole<<<<<",requesterRole)
-  console.log("requesterRole<<<<<",req.ward)
+  
   const requesterId = req?.user?._id;
   if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && requesterRole !== 'Executive Engineer' && !(requesterRole === 'Junior Engineer' && reqward === 'Head Office') && requesterId.toString() !== userId) {
     return res.status(403).json({ message: "You don't have authority to edit this user" });
@@ -318,7 +288,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // Check if the user's email is verified
+   
     if (!user.isVerified) {
       return res.status(403).json({
         message: "Email is not verified. Please verify your email to login.",

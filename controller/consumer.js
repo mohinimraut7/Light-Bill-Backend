@@ -92,23 +92,7 @@ exports.deleteAll=async(req,res)=>{
     } 
 }
 
-// exports.importExcel=async(req,res)=>{
-// try {
-//     const consumers = req.body;
-//     const insertedConsumers = await Consumer.insertMany(consumers, { ordered: false });
 
-//     res.status(201).json({
-//         message: 'Batch imported successfully',
-//         count: insertedConsumers.length,
-//     });
-// } catch (error) {
-//     console.error('Error importing data:', error);
-//     res.status(500).json({
-//         message: 'Error importing data',
-//         error: error.message,
-//     });
-// }
-// }
 exports.importExcel = async (req, res) => {
     try {
         const consumers = req.body;
@@ -217,10 +201,7 @@ exports.editConsumer = async (req, res) => {
 
     
     const requesterRole = req?.user?.role;
-    // if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin') {
-    //     return res.status(403).json({ message: "You don't have authority to edit meter details" });
-    // }
-
+   
     try {
         
         const consumerUpdateData = {

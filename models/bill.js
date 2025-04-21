@@ -1,7 +1,7 @@
 
 const mongoose = require("mongoose");
 
-const todayDate = new Date().toISOString().split("T")[0]; // आजची तारीख YYYY-MM-DD
+const todayDate = new Date().toISOString().split("T")[0]; 
 
 const billSchema = new mongoose.Schema(
   {
@@ -161,57 +161,32 @@ const billSchema = new mongoose.Schema(
     juniorEngineerContactNumber: {
       type: Number,
     },
-    // remark:{
-    //   type:String
-    // }
+    
     remarks: [
       {
-        role: { type: String, required: true }, // Example: "Super Admin", "Junior Engineer"
-        remark: { type: String, required: true }, // Example: "Checked meter status"
+        role: { type: String, required: true }, 
+        remark: { type: String, required: true }, 
         ward: { type: String },
         signature: {type: String, 
           required: false},
-        date: { type: Date, default: Date.now } // Timestamp of remark
+        date: { type: Date, default: Date.now } 
       }
     ],
     
   },
   { timestamps: true }
 );
-// billSchema.pre('save', function (next) {
-//   if (this.dueDate) { 
-//     const today = new Date();
-//     const dueDate = new Date(this.dueDate); 
-//     const twoDaysBeforeDue = new Date(dueDate);
-//     twoDaysBeforeDue.setDate(dueDate.getDate() - 2);
-//     if (today.toDateString() === twoDaysBeforeDue.toDateString()) {
-//       this.dueAlert = true;
-//     } else {
-//       this.dueAlert = false;
-//     }
-//   } else {
-//     this.dueAlert = false; 
-//   }
-//   next();
-// });
-
-// billSchema.pre('save', function (next) {
-//   if (this.paymentStatus) {
-//     this.paymentStatus = this.paymentStatus.toLowerCase().trim();
-//   }
-//   next();
-// });
 
 billSchema.pre('save', function (next) {
   if (this.dueDate && this.paymentStatus === "unpaid") {
-    const today = new Date().toISOString().split("T")[0]; // Get today's date (YYYY-MM-DD)
+    const today = new Date().toISOString().split("T")[0]; 
     const dueDate = new Date(this.dueDate);
     
-    // Calculate two days before dueDate
+   
     dueDate.setDate(dueDate.getDate() - 2);
     const twoDaysBeforeDue = dueDate.toISOString().split("T")[0];
 
-    // Set dueAlert if today matches two days before dueDate
+   
     this.dueAlert = today === twoDaysBeforeDue;
   } else {
     this.dueAlert = false;

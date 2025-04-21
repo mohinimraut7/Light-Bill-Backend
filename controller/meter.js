@@ -111,10 +111,7 @@ exports.editMeter = async (req, res) => {
 
     
     const requesterRole = req?.user?.role;
-    // if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin') {
-    //     return res.status(403).json({ message: "You don't have authority to edit meter details" });
-    // }
-
+    
     try {
         
         const meterUpdateData = {

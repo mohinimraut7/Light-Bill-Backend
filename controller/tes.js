@@ -39,8 +39,7 @@ exports.editRole = async (req, res) => {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
             user = new User({
-                // firstName,
-                // lastName,
+               
                 email,
                 password: hashedPassword,
                 contactNumber,
@@ -50,8 +49,7 @@ exports.editRole = async (req, res) => {
             await user.save();
         } else {
             const userUpdateData = { role: name, ward };
-            // if (firstName) userUpdateData.firstName = firstName;
-            // if (lastName) userUpdateData.lastName = lastName;
+           
             if (email) userUpdateData.email = email;
             if (contactNumber) userUpdateData.contactNumber = contactNumber;
             if (password) {
