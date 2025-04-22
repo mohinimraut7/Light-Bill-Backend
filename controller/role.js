@@ -57,12 +57,28 @@ if (requesterRole !== 'Junior Engineer') {
             return res.status(400).json({ message: `An Dy.Municipal Commissioner for ${ward} already exists for this ward` });
         }
     } 
+    // else {
+    //     const existingWard = await Role.findOne({ ward });
+    //     if (existingWard) {
+    //         return res.status(400).json({ message: `A role for ward ${ward} already exists` });
+    //     }
+    // }
+
     else {
         const existingWard = await Role.findOne({ ward });
-        if (existingWard) {
-            return res.status(400).json({ message: `A role for ward ${ward} already exists` });
+      
+        const allowOverride =
+          requesterRole === 'Admin' ||
+          requesterRole === 'Executive Engineer' ||
+          requesterRole === 'Super Admin' ||
+          (requesterRole === 'Junior Engineer' && requesterWard === 'Head Office');
+      
+        if (existingWard && !allowOverride) {
+          return res.status(400).json({ message: `A role for ward ${ward} already exists` });
         }
-    }
+      }
+      
+    
 }
 
 
