@@ -131,9 +131,10 @@ exports.addRemarkReports = async (req, res) => {
         }
 
       
-        const createRemark = ({ userId, role, remark, signature, document }) => {
+        const createRemark = ({ userId,ward,role, remark, signature, document }) => {
             const remarkObj = {
                 userId: new mongoose.Types.ObjectId(userId),
+                ward,
                 role,
                 remark,
                 signature,
@@ -234,7 +235,7 @@ exports.addRemarkReports = async (req, res) => {
 
             report.reportingRemarks[index] = existing;
         } else {
-            const newRemark = createRemark({ userId, role, remark, signature, document });
+            const newRemark = createRemark({ userId, role,ward,remark, signature, document });
             report.reportingRemarks.push(newRemark);
         }
 
