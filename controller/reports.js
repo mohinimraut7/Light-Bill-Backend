@@ -165,6 +165,7 @@ exports.addRemarkReports = async (req, res) => {
             const jeRemark = {
                 userId: new mongoose.Types.ObjectId(userId),
                 role: "Junior Engineer",
+                ward,
                 remark,
                 signature,
                 date: new Date(),
