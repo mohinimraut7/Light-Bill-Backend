@@ -142,9 +142,121 @@ exports.addRemarkReports = async (req, res) => {
             };
 
           
-            if (role === "Lipik") {
-                remarkObj.documents = document ? [document] : [];
+            // if (role === "Lipik") {
+            //     remarkObj.documents = document ? [document] : [];
+            // }
+// -------------------------------------------------------------------
+
+            // if (document && role !== "Lipik") {
+            //     const lipikRemark = report.reportingRemarks.find(r => r.role === "Lipik");
+            
+            //     if (lipikRemark) {
+            //         lipikRemark.documents = lipikRemark.documents || [];
+            
+            //         const docIndex = lipikRemark.documents.findIndex(doc => doc.formType === formType);
+            
+            //         if (mode === "edit") {
+            //             if (docIndex !== -1) {
+            //                 lipikRemark.documents[docIndex] = document;
+            //             } else {
+            //                 lipikRemark.documents.push(document);
+            //             }
+            //         } else {
+            //             const alreadyExists = lipikRemark.documents.some(doc => doc.formType === formType);
+            //             if (!alreadyExists) {
+            //                 lipikRemark.documents.push(document);
+            //             }
+            //         }
+            //     } else {
+            //         return res.status(400).json({
+            //             message: "Lipik remark not found. Cannot attach document."
+            //         });
+            //     }
+            // }
+            
+// -------------------------------------------------------------
+
+// if (document && role !== "Lipik") {
+//     const lipikRemark = report.reportingRemarks.find(r => r.role === "Lipik");
+
+//     if (lipikRemark) {
+//         lipikRemark.documents = lipikRemark.documents || [];
+
+//         const docIndex = lipikRemark.documents.findIndex(doc => doc.formType === formType);
+
+//         if (mode === "edit") {
+//             if (docIndex !== -1) {
+//                 // Overwrite only specific fields, preserve others
+//                 lipikRemark.documents[docIndex] = {
+//                     ...lipikRemark.documents[docIndex],
+//                     ...document,
+//                     uploadedAt: new Date()  // optionally update the timestamp
+//                 };
+//             } else {
+//                 lipikRemark.documents.push(document);
+//             }
+//         } else {
+//             const alreadyExists = lipikRemark.documents.some(doc => doc.formType === formType);
+//             if (!alreadyExists) {
+//                 lipikRemark.documents.push(document);
+//             }
+//         }
+//     } else {
+//         return res.status(400).json({
+//             message: "Lipik remark not found. Cannot attach document."
+//         });
+//     }
+// }
+// -------------------------------------------
+if (document && role !== "Lipik") {
+    const lipikRemark = report.reportingRemarks.find(r => r.role === "Lipik");
+
+    if (lipikRemark) {
+        lipikRemark.documents = lipikRemark.documents || [];
+
+        const docIndex = lipikRemark.documents.findIndex(doc => doc.formType === formType);
+
+        if (mode === "edit") {
+            if (docIndex !== -1) {
+                const existingDoc = lipikRemark.documents[docIndex];
+
+                lipikRemark.documents[docIndex] = {
+                    ...existingDoc,
+                    ...document,
+                    uploadedAt: new Date(),
+                    signatures: {
+                        ...(existingDoc.signatures || {}),
+                        [role]: signature  // Add/update the current role's signature
+                    }
+                };
+            } else {
+                lipikRemark.documents.push({
+                    ...document,
+                    uploadedAt: new Date(),
+                    signatures: {
+                        [role]: signature
+                    }
+                });
             }
+        } else {
+            const alreadyExists = lipikRemark.documents.some(doc => doc.formType === formType);
+            if (!alreadyExists) {
+                lipikRemark.documents.push({
+                    ...document,
+                    uploadedAt: new Date(),
+                    signatures: {
+                        [role]: signature
+                    }
+                });
+            }
+        }
+    } else {
+        return res.status(400).json({
+            message: "Lipik remark not found. Cannot attach document."
+        });
+    }
+}
+
 
             return remarkObj;
         };
