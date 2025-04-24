@@ -9,4 +9,8 @@ EMAIL=mohinimraut7@gmail.com
 PASSWORD=MohiniRaut@75
 BASEURL=https://lightbillbackend.saavi.co.in
 AAPPASSWORD=enpz swmp tycr ryhh
+-----------------------
+API=http://localhost:5000
+BASEURL=http://localhost:5000
+
 
