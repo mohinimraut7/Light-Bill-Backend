@@ -13,5 +13,10 @@ AAPPASSWORD=enpz swmp tycr ryhh
 API=https://lightbillbackend.saavi.co.in
 BASEURL=https://lightbillbackend.saavi.co.in
 
+API=http://localhost:5000
+BASEURL=http://localhost:5000
+
+
+
 
 
