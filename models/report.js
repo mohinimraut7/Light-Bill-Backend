@@ -10,7 +10,7 @@ const reportSchema = new mongoose.Schema({
           userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
           role: { type: String }, 
           remark: { type: String }, 
-          ward:{ type: String },
+          userWard:{ type: String },
           signature: { type: String },
           date: { type: Date, default: Date.now }, 
           documents: [
