@@ -19,6 +19,7 @@ const reportSchema = new mongoose.Schema({
                 formNumber: { type: String}, 
                 pdfFile: { type: String }, 
                 uploadedAt: { type: Date, default: Date.now },
+                approvedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
               
             }
         ]

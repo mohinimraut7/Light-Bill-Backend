@@ -61,7 +61,7 @@ exports.getReports = async (req, res) => {
         return null;
     }
 };
-
+// -----------------------------------------------------------------------
 
 exports.addRemarkReports = async (req, res) => {
     try {
@@ -78,11 +78,12 @@ exports.addRemarkReports = async (req, res) => {
             mode
         } = req.body;
 
-        console.log("req.body", req.body.wardName);
+        // console.log("req.body", req.body.wardName);
+        // console.log("req.body.signature ***** ",signature);
 
        let userWard=ward;
 
-       console.log("userward - 1",userWard)
+    //    console.log("userward - 1",userWard)
         const missingFields = [];
         if (!role) missingFields.push("role");
         if (!remark) missingFields.push("remark");
@@ -107,7 +108,8 @@ exports.addRemarkReports = async (req, res) => {
                 formNumber,
                 pdfFile: req.file.path,
                 uploadedAt: new Date(),
-                seleMonth
+                seleMonth,
+                approvedBy: [] 
             };
         } else if (pdfData) {
             const pdfFilePath = saveBase64File(pdfData, formNumber);
@@ -117,7 +119,8 @@ exports.addRemarkReports = async (req, res) => {
                     formNumber,
                     pdfFile: pdfFilePath,
                     uploadedAt: new Date(),
-                    seleMonth
+                    seleMonth,
+                    approvedBy: []  // Empty array initially
                 };
             } else {
                 return res.status(400).json({
@@ -141,74 +144,11 @@ exports.addRemarkReports = async (req, res) => {
                 userWard,
                 date: new Date()
             };
-
+            if (remark === "Approved" && document) {
+                document.approvedBy.push(userId);
+            }
           
-            // if (role === "Lipik") {
-            //     remarkObj.documents = document ? [document] : [];
-            // }
-// -------------------------------------------------------------------
-
-            // if (document && role !== "Lipik") {
-            //     const lipikRemark = report.reportingRemarks.find(r => r.role === "Lipik");
-            
-            //     if (lipikRemark) {
-            //         lipikRemark.documents = lipikRemark.documents || [];
-            
-            //         const docIndex = lipikRemark.documents.findIndex(doc => doc.formType === formType);
-            
-            //         if (mode === "edit") {
-            //             if (docIndex !== -1) {
-            //                 lipikRemark.documents[docIndex] = document;
-            //             } else {
-            //                 lipikRemark.documents.push(document);
-            //             }
-            //         } else {
-            //             const alreadyExists = lipikRemark.documents.some(doc => doc.formType === formType);
-            //             if (!alreadyExists) {
-            //                 lipikRemark.documents.push(document);
-            //             }
-            //         }
-            //     } else {
-            //         return res.status(400).json({
-            //             message: "Lipik remark not found. Cannot attach document."
-            //         });
-            //     }
-            // }
-            
-// -------------------------------------------------------------
-
-// if (document && role !== "Lipik") {
-//     const lipikRemark = report.reportingRemarks.find(r => r.role === "Lipik");
-
-//     if (lipikRemark) {
-//         lipikRemark.documents = lipikRemark.documents || [];
-
-//         const docIndex = lipikRemark.documents.findIndex(doc => doc.formType === formType);
-
-//         if (mode === "edit") {
-//             if (docIndex !== -1) {
-//                 // Overwrite only specific fields, preserve others
-//                 lipikRemark.documents[docIndex] = {
-//                     ...lipikRemark.documents[docIndex],
-//                     ...document,
-//                     uploadedAt: new Date()  // optionally update the timestamp
-//                 };
-//             } else {
-//                 lipikRemark.documents.push(document);
-//             }
-//         } else {
-//             const alreadyExists = lipikRemark.documents.some(doc => doc.formType === formType);
-//             if (!alreadyExists) {
-//                 lipikRemark.documents.push(document);
-//             }
-//         }
-//     } else {
-//         return res.status(400).json({
-//             message: "Lipik remark not found. Cannot attach document."
-//         });
-//     }
-// }
-// -------------------------------------------
+           
 if (document && role !== "Lipik") {
     const lipikRemark = report.reportingRemarks.find(r => r.role === "Lipik");
 
@@ -228,7 +168,8 @@ if (document && role !== "Lipik") {
                     signatures: {
                         ...(existingDoc.signatures || {}),
                         [role]: signature  // Add/update the current role's signature
-                    }
+                    },
+                    approvedBy: existingDoc.approvedBy || [] // ✅ very important
                 };
             } else {
                 lipikRemark.documents.push({
@@ -236,7 +177,8 @@ if (document && role !== "Lipik") {
                     uploadedAt: new Date(),
                     signatures: {
                         [role]: signature
-                    }
+                    },
+                    approvedBy: []
                 });
             }
         } else {
@@ -247,7 +189,8 @@ if (document && role !== "Lipik") {
                     uploadedAt: new Date(),
                     signatures: {
                         [role]: signature
-                    }
+                    },
+                    approvedBy: []
                 });
             }
         }
@@ -369,6 +312,252 @@ if (document && role !== "Lipik") {
         });
     }
 };
+
+// ---------------------------------------------------------------------------------
+
+// exports.addRemarkReports = async (req, res) => {
+//     try {
+//         const {
+//             userId,
+//             remark,
+//             role,
+//             signature,
+//             ward,
+//             formType,
+//             pdfData,
+//             seleMonth,
+//             wardName,
+//             mode
+//         } = req.body;
+
+//         // console.log("req.body", req.body.wardName);
+//         // console.log("req.body.signature ***** ", signature);
+
+//         let userWard = ward;
+
+//         const missingFields = [];
+//         if (!role) missingFields.push("role");
+//         if (!remark) missingFields.push("remark");
+//         if (!formType) missingFields.push("formType");
+//         if (!seleMonth) missingFields.push("seleMonth");
+//         if (!ward) missingFields.push("ward");
+
+//         if (missingFields.length > 0) {
+//             return res.status(400).json({
+//                 message: `Missing required fields: ${missingFields.join(", ")}`
+//             });
+//         }
+
+//         const formNumber = await generateFormNumber(formType);
+//         let document = null;
+
+//         if (req.file) {
+//             document = {
+//                 formType,
+//                 formNumber,
+//                 pdfFile: req.file.path,
+//                 uploadedAt: new Date(),
+//                 seleMonth,
+//                 approvedBy: [] 
+//             };
+//         } else if (pdfData) {
+//             const pdfFilePath = saveBase64File(pdfData, formNumber);
+//             if (pdfFilePath) {
+//                 document = {
+//                     formType,
+//                     formNumber,
+//                     pdfFile: pdfFilePath,
+//                     uploadedAt: new Date(),
+//                     seleMonth,
+//                     approvedBy: [] // Empty array initially
+//                 };
+//             } else {
+//                 return res.status(400).json({
+//                     message: "Invalid base64 PDF data."
+//                 });
+//             }
+//         } else {
+//             return res.status(400).json({
+//                 message: "No file or PDF data provided."
+//             });
+//         }
+
+//         const createRemark = ({ userId, ward, role, remark, signature, document, userWard }) => {
+//             const remarkObj = {
+//                 userId: new mongoose.Types.ObjectId(userId),
+//                 ward,
+//                 role,
+//                 remark,
+//                 signature,
+//                 userWard,
+//                 date: new Date()
+//             };
+
+//             if (remark === "Approved" && document) {
+//                 document.approvedBy.push(userId); // Approve the document by adding userId
+//             }
+
+//             // 🛠️ NEW - Check for Lipik approval and add approvedBy
+//             if (document && role !== "Lipik") {
+//                 const lipikRemark = report.reportingRemarks.find(r => r.role === "Lipik");
+
+//                 if (lipikRemark) {
+//                     lipikRemark.documents = lipikRemark.documents || [];
+
+//                     const docIndex = lipikRemark.documents.findIndex(doc => doc.formType === formType);
+
+//                     if (mode === "edit") {
+//                         if (docIndex !== -1) {
+//                             const existingDoc = lipikRemark.documents[docIndex];
+//                             lipikRemark.documents[docIndex] = {
+//                                 ...existingDoc,
+//                                 ...document,
+//                                 uploadedAt: new Date(),
+//                                 signatures: {
+//                                     ...(existingDoc.signatures || {}),
+//                                     [role]: signature // Add/update the current role's signature
+//                                 },
+//                                 approvedBy: existingDoc.approvedBy || [] // Add empty array if no approvals
+//                             };
+//                         } else {
+//                             lipikRemark.documents.push({
+//                                 ...document,
+//                                 uploadedAt: new Date(),
+//                                 signatures: {
+//                                     [role]: signature
+//                                 },
+//                                 approvedBy: [] // Empty array for new document
+//                             });
+//                         }
+//                     } else {
+//                         const alreadyExists = lipikRemark.documents.some(doc => doc.formType === formType);
+//                         if (!alreadyExists) {
+//                             lipikRemark.documents.push({
+//                                 ...document,
+//                                 uploadedAt: new Date(),
+//                                 signatures: {
+//                                     [role]: signature
+//                                 },
+//                                 approvedBy: [] // Empty array for new document
+//                             });
+//                         }
+//                     }
+//                 } else {
+//                     return res.status(400).json({
+//                         message: "Lipik remark not found. Cannot attach document."
+//                     });
+//                 }
+//             }
+
+//             return remarkObj;
+//         };
+
+//         if (role === "Junior Engineer" && ward === "Head Office" && wardName) {
+//             let wardReport = await Report.findOne({ seleMonth, ward: wardName });
+//             if (!wardReport) {
+//                 wardReport = new Report({
+//                     seleMonth,
+//                     userWard,
+//                     ward: wardName,
+//                     monthReport: seleMonth,
+//                 });
+//             }
+
+//             const jeRemark = {
+//                 userId: new mongoose.Types.ObjectId(userId),
+//                 role: "Junior Engineer",
+//                 ward,
+//                 userWard,
+//                 remark,
+//                 signature,
+//                 date: new Date(),
+//             };
+
+//             const jeExists = wardReport.reportingRemarks.some(r =>
+//                 r.userId.toString() === userId &&
+//                 r.role === "Junior Engineer" &&
+//                 r.remark === remark
+//             );
+
+//             if (!jeExists) {
+//                 wardReport.reportingRemarks.push(jeRemark);
+//                 await wardReport.save();
+//             }
+
+//             return res.status(201).json({
+//                 message: `Junior Engineer remark added to ward ${wardName} successfully.`,
+//                 report: wardReport
+//             });
+//         }
+
+//         let report = await Report.findOne({ seleMonth, ward });
+
+//         if (!report) {
+//             report = new Report({
+//                 seleMonth,
+//                 ward,
+//                 monthReport: seleMonth,
+//             });
+//         }
+
+//         if (report.reportingRemarks.length === 0 && role !== "Lipik") {
+//             return res.status(400).json({
+//                 message: "The first remark must be from the role 'Lipik'."
+//             });
+//         }
+
+//         const index = report.reportingRemarks.findIndex(r =>
+//             r.userId.toString() === userId &&
+//             r.role === role &&
+//             report.ward === ward
+//         );
+
+//         if (index !== -1) {
+//             const existing = report.reportingRemarks[index];
+//             existing.remark = remark;
+//             existing.signature = signature;
+//             existing.date = new Date();
+//             existing.documents = existing.documents || [];
+
+//             const docIndex = existing.documents.findIndex(doc => doc.formType === formType);
+
+//             if (mode === "edit") {
+//                 if (docIndex !== -1) {
+//                     existing.documents[docIndex] = document;
+//                 } else {
+//                     existing.documents.push(document);
+//                 }
+//             } else {
+//                 const alreadyExists = existing.documents.some(doc => doc.formType === formType);
+//                 if (!alreadyExists && document) {
+//                     existing.documents.push(document);
+//                 }
+//             }
+
+//             report.reportingRemarks[index] = existing;
+//         } else {
+//             const newRemark = createRemark({ userId, role, ward, remark, signature, document, userWard });
+//             console.log("remark----ttt",remark)
+//             report.reportingRemarks.push(newRemark);
+//         }
+
+//         await report.save();
+
+//         res.status(201).json({
+//             message: "Report added/updated successfully.",
+//             report
+//         });
+
+//     } catch (error) {
+//         console.error("🚨 Error adding/updating report:", error);
+//         res.status(500).json({
+//             message: "An error occurred while adding the report.",
+//             error: error.message
+//         });
+//     }
+// };
+
+
 
 
 
