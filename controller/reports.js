@@ -63,8 +63,6 @@ exports.getReports = async (req, res) => {
 };
 
 
-
-
 exports.addRemarkReports = async (req, res) => {
     try {
         const {
@@ -82,7 +80,9 @@ exports.addRemarkReports = async (req, res) => {
 
         console.log("req.body", req.body.wardName);
 
-       
+       let userWard=ward;
+
+       console.log("userward - 1",userWard)
         const missingFields = [];
         if (!role) missingFields.push("role");
         if (!remark) missingFields.push("remark");
@@ -131,13 +131,14 @@ exports.addRemarkReports = async (req, res) => {
         }
 
       
-        const createRemark = ({ userId,ward,role, remark, signature, document }) => {
+        const createRemark = ({ userId,ward,role, remark, signature, document,userWard }) => {
             const remarkObj = {
                 userId: new mongoose.Types.ObjectId(userId),
                 ward,
                 role,
                 remark,
                 signature,
+                userWard,
                 date: new Date()
             };
 
@@ -264,11 +265,11 @@ if (document && role !== "Lipik") {
       
         if (role === "Junior Engineer" && ward === "Head Office" && wardName) {
             let wardReport = await Report.findOne({ seleMonth, ward: wardName });
-
+               console.log("userWard -2 ",userWard)
             if (!wardReport) {
                 wardReport = new Report({
                     seleMonth,
-                    userWard:ward,
+                    userWard,
                     ward: wardName,
                     monthReport: seleMonth,
                 });
@@ -278,6 +279,7 @@ if (document && role !== "Lipik") {
                 userId: new mongoose.Types.ObjectId(userId),
                 role: "Junior Engineer",
                 ward,
+                userWard,
                 remark,
                 signature,
                 date: new Date(),
@@ -312,108 +314,11 @@ if (document && role !== "Lipik") {
         }
 
       
-        // if (report.reportingRemarks.length === 0 && role !== "Lipik") {
-        //     return res.status(400).json({
-        //         message: "The first remark must be from the role 'Lipik'."
-        //     });
-        // }
-
-        // ------------------------------------------------------------------------
-        if (report.reportingRemarks.length === 0) {
-            // First remark must be from Lipik (specific ward)
-            if (role !== "Lipik") {
-                return res.status(400).json({
-                    message: "The first remark must be from the role 'Lipik'."
-                });
-            }
-        } 
-        else if (report.reportingRemarks.length === 1) {
-            const firstRemark = report.reportingRemarks[0];
-        
-            // Second remark must be from Junior Engineer (allowed wards only, not Head Office)
-            const allowedWardsForJuniorEngineer = ["Ward-A", "Ward-B", "Ward-C", "Ward-D", "Ward-E", "Ward-F", "Ward-G", "Ward-H", "Ward-I"];
-        
-            if (role !== "Junior Engineer") {
-                return res.status(400).json({
-                    message: "The second remark must be from the role 'Junior Engineer'."
-                });
-            }
-            if (!allowedWardsForJuniorEngineer.includes(ward)) {
-                return res.status(400).json({
-                    message: "Junior Engineer must belong to one of the allowed wards (Ward-A to Ward-I)."
-                });
-            }
-            if (ward !== firstRemark.ward) {
-                return res.status(400).json({
-                    message: `Junior Engineer's ward must be same as Lipik's ward ('${firstRemark.ward}').`
-                });
-            }
-        }
-        else if (report.reportingRemarks.length === 2) {
-            const secondRemark = report.reportingRemarks[1];
-        
-            // Third remark must be from Junior Engineer (Head Office only)
-            if (role !== "Junior Engineer" || ward !== "Head Office") {
-                return res.status(400).json({
-                    message: "The third remark must be from the role 'Junior Engineer' from 'Head Office'."
-                });
-            }
-        }
-        else if (report.reportingRemarks.length === 3) {
-            const thirdRemark = report.reportingRemarks[2];
-        
-            // Fourth remark must be from Accountant
-            if (role !== "Accountant") {
-                return res.status(400).json({
-                    message: "The fourth remark must be from the role 'Accountant'."
-                });
-            }
-        
-            // Accountant must match Junior Engineer (Head Office) ward
-            if (ward !== thirdRemark.ward) {
-                return res.status(400).json({
-                    message: `Accountant must belong to same ward as Junior Engineer from Head Office ('${thirdRemark.ward}').`
-                });
-            }
-        }
-        else if (report.reportingRemarks.length === 4) {
-            const fourthRemark = report.reportingRemarks[3];
-        
-            // Fifth remark must be from Assistant Municipal Commissioner
-            if (role !== "Assistant Municipal Commissioner") {
-                return res.status(400).json({
-                    message: "The fifth remark must be from the role 'Assistant Municipal Commissioner'."
-                });
-            }
-        
-            if (ward !== fourthRemark.ward) {
-                return res.status(400).json({
-                    message: `Assistant Municipal Commissioner must belong to same ward as Accountant ('${fourthRemark.ward}').`
-                });
-            }
-        }
-        else if (report.reportingRemarks.length === 5) {
-            const fifthRemark = report.reportingRemarks[4];
-        
-            // Sixth remark must be from Dy. Municipal Commissioner
-            if (role !== "Dy. Municipal Commissioner") {
-                return res.status(400).json({
-                    message: "The sixth remark must be from the role 'Dy. Municipal Commissioner'."
-                });
-            }
-        
-            if (ward !== fifthRemark.ward) {
-                return res.status(400).json({
-                    message: `Dy. Municipal Commissioner must belong to same ward as Assistant Municipal Commissioner ('${fifthRemark.ward}').`
-                });
-            }
-        }
-        else {
+        if (report.reportingRemarks.length === 0 && role !== "Lipik") {
             return res.status(400).json({
-                message: "Invalid number of remarks or roles."
+                message: "The first remark must be from the role 'Lipik'."
             });
         }
-        
 
         const index = report.reportingRemarks.findIndex(r =>
             r.userId.toString() === userId &&
@@ -445,7 +350,7 @@ if (document && role !== "Lipik") {
 
             report.reportingRemarks[index] = existing;
         } else {
-            const newRemark = createRemark({ userId, role,ward,remark, signature, document });
+            const newRemark = createRemark({ userId, role,ward,remark, signature, document,userWard });
             report.reportingRemarks.push(newRemark);
         }
 
@@ -464,6 +369,7 @@ if (document && role !== "Lipik") {
         });
     }
 };
+
 
 
 exports.searchReport = async (req, res) => {
