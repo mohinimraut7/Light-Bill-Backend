@@ -144,8 +144,8 @@ exports.addRemarkReports = async (req, res) => {
                 userWard,
                 date: new Date()
             };
-            console.log("remark test((((((((((((",remark)
-            if (remark === "Approved") {
+            console.log("remark test((((((((((((")
+            if (remark === "Approved" && document) {
                 document.approvedBy.push(userId);
             }
           
