@@ -419,7 +419,7 @@ exports.addRemarkReports = async (req, res) => {
             }
         } else {
             return res.status(400).json({
-                message: "No file or PDF data provided."
+                message: "No file or PDF data provided. "
             });
         }
 
