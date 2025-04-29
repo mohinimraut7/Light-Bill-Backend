@@ -1207,5 +1207,202 @@ exports.searchReport = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
+// =================================================================================================
+// 29 April 2025
+
+// if (document && role !== "Lipik")
+//     {
+//     const lipikRemark = report.reportingRemarks.find(r => r.role === "Lipik");
+
+//     if (lipikRemark) {
+//         lipikRemark.documents = lipikRemark.documents || [];
+
+//         const docIndex = lipikRemark.documents.findIndex(doc => doc.formType === formType);
+
+//         if (mode === "edit") {
+//             if (docIndex !== -1) {
+//                 const existingDoc = lipikRemark.documents[docIndex];
+
+//                 lipikRemark.documents[docIndex] = {
+//                     ...existingDoc,
+//                     ...document,
+//                     uploadedAt: new Date(),
+//                     signatures: {
+//                         ...(existingDoc.signatures || {}),
+//                         [role]: signature  // Add/update the current role's signature
+//                     },
+//                     approvedBy: existingDoc.approvedBy || [] // ✅ very important
+//                 };
+//             } 
+            
+            
+            
+//             else {
+//                 lipikRemark.documents.push({
+//                     ...document,
+//                     uploadedAt: new Date(),
+//                     signatures: {
+//                         [role]: signature
+//                     },
+//                     approvedBy: []
+//                 });
+//             }
+//         } else {
+//             const alreadyExists = lipikRemark.documents.some(doc => doc.formType === formType);
+//             if (!alreadyExists) {
+//                 lipikRemark.documents.push({
+//                     ...document,
+//                     uploadedAt: new Date(),
+//                     signatures: {
+//                         [role]: signature
+//                     },
+//                     approvedBy: []
+//                 });
+//             }
+//         }
+//     } else {
+//         return res.status(400).json({
+//             message: "Lipik remark not found. Cannot attach document."
+//         });
+//     }
+// }
+
+// Handling the logic when role is not "Lipik"
+// ---------------------------------------------------------------
+// if (document && role !== "Lipik") {
+//     // Finding the remark for "Lipik"
+//     const lipikRemark = report.reportingRemarks.find(r => r.role === "Lipik");
+
+//     // Check if Lipik's remark exists
+//     if (lipikRemark) {
+//         // Find the document inside Lipik's remark based on formType and formNumber
+//         const docIndex = lipikRemark.documents.findIndex(
+//             doc => doc.formType === formType && doc.formNumber === document.formNumber
+//         );
+
+//         // If the document exists, update it
+//         if (docIndex !== -1) {
+//             const existingDoc = lipikRemark.documents[docIndex];
+
+//             // Add user to the approvedBy array if the remark is "Approved"
+//             if (remark === "Approved" && !existingDoc.approvedBy.includes(userId)) {
+//                 existingDoc.approvedBy.push(userId);
+//             }
+
+//             // Update signatures with the current role's signature
+//             existingDoc.signatures = {
+//                 ...(existingDoc.signatures || {}),
+//                 [role]: signature
+//             };
+
+//             // Update the document in the array
+//             lipikRemark.documents[docIndex] = {
+//                 ...existingDoc,
+//                 uploadedAt: new Date()  // Update upload time
+//             };
+//         } else {
+//             // If document is not found, add it
+//             lipikRemark.documents.push({
+//                 ...document,
+//                 uploadedAt: new Date(),
+//                 signatures: {
+//                     [role]: signature
+//                 },
+//                 approvedBy: remark === "Approved" ? [userId] : [] // Add userId to approvedBy if "Approved"
+//             });
+//         }
+//     } else {
+//         // If Lipik remark doesn't exist, return an error
+//         return res.status(400).json({
+//             message: "Lipik remark not found. Cannot attach document."
+//         });
+//     }
+// }
+// ------------------------------------------------
+
+// ===============================================================================
+
+// if (role === "Junior Engineer" && ward === "Head Office" && wardName) {
+        //     let wardReport = await Report.findOne({ seleMonth, ward: wardName });
+        //        console.log("userWard -2 ",userWard)
+        //     if (!wardReport) {
+        //         wardReport = new Report({
+        //             seleMonth,
+        //             userWard,
+        //             ward: wardName,
+        //             monthReport: seleMonth,
+        //         });
+        //     }
+
+        //     const jeRemark = {
+        //         userId: new mongoose.Types.ObjectId(userId),
+        //         role: "Junior Engineer",
+        //         ward,
+        //         userWard,
+        //         remark,
+        //         signature,
+        //         date: new Date(),
+        //     };
+
+        //     const jeExists = wardReport.reportingRemarks.some(r =>
+        //         r.userId.toString() === userId &&
+        //         r.role === "Junior Engineer" &&
+        //         r.remark === remark
+        //     );
+
+        //     if (!jeExists) {
+        //         wardReport.reportingRemarks.push(jeRemark);
+        //         await wardReport.save();
+        //     }
+
+        //     return res.status(201).json({
+        //         message: `Junior Engineer remark added to ward ${wardName} successfully.`,
+        //         report: wardReport
+        //     });
+        // }
+// =================================================================================================
+        // if (role === "Junior Engineer" && ward === "Head Office" && wardName) {
+        //     let wardReport = await Report.findOne({ seleMonth, ward: wardName });
+        //        console.log("userWard -2 ",userWard)
+        //     if (!wardReport) {
+        //         wardReport = new Report({
+        //             seleMonth,
+        //             userWard,
+        //             ward: wardName,
+        //             monthReport: seleMonth,
+        //         });
+        //     }
+
+        //     const jeRemark = {
+        //         userId: new mongoose.Types.ObjectId(userId),
+        //         role: "Junior Engineer",
+        //         ward,
+        //         userWard,
+        //         remark,
+        //         signature,
+        //         date: new Date(),
+        //     };
+
+        //     const jeExists = wardReport.reportingRemarks.some(r =>
+        //         r.userId.toString() === userId &&
+        //         r.role === "Junior Engineer" &&
+        //         r.remark === remark
+        //     );
+
+        //     if (!jeExists) {
+        //         wardReport.reportingRemarks.push(jeRemark);
+        //         await wardReport.save();
+        //     }
+
+        //     return res.status(201).json({
+        //         message: `Junior Engineer remark added to ward ${wardName} successfully.`,
+        //         report: wardReport
+        //     });
+        // }
+
+      
+        
 
 
+
+        // ==========================

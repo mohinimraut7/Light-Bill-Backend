@@ -135,6 +135,7 @@ exports.addRemarkReports = async (req, res) => {
 
       
         const createRemark = ({ userId,ward,role, remark, signature, document,userWard }) => {
+            console.log("document",document)
             const remarkObj = {
                 userId: new mongoose.Types.ObjectId(userId),
                 ward,
@@ -142,14 +143,21 @@ exports.addRemarkReports = async (req, res) => {
                 remark,
                 signature,
                 userWard,
-                date: new Date()
+                date: new Date(),
+                documents: []
             };
+            
+            if (document && role === "Lipik") {
+                remarkObj.documents.push(document);
+            }
+
             console.log("remark test((((((((((((")
             if (remark === "Approved" && document) {
                 document.approvedBy.push(userId);
             }
           
            
+
 if (document && role !== "Lipik") {
     const lipikRemark = report.reportingRemarks.find(r => r.role === "Lipik");
 
@@ -162,24 +170,34 @@ if (document && role !== "Lipik") {
             if (docIndex !== -1) {
                 const existingDoc = lipikRemark.documents[docIndex];
 
-                lipikRemark.documents[docIndex] = {
+                // Add/update the current role's signature
+                const updatedDoc = {
                     ...existingDoc,
                     ...document,
                     uploadedAt: new Date(),
                     signatures: {
                         ...(existingDoc.signatures || {}),
-                        [role]: signature  // Add/update the current role's signature
+                        [role]: signature
                     },
-                    approvedBy: existingDoc.approvedBy || [] // ✅ very important
+                    // Handle approvedBy logic for the "Approved" remark
+                    approvedBy: existingDoc.approvedBy || []
                 };
+
+                // If the remark is "Approved" and the user isn't already in the approvedBy array, add them
+                if (remark === "Approved" && !updatedDoc.approvedBy.includes(userId)) {
+                    updatedDoc.approvedBy.push(userId);
+                }
+
+                lipikRemark.documents[docIndex] = updatedDoc;
             } else {
+                // If the document doesn't exist, add it
                 lipikRemark.documents.push({
                     ...document,
                     uploadedAt: new Date(),
                     signatures: {
                         [role]: signature
                     },
-                    approvedBy: []
+                    approvedBy: remark === "Approved" ? [userId] : []  // Add userId to approvedBy if "Approved"
                 });
             }
         } else {
@@ -191,7 +209,7 @@ if (document && role !== "Lipik") {
                     signatures: {
                         [role]: signature
                     },
-                    approvedBy: []
+                    approvedBy: remark === "Approved" ? [userId] : []  // Add userId to approvedBy if "Approved"
                 });
             }
         }
@@ -207,18 +225,21 @@ if (document && role !== "Lipik") {
         };
 
       
+        
+       
         if (role === "Junior Engineer" && ward === "Head Office" && wardName) {
             let wardReport = await Report.findOne({ seleMonth, ward: wardName });
-               console.log("userWard -2 ",userWard)
+        
+            console.log("userWard -2 ", userWard);
+        
+            // If no report exists, do not create new one if user is not Lipik
             if (!wardReport) {
-                wardReport = new Report({
-                    seleMonth,
-                    userWard,
-                    ward: wardName,
-                    monthReport: seleMonth,
+                // Ensure Lipik remark is added first in all new reports
+                return res.status(400).json({
+                    message: "The first remark must be from the role 'Lipik'."
                 });
             }
-
+        
             const jeRemark = {
                 userId: new mongoose.Types.ObjectId(userId),
                 role: "Junior Engineer",
@@ -228,24 +249,28 @@ if (document && role !== "Lipik") {
                 signature,
                 date: new Date(),
             };
-
+        
+            if (remark === "Approved") {
+                jeRemark.approvedBy=new mongoose.Types.ObjectId(userId);
+            }
+        
             const jeExists = wardReport.reportingRemarks.some(r =>
                 r.userId.toString() === userId &&
                 r.role === "Junior Engineer" &&
                 r.remark === remark
             );
-
+        
             if (!jeExists) {
                 wardReport.reportingRemarks.push(jeRemark);
                 await wardReport.save();
             }
-
+        
             return res.status(201).json({
                 message: `Junior Engineer remark added to ward ${wardName} successfully.`,
                 report: wardReport
             });
         }
-
+        
       
         let report = await Report.findOne({ seleMonth, ward });
 
