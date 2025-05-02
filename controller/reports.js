@@ -4,6 +4,9 @@ const axios = require('axios');
 const multer = require('multer'); 
 const path = require('path');
 
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/');
@@ -359,3 +362,78 @@ exports.searchReport = async (req, res) => {
 };
 
 
+
+
+// exports.deleteMonthReport = async (req, res) => {
+//   const { month } = req.params;
+
+//   try {
+//     const deletedReport = await Report.findOneAndDelete({ monthReport: month });
+
+//     if (!deletedReport) {
+//       return res.status(404).json({ message: `Report for month ${month} not found.` });
+//     }
+
+//     res.status(200).json({ message: `Report for month ${month} deleted successfully.` });
+//   } catch (error) {
+//     console.error('Error deleting report:', error);
+//     res.status(500).json({ message: 'Internal server error.' });
+//   }
+// };
+
+
+exports.deleteMonthReport = async (req, res) => {
+    const { month } = req.params;
+  
+    try {
+      // Step 1: Find the report for the given month
+      const report = await Report.findOne({ monthReport: month });
+  
+      if (!report) {
+        return res.status(404).json({ message: `Report for month ${month} not found.` });
+      }
+  
+      // Step 2: Delete the PDF related to the report (assuming it's stored in the report)
+      const pdfFileName = report.pdfFileName; // assuming the PDF path is stored in `pdfFileName`
+      if (pdfFileName) {
+        const pdfFilePath = path.join(uploadsDir, pdfFileName);
+        if (fs.existsSync(pdfFilePath)) {
+          fs.unlinkSync(pdfFilePath); // Delete the PDF file
+          console.log(`Deleted PDF file: ${pdfFileName}`);
+        }
+      }
+  
+      // Step 3: Delete related signature files in the 'uploads' folder
+      const usedFiles = new Set();
+  
+      // Collect all used signature files from the reportingRemarks.documents array
+      report.reportingRemarks.forEach(remark => {
+        if (remark.documents && Array.isArray(remark.documents)) {
+          remark.documents.forEach(doc => {
+            const sig = doc.signature;
+            if (sig && !sig.startsWith('data:image')) {
+              usedFiles.add(sig); // Add file path to set for comparison
+            }
+          });
+        }
+      });
+  
+      // Step 4: Delete any other signature files that are no longer used
+      const filesInUploads = fs.readdirSync(uploadsDir);
+      filesInUploads.forEach(file => {
+        const filePath = path.join(uploadsDir, file);
+        if (!usedFiles.has(filePath)) {
+          fs.unlinkSync(filePath); // Delete unused signature file
+          console.log(`Deleted unused file: ${file}`);
+        }
+      });
+  
+      // Step 5: Delete the report from the database
+      await Report.findOneAndDelete({ monthReport: month });
+  
+      res.status(200).json({ message: `Report for month ${month} deleted successfully along with associated files.` });
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      res.status(500).json({ message: 'Internal server error.' });
+    }
+  };
