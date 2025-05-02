@@ -70,6 +70,7 @@ exports.addRemarkReports = async (req, res) => {
     try {
         const {
             userId,
+            
             remark,
             role,
             signature,
