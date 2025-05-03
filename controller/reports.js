@@ -66,67 +66,10 @@ exports.getReports = async (req, res) => {
 };
 // -----------------------------------------------------------------------
 
-const getWorkflowSteps = (ward) => {
-    const workflows = {
-        'Ward-A': [
-            { role: 'Lipik', ward: 'Ward-A' },
-            { role: 'Junior Engineer', ward: 'Ward-A' },
-            { role: 'Junior Engineer', ward: 'Head Office' },
-            { role: 'Accountant', ward: 'Ward-A' },
-            { role: 'Assistant Municipal Commissioner', ward: 'Ward-A' },
-            { role: 'Dy.Municipal Commissioner', ward: 'Ward-A' }
-        ],
-        'Ward-B': [
-            { role: 'Lipik', ward: 'Ward-B' },
-            { role: 'Junior Engineer', ward: 'Ward-B' },
-            { role: 'Junior Engineer', ward: 'Head Office' },
-            { role: 'Accountant', ward: 'Ward-B' },
-            { role: 'Assistant Municipal Commissioner', ward: 'Ward-B' },
-            { role: 'Dy.Municipal Commissioner', ward: 'Ward-B' }
-        ],
-        // Similar patterns for Ward-C through Ward-I
-    };
-    return workflows[ward] || [];
-};
+
 
 // ---------------------------------------------------------------------------------
 
-const validateWorkflowStep = (ward, currentRole, currentWard, reportingRemarks) => {
-    const workflow = getWorkflowSteps(ward);
-    const currentStepIndex = workflow.findIndex(step => 
-        step.role === currentRole && step.ward === currentWard
-    );
-
-    if (currentStepIndex === -1) {
-        return { valid: false, message: `Invalid step: ${currentRole} at ${currentWard} for ${ward}` };
-    }
-
-    if (currentStepIndex === 0) {
-        return { valid: true };
-    }
-
-    // Check previous steps
-    for (let i = 0; i < currentStepIndex; i++) {
-        const prevStep = workflow[i];
-        const isApproved = reportingRemarks.some(remark => 
-            remark.role === prevStep.role && 
-            remark.ward === prevStep.ward && 
-            remark.remark === "Approved"
-        );
-
-        if (!isApproved) {
-            return { 
-                valid: false, 
-                message: `Approval required from ${prevStep.role} at ${prevStep.ward} first` 
-            };
-        }
-    }
-
-    return { valid: true };
-};
-
-// ------------------------------------------------------------------
-// old code
 exports.addRemarkReports = async (req, res) => {
     try {
         const {
@@ -391,12 +334,6 @@ exports.addRemarkReports = async (req, res) => {
         });
     }
 };
-
-
-
-// ---------------------------------------------
-
-
 
 
 
