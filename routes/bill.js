@@ -1,10 +1,11 @@
 const express=require('express');
 const router=express.Router();
-const {addBill,editBill,getBills,getBillsWithMeterPurpose,updateBillStatus,deleteBill,updateFlagStatus, massUpdateBillStatus,reverseMassBillStatus,addBillFromThirdPartyAPI,addReceipt,editReceipt,dropBillsCollection,addRemark,editRemark}=require('../controller/bill');
+const {addBill,updateBillPaymentStatus,editBill,getBills,getBillsWithMeterPurpose,updateBillStatus,deleteBill,updateFlagStatus, massUpdateBillStatus,reverseMassBillStatus,addBillFromThirdPartyAPI,addReceipt,editReceipt,dropBillsCollection,addRemark,editRemark}=require('../controller/bill');
 const authMiddleware = require('../middleware/authMiddleware');
 const verifyStaticHeader=require('../middleware/verifyStaticHeader');
 
 router.post('/addBill',verifyStaticHeader,addBill);
+router.post('/updateBillPaymentStatus',verifyStaticHeader,updateBillPaymentStatus);
 router.delete("/dropBills", dropBillsCollection);
 
 router.post('/addReceipt',addReceipt)

@@ -6,6 +6,7 @@ const bcrypt=require('bcryptjs');
 const Consumer = require('../models/consumer'); 
 const cron = require("node-cron");
 const axios = require('axios');
+const Paidbill = require("../models/paidbill"); // adjust the path as needed
 
 
 cron.schedule("40 16 * * *", async () => {
@@ -238,6 +239,79 @@ exports.addBill = async (req, res) => {
   }
 };
 
+
+exports.updateBillPaymentStatus = async (req, res) => {
+  try {
+    const payments = Array.isArray(req.body) ? req.body : [req.body];
+    const updatedBills = [];
+    const failedBills = [];
+
+    for (const payment of payments) {
+      const { consumerNumber, receiptAmount, receiptDate } = payment;
+
+      if (!consumerNumber || receiptAmount == null || !receiptDate) {
+        failedBills.push({
+          consumerNumber,
+          error: "Missing consumerNumber, receiptAmount or receiptDate",
+        });
+        continue;
+      }
+
+      const bills = await Bill.find({ consumerNumber }).sort({ billDate: -1 });
+
+      const matchingBill = bills.find(bill => {
+        const billDateValid = new Date(bill.billDate) < new Date(receiptDate);
+        const amountMatch =
+          receiptAmount === bill.netBillAmount ||
+          receiptAmount === bill.netBillAmountWithDPC ||
+          receiptAmount === bill.promptPaymentAmount;
+        const isUnpaid = bill.paymentStatus === 'unpaid';
+
+        return billDateValid && amountMatch && isUnpaid;
+      });
+
+      if (!matchingBill) {
+        failedBills.push({
+          consumerNumber,
+          error: "No matching unpaid bill found with valid date and amount",
+        });
+        continue;
+      }
+
+      // Update the main bill
+      matchingBill.paymentStatus = "paid";
+      matchingBill.paidAmount = receiptAmount;
+      matchingBill.billPaymentDate = receiptDate;
+      await matchingBill.save();
+
+      // Save receipt info in Paidbill collection
+      await Paidbill.create({
+        consumerNumber,
+        lastReceiptAmount: receiptAmount,
+        lastReceiptDate: receiptDate,
+      });
+
+      updatedBills.push({
+        consumerNumber: matchingBill.consumerNumber,
+        monthAndYear: matchingBill.monthAndYear,
+        updated: true,
+      });
+    }
+
+    res.status(200).json({
+      message: "Payment status update complete",
+      updatedBills,
+      failedBills,
+    });
+
+  } catch (error) {
+    console.error("Error in updateBillPaymentStatus:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
 
 
 cron.schedule("10 18 * * *", async () => {

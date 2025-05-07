@@ -1016,3 +1016,18 @@ exports.addRemarkReports = async (req, res) => {
         });
     }
 };
+------------------------------------------------
+billDate: {
+        type: String,
+        required: true,
+      },
+
+consumerNumber last billDate cheeck karane paymentStatus==="unpaid" usel tar paid set karane
+aani lastReceiptDate > billDate
+and lastReceiptAmount eka barobar match hoil netBillAmount or netBillAmountWithDPC or promptPaymentAmount
+===================================
+BASEURL=http://localhost:5000
+API=http://localhost:5000
+
+API=https://lightbillbackend.saavi.co.in
+BASEURL=https://lightbillbackend.saavi.co.in
