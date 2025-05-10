@@ -240,19 +240,188 @@ exports.addBill = async (req, res) => {
 };
 
 
+// exports.updateBillPaymentStatus = async (req, res) => {
+//   try {
+//     const payments = Array.isArray(req.body) ? req.body : [req.body];
+//     const updatedBills = [];
+//     const failedBills = [];
+
+//     for (const payment of payments) {
+//       const { consumerNumber, receiptAmount, receiptDate } = payment;
+
+//       if (!consumerNumber || receiptAmount == null || !receiptDate) {
+//         failedBills.push({
+//           consumerNumber,
+//           error: "Missing consumerNumber, receiptAmount or receiptDate",
+//         });
+//         continue;
+//       }
+
+//       const bills = await Bill.find({ consumerNumber }).sort({ billDate: -1 });
+
+//       const matchingBill = bills.find(bill => {
+//         const billDateValid = new Date(bill.billDate) < new Date(receiptDate);
+//         const amountMatch =
+//           receiptAmount === bill.netBillAmount ||
+//           receiptAmount === bill.netBillAmountWithDPC ||
+//           receiptAmount === bill.promptPaymentAmount;
+//         const isUnpaid = bill.paymentStatus === 'unpaid';
+
+//         return billDateValid && amountMatch && isUnpaid;
+//       });
+
+//       if (!matchingBill) {
+//         failedBills.push({
+//           consumerNumber,
+//           error: "No matching unpaid bill found with valid date and amount",
+//         });
+//         continue;
+//       }
+
+//       // Update the main bill
+//       matchingBill.paymentStatus = "paid";
+//       matchingBill.paidAmount = receiptAmount;
+//       matchingBill.billPaymentDate = receiptDate;
+//       await matchingBill.save();
+
+//       // Save receipt info in Paidbill collection
+//       await Paidbill.create({
+//         consumerNumber,
+//         receiptAmount,
+//         receiptDate,
+//       });
+
+//       // updatedBills.push({
+//       //   consumerNumber: matchingBill.consumerNumber,
+//       //   monthAndYear: matchingBill.monthAndYear,
+//       //   updated: true,
+//       // });
+//       updatedBills.push({
+//         consumerNo: consumerNumber,
+//         receiptDate,
+//         status: "SUCCESS",
+//       });
+//     }
+
+//     res.status(200).json({
+//       // message: "Payment status update complete",
+//       updatedBills,
+//       failedBills,
+//     });
+
+//   } catch (error) {
+//     console.error("Error in updateBillPaymentStatus:", error);
+//     res.status(500).json({
+//       message: "Internal server error",
+//       error: error.message,
+//     });
+//   }
+// };
+
+// ----------------------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// exports.updateBillPaymentStatus = async (req, res) => {
+//   try {
+//     const payments = Array.isArray(req.body) ? req.body : [req.body];
+//     const responseArray = [];
+
+//     for (const payment of payments) {
+//       const { consumerNumber, receiptAmount, receiptDate } = payment;
+
+//       if (!consumerNumber || receiptAmount == null || !receiptDate) {
+//         responseArray.push({
+//           consumerNo: consumerNumber || "UNKNOWN",
+//           receiptDate: receiptDate || "INVALID DATE",
+//           status: "FAILED",
+//           errorReason: "Missing consumerNumber, receiptAmount or receiptDate",
+//         });
+//         continue;
+//       }
+
+//       const bills = await Bill.find({ consumerNumber }).sort({ billDate: -1 });
+
+//       const matchingBill = bills.find(bill => {
+//         const billDateValid = new Date(bill.billDate) < new Date(receiptDate);
+//         const amountMatch =
+//           receiptAmount === bill.netBillAmount ||
+//           receiptAmount === bill.netBillAmountWithDPC ||
+//           receiptAmount === bill.promptPaymentAmount;
+//         const isUnpaid = bill.paymentStatus === 'unpaid';
+
+//         return billDateValid && amountMatch && isUnpaid;
+//       });
+
+//       if (!matchingBill) {
+//         responseArray.push({
+//           consumerNo: consumerNumber,
+//           receiptDate,
+//           status: "FAILED",
+//           errorReason: "No matching unpaid bill found with valid date and amount",
+//         });
+//         continue;
+//       }
+
+//       // Update the bill
+//       matchingBill.paymentStatus = "paid";
+//       matchingBill.paidAmount = receiptAmount;
+//       matchingBill.billPaymentDate = receiptDate;
+//       await matchingBill.save();
+
+//       // Save in Paidbill
+//       await Paidbill.create({
+//         consumerNumber,
+//         receiptAmount,
+//         receiptDate,
+//       });
+
+//       responseArray.push({
+//         consumerNo: consumerNumber,
+//         receiptDate,
+//         status: "SUCCESS",
+//       });
+//     }
+
+//     // ✅ Final combined response
+//     res.status(200).json(responseArray);
+
+//   } catch (error) {
+//     console.error("Error in updateBillPaymentStatus:", error);
+//     res.status(500).json({
+//       message: "Internal server error",
+//       error: error.message,
+//     });
+//   }
+// };
+
+// ------------------------------------------------------------------------------
 exports.updateBillPaymentStatus = async (req, res) => {
   try {
     const payments = Array.isArray(req.body) ? req.body : [req.body];
-    const updatedBills = [];
-    const failedBills = [];
+    const responseArray = [];
 
     for (const payment of payments) {
       const { consumerNumber, receiptAmount, receiptDate } = payment;
 
+      // Validation
       if (!consumerNumber || receiptAmount == null || !receiptDate) {
-        failedBills.push({
-          consumerNumber,
-          error: "Missing consumerNumber, receiptAmount or receiptDate",
+        responseArray.push({
+          consumerNo: consumerNumber || "UNKNOWN",
+          status: "FAILURE",
+          errorMessage: "Missing consumerNumber, receiptAmount or receiptDate",
+          errorCode: "2001",
+        });
+        continue;
+      }
+
+      // Check consumer exists
+      const consumerExists = await Consumer.exists({ consumerNumber }); // adjust if collection name differs
+      if (!consumerExists) {
+        responseArray.push({
+          consumerNo: consumerNumber,
+          status: "FAILURE",
+          errorMessage: "The provided consumer number does not exist",
+          errorCode: "2002",
         });
         continue;
       }
@@ -271,38 +440,38 @@ exports.updateBillPaymentStatus = async (req, res) => {
       });
 
       if (!matchingBill) {
-        failedBills.push({
-          consumerNumber,
-          error: "No matching unpaid bill found with valid date and amount",
+        responseArray.push({
+          consumerNo: consumerNumber,
+          receiptDate,
+          status: "FAILURE",
+          errorMessage: "No matching unpaid bill found with valid date and amount",
+          errorCode: "2003",
         });
         continue;
       }
 
-      // Update the main bill
+      // Update bill
       matchingBill.paymentStatus = "paid";
       matchingBill.paidAmount = receiptAmount;
       matchingBill.billPaymentDate = receiptDate;
       await matchingBill.save();
 
-      // Save receipt info in Paidbill collection
+      // Save receipt
       await Paidbill.create({
         consumerNumber,
-        lastReceiptAmount: receiptAmount,
-        lastReceiptDate: receiptDate,
+        receiptAmount,
+        receiptDate,
       });
 
-      updatedBills.push({
-        consumerNumber: matchingBill.consumerNumber,
-        monthAndYear: matchingBill.monthAndYear,
-        updated: true,
+      responseArray.push({
+        consumerNo: consumerNumber,
+        receiptDate,
+        status: "SUCCESS",
       });
     }
 
-    res.status(200).json({
-      message: "Payment status update complete",
-      updatedBills,
-      failedBills,
-    });
+    // Final response
+    res.status(200).json(responseArray);
 
   } catch (error) {
     console.error("Error in updateBillPaymentStatus:", error);
