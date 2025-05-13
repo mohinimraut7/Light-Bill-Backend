@@ -145,7 +145,7 @@ exports.resendVerificationEmail = async (req, res) => {
       },
     });
 
-    const verificationLink = `${process.env.BASEURL}/api/verify-email/${verificationToken}`;
+    const verificationLink = `${process.env.BASEURLEMAIL}/api/verify-email/${verificationToken}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL,
