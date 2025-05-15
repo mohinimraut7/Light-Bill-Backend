@@ -49,7 +49,7 @@ exports.addBill = async (req, res) => {
       var duealertvalue = dueAlert || false;
 
 
-      // 🔹 Check if consumerNumber exists in the Consumer collection
+      // 🔹 Check i  f consumerNumber exists in the Consumer collection
       const consumerExists = await Consumer.findOne({ consumerNumber });
       let wardname=consumerExists?.ward;
 
