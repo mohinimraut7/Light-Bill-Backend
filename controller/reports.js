@@ -3012,7 +3012,7 @@ exports.addRemarkReports = async (req, res) => {
             });
         }
 
-        // Validate first remark must be from Lipik
+        // Validate first remark must be from  Lipik
         if (report.reportingRemarks.length === 0 && role !== "Lipik") {
             return res.status(400).json({
                 message: "The first remark must be from the role 'Lipik'."
