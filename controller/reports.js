@@ -3221,12 +3221,201 @@ exports.deleteMonthReport = async (req, res) => {
     }
   };
 
-  exports.clearAllReports = async (req, res) => {
+
+
+
+
+//   exports.clearAllReports = async (req, res) => {
+//   try {
+//     // Step 1: Get all reports before deleting
+//     const reports = await Report.find({});
+
+//     // Step 2: Collect all used file names (PDFs and signatures)
+//     const filesToDelete = new Set();
+
+//     reports.forEach(report => {
+//       // Add PDF file
+//       if (report.pdfFileName && !report.pdfFileName.startsWith('data:')) {
+//         filesToDelete.add(path.basename(report.pdfFileName));
+//       }
+
+//       // Add all signature files from documents
+//       report.reportingRemarks?.forEach(remark => {
+//         remark.documents?.forEach(doc => {
+//           const sig = doc.signature;
+//           if (sig && !sig.startsWith('data:image')) {
+//             filesToDelete.add(path.basename(sig));
+//           }
+//         });
+//       });
+//     });
+
+//     // Step 3: Delete each collected file from the uploads folder
+//     const allFiles = fs.existsSync(uploadsDir) ? fs.readdirSync(uploadsDir) : [];
+//     allFiles.forEach(file => {
+//       if (filesToDelete.has(file)) {
+//         const filePath = path.join(uploadsDir, file);
+//         fs.unlinkSync(filePath);
+//         console.log(`🗑️ Deleted file: ${file}`);
+//       }
+//     });
+
+//     // Step 4: Delete all reports from the database
+//     await Report.deleteMany({});
+
+//     res.status(200).json({ message: 'All Report documents and associated files have been successfully deleted.' });
+//   } catch (error) {
+//     console.error('❌ Error clearing Report collection:', error);
+//     res.status(500).json({ message: 'Internal server error.' });
+//   }
+// };
+
+
+
+// exports.clearAllReports = async (req, res) => {
+//   try {
+//     // Step 1: Get all reports before deleting
+//     const reports = await Report.find({});
+
+//     reports.forEach(report => {
+//       // Delete PDF file if it exists
+//       const pdfFileName = report.pdfFileName;
+//       if (pdfFileName && !pdfFileName.startsWith('data:')) {
+//         const pdfFilePath = path.join(uploadsDir, path.basename(pdfFileName));
+//         if (fs.existsSync(pdfFilePath)) {
+//           fs.unlinkSync(pdfFilePath);
+//           console.log(`🗑️ Deleted PDF file: ${pdfFileName}`);
+//         }
+//       }
+
+//       // Delete all related signature files
+//       report.reportingRemarks?.forEach(remark => {
+//         remark.documents?.forEach(doc => {
+//           const sig = doc.signature;
+//           if (sig && !sig.startsWith('data:image')) {
+//             const sigPath = path.join(uploadsDir, path.basename(sig));
+//             if (fs.existsSync(sigPath)) {
+//               fs.unlinkSync(sigPath);
+//               console.log(`🗑️ Deleted signature file: ${sig}`);
+//             }
+//           }
+//         });
+//       });
+//     });
+
+//     // Step 2: Delete all reports from the database
+//     await Report.deleteMany({});
+
+//     res.status(200).json({ message: 'All Report documents and associated files have been successfully deleted.' });
+//   } catch (error) {
+//     console.error('❌ Error clearing Report collection:', error);
+//     res.status(500).json({ message: 'Internal server error.' });
+//   }
+// };
+
+
+
+
+
+// exports.clearAllReports = async (req, res) => {
+//   try {
+//     // Step 1: Get all reports before deleting
+//     const reports = await Report.find({});
+//     if (!reports.length) {
+//       return res.status(200).json({ message: 'No reports found to delete.' });
+//     }
+
+//     // Step 2: Collect all PDF and signature file paths
+//     const filesToDelete = new Set();
+
+//     reports.forEach(report => {
+//       // PDF file
+//       if (report.pdfFileName && !report.pdfFileName.startsWith('data:')) {
+//         filesToDelete.add(path.join(uploadsDir, path.basename(report.pdfFileName)));
+//       }
+
+//       // Signature files
+//       report.reportingRemarks?.forEach(remark => {
+//         remark.documents?.forEach(doc => {
+//           const sig = doc.signature;
+//           if (sig && !sig.startsWith('data:image')) {
+//             filesToDelete.add(path.join(uploadsDir, path.basename(sig)));
+//           }
+//         });
+//       });
+//     });
+
+//     // Step 3: Delete each collected file
+//     for (const filePath of filesToDelete) {
+//       if (fs.existsSync(filePath)) {
+//         fs.unlinkSync(filePath);
+//         console.log(`🗑️ Deleted file: ${path.basename(filePath)}`);
+//       } else {
+//         console.warn(`⚠️ File not found: ${path.basename(filePath)}`);
+//       }
+//     }
+
+//     // Step 4: Delete all reports
+//     await Report.deleteMany({});
+
+//     res.status(200).json({ message: '✅ All reports and associated files deleted successfully.' });
+//   } catch (error) {
+//     console.error('❌ Error while clearing reports:', error);
+//     res.status(500).json({ message: 'Internal server error.' });
+//   }
+// };
+
+
+
+exports.clearAllReports = async (req, res) => {
   try {
+    const reports = await Report.find({});
+    if (!reports.length) {
+      return res.status(200).json({ message: 'No reports found to delete.' });
+    }
+
+    const filesToDelete = new Set();
+
+    const extractFileName = filePath => {
+      if (!filePath) return null;
+      try {
+        const url = new URL(filePath);
+        return path.basename(url.pathname);
+      } catch {
+        return path.basename(filePath);
+      }
+    };
+
+    reports.forEach(report => {
+      const pdfName = extractFileName(report.pdfFileName);
+      if (pdfName) {
+        filesToDelete.add(path.join(uploadsDir, pdfName));
+      }
+
+      report.reportingRemarks?.forEach(remark => {
+        remark.documents?.forEach(doc => {
+          const sigName = extractFileName(doc.signature);
+          if (sigName && !sigName.startsWith('data:image')) {
+            filesToDelete.add(path.join(uploadsDir, sigName));
+          }
+        });
+      });
+    });
+
+    for (const filePath of filesToDelete) {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`🗑️ Deleted file: ${path.basename(filePath)}`);
+      } else {
+        console.warn(`⚠️ File not found: ${path.basename(filePath)}`);
+      }
+    }
+
     await Report.deleteMany({});
-    res.status(200).json({ message: 'All Report documents have been successfully deleted.' });
+    res.status(200).json({ message: '✅ All reports and associated files deleted successfully.' });
   } catch (error) {
-    console.error('Error clearing Report collection:', error);
+    console.error('❌ Error while clearing reports:', error);
     res.status(500).json({ message: 'Internal server error.' });
   }
 };
+ 
