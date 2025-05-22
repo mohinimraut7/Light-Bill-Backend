@@ -3220,3 +3220,13 @@ exports.deleteMonthReport = async (req, res) => {
       res.status(500).json({ message: 'Internal server error.' });
     }
   };
+
+  exports.clearAllReports = async (req, res) => {
+  try {
+    await Report.deleteMany({});
+    res.status(200).json({ message: 'All Report documents have been successfully deleted.' });
+  } catch (error) {
+    console.error('Error clearing Report collection:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+};
