@@ -3050,3 +3050,6 @@ exports.addRemarkReports = async (req, res) => {
         });
     }
 };
+---------------
+BASEURL=http://localhost:5000
+API=http://localhost:5000
