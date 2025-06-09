@@ -19,7 +19,17 @@ const reportSchema = new mongoose.Schema({
                 formNumber: { type: String}, 
                 pdfFile: { type: String }, 
                 uploadedAt: { type: Date, default: Date.now },
-                approvedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
+                approvedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+                doneBy: [
+      {
+        formType: { type: String },
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        role: { type: String },
+        status: { type: String },
+        ward: { type: String },
+        userWard: { type: String }
+      }
+    ]
               
             }
         ]
