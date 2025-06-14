@@ -1930,6 +1930,948 @@ const updateDocumentDoneBy = (document, reportingRemarks, ward) => {
 
 // ------------------------------------
 
+
+// ========================================================================================
+// Main controller
+// exports.addRemarkReports = async (req, res) => {
+//   try {
+//     const { userId, remark, role, signature, ward, formType, pdfData, seleMonth, wardName, mode } = req.body;
+//     const userWard = ward;
+//     const missingFields = [];
+//     if (!role) missingFields.push("role");
+//     if (!remark) missingFields.push("remark");
+//     if (!formType) missingFields.push("formType");
+//     if (!seleMonth) missingFields.push("seleMonth");
+//     if (!ward) missingFields.push("ward");
+
+//     if (missingFields.length) return res.status(400).json({ message: `Missing: ${missingFields.join(", ")}` });
+
+//     const formNumber = await generateFormNumber(formType);
+//     let document = null;
+
+//     if (req.file) {
+//       document = { formType, formNumber, pdfFile: req.file.path, uploadedAt: new Date(), seleMonth, approvedBy: [], doneBy: [] };
+//     } else if (pdfData) {
+//       const pdfFilePath = saveBase64File(pdfData, formNumber);
+//       if (!pdfFilePath) return res.status(400).json({ message: "Invalid base64 PDF." });
+//       document = { formType, formNumber, pdfFile: pdfFilePath, uploadedAt: new Date(), seleMonth, approvedBy: [], doneBy: [] };
+//     } else {
+//       return res.status(400).json({ message: "PDF file or base64 required." });
+//     }
+
+//     // PDF Update Function - Modified to handle BOTH Junior Engineers and display ward & seleMonth
+//     const updatePdfWithAllSignatures = async (pdfPath, approvalData, formNum, targetWardName) => {
+//       try {
+//         const existingPdfBytes = fs.readFileSync(pdfPath);
+//         const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+//         const pages = pdfDoc.getPages();
+//         const firstPage = pages[0];
+//         const { width, height } = firstPage.getSize();
+
+
+        
+
+//         // Define signature positions - SEPARATE positions for BOTH Junior Engineers
+//         const signaturePositions = {
+//           'Lipik': { x: 50, y: height - 150 },
+//           'Junior Engineer_Ward': { x: 200, y: height - 150 },
+//           'Junior Engineer_Head Office': { x: 350, y: height - 150 },
+//           'Accountant': { x: 50, y: height - 250 },
+//           'Assistant Municipal Commissioner': { x: 200, y: height - 250 },
+//           'Dy.Municipal Commissioner': { x: 350, y: height - 250 }
+//         };
+
+//         // Add signatures for each approved role
+//         for (const approval of approvalData) {
+//           if (approval.signature) {
+//             let positionKey = approval.role;
+            
+//             // Handle BOTH Junior Engineer positions based on userWard
+//             if (approval.role === 'Junior Engineer') {
+//               if (approval.userWard === 'Head Office') {
+//                 positionKey = 'Junior Engineer_Head Office';
+//               } else {
+//                 positionKey = 'Junior Engineer_Ward';
+//               }
+//             }
+            
+//             const position = signaturePositions[positionKey];
+            
+//             if (position) {
+//               // Add role label with ward info for Junior Engineers
+//               let roleLabel = approval.role;
+//               if (approval.role === 'Junior Engineer') {
+//                 if (approval.userWard === 'Head Office') {
+//                   // Display wardName for Head Office JE to show which ward they're approving for
+//                   roleLabel = `JE (Head Office) - ${targetWardName || wardName || 'Ward'}`;
+//                 } else {
+//                   roleLabel = `JE (${approval.ward || approval.userWard})`;
+//                 }
+//               }
+              
+//               firstPage.drawText(`${roleLabel}:`, {
+//                 x: position.x,
+//                 y: position.y + 50,
+//                 size: 10,
+//                 color: PDFLib.rgb(0, 0, 0)
+//               });
+
+//               // Add status
+//               firstPage.drawText(`Status: ${approval.status || 'verified'}`, {
+//                 x: position.x,
+//                 y: position.y + 35,
+//                 size: 8,
+//                 color: PDFLib.rgb(0, 0.5, 0)
+//               });
+
+//               // Add ward - For Head Office JE, show the target ward they're approving for
+//               let displayWard = approval.ward || approval.userWard || 'N/A';
+//               if (approval.role === 'Junior Engineer' && approval.userWard === 'Head Office') {
+//                 displayWard = `${targetWardName || wardName || 'Ward'} (via Head Office)`;
+//               }
+//               firstPage.drawText(`Ward: ${displayWard}`, {
+//                 x: position.x,
+//                 y: position.y + 20,
+//                 size: 8,
+//                 color: PDFLib.rgb(0, 0, 0)
+//               });
+
+//               // Add seleMonth
+//               firstPage.drawText(`Month: ${approval.seleMonth || 'N/A'}`, {
+//                 x: position.x,
+//                 y: position.y + 5,
+//                 size: 8,
+//                 color: PDFLib.rgb(0, 0, 0)
+//               });
+
+//               // Add date
+//               firstPage.drawText(`Date: ${new Date(approval.date).toLocaleDateString()}`, {
+//                 x: position.x,
+//                 y: position.y - 10,
+//                 size: 8,
+//                 color: PDFLib.rgb(0, 0, 0)
+//               });
+
+//               // Add signature image if available
+//               if (approval.signature && approval.signature.startsWith('data:image')) {
+//                 try {
+//                   const signatureBase64 = approval.signature.split(',')[1];
+//                   const signatureBytes = Buffer.from(signatureBase64, 'base64');
+
+//                   let embeddedImage;
+//                   if (approval.signature.includes('png')) {
+//                     embeddedImage = await pdfDoc.embedPng(signatureBytes);
+//                   } else if (approval.signature.includes('jpg') || approval.signature.includes('jpeg')) {
+//                     embeddedImage = await pdfDoc.embedJpg(signatureBytes);
+//                   }
+
+//                   if (embeddedImage) {
+//                     firstPage.drawImage(embeddedImage, {
+//                       x: position.x,
+//                       y: position.y - 50,
+//                       width: 80,
+//                       height: 30
+//                     });
+//                   }
+//                 } catch (imageError) {
+//                   firstPage.drawText('Signature Applied', {
+//                     x: position.x,
+//                     y: position.y - 30,
+//                     size: 8,
+//                     color: PDFLib.rgb(0, 0, 0.8)
+//                   });
+//                 }
+//               } else {
+//                 firstPage.drawText('Signature Applied', {
+//                   x: position.x,
+//                   y: position.y - 30,
+//                   size: 8,
+//                   color: PDFLib.rgb(0, 0, 0.8)
+//                 });
+//               }
+//             }
+//           }
+//         }
+
+//         const pdfBytes = await pdfDoc.save();
+//         const updatedPdfPath = path.join(path.dirname(pdfPath), `updated_${formNum}_${Date.now()}.pdf`);
+//         fs.writeFileSync(updatedPdfPath, pdfBytes);
+//         return updatedPdfPath;
+//       } catch (error) {
+//         console.error('Error updating PDF:', error);
+//         throw error;
+//       }
+//     };
+
+//     // Create approval data from reporting remarks - INCLUDES BOTH Junior Engineers
+//     const createApprovalData = (reportingRemarks, targetWard, seleMonth, wardName) => {
+//       return reportingRemarks
+//         .filter(remark => {
+//           // Include remarks for the target ward OR Head Office Junior Engineers
+//           return remark.ward === targetWard || 
+//                  remark.userWard === targetWard || 
+//                  (remark.role === "Junior Engineer" && remark.userWard === "Head Office");
+//         })
+//         .map(remark => ({
+//           role: remark.role,
+//           remark: remark.remark,
+//           signature: remark.signature,
+//           date: remark.date,
+//           status: remark.remark === 'Approved' ? 'verified' : 'pending',
+//           ward: remark.ward,
+//           userWard: remark.userWard,
+//           seleMonth: seleMonth,
+//           wardName: wardName || targetWard
+//         }))
+//         .sort((a, b) => {
+//           const hierarchy = ['Lipik', 'Junior Engineer', 'Accountant', 'Assistant Municipal Commissioner', 'Dy.Municipal Commissioner'];
+//           return hierarchy.indexOf(a.role) - hierarchy.indexOf(b.role);
+//         });
+//     };
+
+//     let report;
+
+//     if (role === "Junior Engineer" && ward === "Head Office" && wardName) {
+//       report = await Report.findOne({ seleMonth, ward: wardName });
+//       if (!report) return res.status(400).json({ message: "Ward report not found." });
+
+//       const approved = areAllFormsApprovedByRole(report, "Junior Engineer", wardName);
+//       if (!approved) {
+//         const missing = getMissingFormTypes(report, "Junior Engineer", wardName, userId);
+//         return res.status(400).json({ message: `Ward JE must approve all forms. Missing: ${missing.join(", ")}` });
+//       }
+
+//       const jeRemark = {
+//         userId: new mongoose.Types.ObjectId(userId),
+//         role: "Junior Engineer",
+//         ward: "Head Office",
+//         userWard: "Head Office",
+//         remark,
+//         signature,
+//         date: new Date()
+//       };
+
+//       const exists = report.reportingRemarks.some(r => r.userId.toString() === userId && r.role === "Junior Engineer" && (r.ward === "Head Office" || r.userWard === "Head Office"));
+
+//       if (!exists) {
+//         if (remark === "Approved") {
+//           const lipik = report.reportingRemarks.find(r => r.role === "Lipik");
+//           if (lipik?.documents) {
+//             for (let doc of lipik.documents) {
+//               if (!doc.approvedBy.includes(userId)) doc.approvedBy.push(userId);
+//               doc.doneBy = populateDoneByArray(doc, [...report.reportingRemarks, jeRemark], wardName);
+              
+//               // Update PDF with Head Office JE signature - passing wardName for display
+//               try {
+//                 const approvalData = createApprovalData([...report.reportingRemarks, jeRemark], wardName, seleMonth, wardName);
+//                 const updatedPdfPath = await updatePdfWithAllSignatures(doc.pdfFile, approvalData, doc.formNumber, wardName);
+//                 doc.pdfFile = updatedPdfPath;
+//                 doc.lastUpdated = new Date();
+//               } catch (pdfError) {
+//                 console.error('Error updating PDF for Head Office JE:', pdfError);
+//               }
+//             }
+//           }
+//         }
+//         report.reportingRemarks.push(jeRemark);
+//         await report.save();
+//       }
+//       return res.status(201).json({ message: "Head Office JE remark added.", report });
+//     }
+
+//     report = await Report.findOne({ seleMonth, ward });
+//     if (!report) report = new Report({ seleMonth, ward, monthReport: seleMonth, reportingRemarks: [] });
+
+//     if (report.reportingRemarks.length === 0 && role !== "Lipik") {
+//       return res.status(400).json({ message: "First remark must be from Lipik." });
+//     }
+
+//     // Hierarchy checks
+//     if (role !== "Lipik") {
+//       const checks = {
+//         "Junior Engineer": "Lipik",
+//         "Accountant": "Junior Engineer",
+//         "Assistant Municipal Commissioner": "Accountant",
+//         "Dy.Municipal Commissioner": "Assistant Municipal Commissioner"
+//       };
+//       const checkRole = checks[role];
+//       if (checkRole) {
+//         const approved = checkRole === "Junior Engineer" && role === "Accountant"
+//           ? areAllFormsApprovedByRole(report, checkRole, ward) && areAllFormsApprovedByRole(report, checkRole, "Head Office")
+//           : areAllFormsApprovedByRole(report, checkRole, ward);
+
+//         if (!approved) {
+//           const missing = getMissingFormTypes(report, checkRole, checkRole === "Junior Engineer" ? [ward, "Head Office"].find(w => !areAllFormsApprovedByRole(report, checkRole, w)) : ward, userId);
+//           return res.status(400).json({ message: `${checkRole} must approve all forms. Missing: ${missing.join(", ")}` });
+//         }
+//       }
+//     }
+
+//     const index = report.reportingRemarks.findIndex(r => r.userId.toString() === userId && r.role === role && (r.ward === ward || r.userWard === ward));
+
+//     if (index !== -1) {
+//       const existing = report.reportingRemarks[index];
+//       existing.remark = remark;
+//       existing.signature = signature;
+//       existing.date = new Date();
+
+//       if (role === "Lipik") {
+//         const docs = existing.documents || [];
+//         const docIndex = docs.findIndex(d => d.formType === formType);
+
+//         if (docIndex !== -1) {
+//           const doc = docs[docIndex];
+//           doc.uploadedAt = new Date();
+//           doc.pdfFile = document.pdfFile;
+//           doc.approvedBy = remark === "Approved" ? [userId] : doc.approvedBy;
+//           doc.doneBy = populateDoneByArray(doc, report.reportingRemarks, ward);
+          
+//           // Update PDF with Lipik signature for updated document
+//           if (remark === "Approved") {
+//             try {
+//               const approvalData = createApprovalData(report.reportingRemarks, ward, seleMonth, wardName);
+//               const updatedPdfPath = await updatePdfWithAllSignatures(doc.pdfFile, approvalData, doc.formNumber, wardName);
+//               doc.pdfFile = updatedPdfPath;
+//               doc.lastUpdated = new Date();
+//             } catch (pdfError) {
+//               console.error('Error updating PDF for Lipik update:', pdfError);
+//             }
+//           }
+//         } else {
+//           const newDoc = { ...document, approvedBy: remark === "Approved" ? [userId] : [], doneBy: [] };
+//           newDoc.doneBy = populateDoneByArray(newDoc, report.reportingRemarks, ward);
+          
+//           // Update PDF with Lipik signature for new document
+//           if (remark === "Approved") {
+//             try {
+//               const approvalData = createApprovalData(report.reportingRemarks, ward, seleMonth, wardName);
+//               const updatedPdfPath = await updatePdfWithAllSignatures(newDoc.pdfFile, approvalData, newDoc.formNumber, wardName);
+//               newDoc.pdfFile = updatedPdfPath;
+//               newDoc.lastUpdated = new Date();
+//             } catch (pdfError) {
+//               console.error('Error updating PDF for Lipik new:', pdfError);
+//             }
+//           }
+          
+//           docs.push(newDoc);
+//         }
+//         existing.documents = docs;
+//       }
+
+//       // Update PDF for all approved roles
+//       if (remark === "Approved") {
+//         const lipik = report.reportingRemarks.find(r => r.role === "Lipik");
+//         if (lipik?.documents) {
+//           for (let doc of lipik.documents) {
+//             if (role === "Lipik" || doc.formType === formType) {
+//               if (!doc.approvedBy.includes(userId)) doc.approvedBy.push(userId);
+//               doc.doneBy = populateDoneByArray(doc, report.reportingRemarks, ward);
+              
+//               // Update PDF with current role signature
+//               try {
+//                 const approvalData = createApprovalData(report.reportingRemarks, ward, seleMonth, wardName);
+//                 const updatedPdfPath = await updatePdfWithAllSignatures(doc.pdfFile, approvalData, doc.formNumber, wardName);
+//                 doc.pdfFile = updatedPdfPath;
+//                 doc.lastUpdated = new Date();
+//               } catch (pdfError) {
+//                 console.error(`Error updating PDF for ${role}:`, pdfError);
+//               }
+//             }
+//           }
+//         }
+//       }
+
+//       report.reportingRemarks[index] = existing;
+//     } else {
+//       const remarkObj = {
+//         userId: new mongoose.Types.ObjectId(userId),
+//         ward,
+//         role,
+//         remark,
+//         signature,
+//         userWard,
+//         date: new Date(),
+//         documents: []
+//       };
+
+//       if (role === "Lipik" && remark === "Approved") {
+//         document.approvedBy.push(userId);
+//         document.doneBy = populateDoneByArray(document, [remarkObj], ward);
+        
+//         // Update PDF with initial Lipik signature
+//         try {
+//           const approvalData = createApprovalData([remarkObj], ward, seleMonth, wardName);
+//           const updatedPdfPath = await updatePdfWithAllSignatures(document.pdfFile, approvalData, document.formNumber, wardName);
+//           document.pdfFile = updatedPdfPath;
+//           document.lastUpdated = new Date();
+//         } catch (pdfError) {
+//           console.error('Error updating PDF for initial Lipik:', pdfError);
+//         }
+        
+//         remarkObj.documents.push(document);
+//       } else if (role !== "Lipik") {
+//         const lipik = report.reportingRemarks.find(r => r.role === "Lipik");
+//         if (!lipik) return res.status(400).json({ message: "Lipik remark not found." });
+
+//         const docIndex = lipik.documents.findIndex(d => d.formType === formType);
+
+//         if (docIndex !== -1) {
+//           const doc = lipik.documents[docIndex];
+//           if (!doc.signatures) doc.signatures = {};
+//           doc.signatures[role] = signature;
+//           if (remark === "Approved" && !doc.approvedBy.includes(userId)) doc.approvedBy.push(userId);
+//           doc.doneBy = populateDoneByArray(doc, [...report.reportingRemarks, remarkObj], ward);
+          
+//           // Update PDF with new role signature
+//           if (remark === "Approved") {
+//             try {
+//               const approvalData = createApprovalData([...report.reportingRemarks, remarkObj], ward, seleMonth, wardName);
+//               const updatedPdfPath = await updatePdfWithAllSignatures(doc.pdfFile, approvalData, doc.formNumber, wardName);
+//               doc.pdfFile = updatedPdfPath;
+//               doc.lastUpdated = new Date();
+//             } catch (pdfError) {
+//               console.error(`Error updating PDF for ${role}:`, pdfError);
+//             }
+//           }
+//         } else {
+//           const newDoc = { ...document, signatures: { [role]: signature }, approvedBy: remark === "Approved" ? [userId] : [], doneBy: [] };
+//           newDoc.doneBy = populateDoneByArray(newDoc, [...report.reportingRemarks, remarkObj], ward);
+          
+//           // Update PDF for new document with non-Lipik role
+//           if (remark === "Approved") {
+//             try {
+//               const approvalData = createApprovalData([...report.reportingRemarks, remarkObj], ward, seleMonth, wardName);
+//               const updatedPdfPath = await updatePdfWithAllSignatures(newDoc.pdfFile, approvalData, newDoc.formNumber, wardName);
+//               newDoc.pdfFile = updatedPdfPath;
+//               newDoc.lastUpdated = new Date();
+//             } catch (pdfError) {
+//               console.error(`Error updating PDF for ${role} new doc:`, pdfError);
+//             }
+//           }
+          
+//           lipik.documents.push(newDoc);
+//         }
+//       }
+
+//       report.reportingRemarks.push(remarkObj);
+//     }
+
+//     const lipik = report.reportingRemarks.find(r => r.role === "Lipik");
+//     lipik?.documents?.forEach(doc => doc.doneBy = populateDoneByArray(doc, report.reportingRemarks, ward));
+//     await report.save();
+
+//     res.status(201).json({ message: "Report saved.", report });
+//   } catch (error) {
+//     console.error("🚨 Error:", error);
+//     res.status(500).json({ message: "Error while saving report.", error: error.message });
+//   }
+// };
+// ==============================================================================================
+
+// exports.addRemarkReports = async (req, res) => {
+//   try {
+//     const { userId, remark, role, signature, ward, formType, pdfData, seleMonth, wardName, mode } = req.body;
+//     const userWard = ward;
+//     const missingFields = [];
+//     if (!role) missingFields.push("role");
+//     if (!remark) missingFields.push("remark");
+//     if (!formType) missingFields.push("formType");
+//     if (!seleMonth) missingFields.push("seleMonth");
+//     if (!ward) missingFields.push("ward");
+
+//     if (missingFields.length) return res.status(400).json({ message: `Missing: ${missingFields.join(", ")}` });
+
+//     const formNumber = await generateFormNumber(formType);
+//     let document = null;
+
+//     if (req.file) {
+//       document = { formType, formNumber, pdfFile: req.file.path, uploadedAt: new Date(), seleMonth, approvedBy: [], doneBy: [] };
+//     } else if (pdfData) {
+//       const pdfFilePath = saveBase64File(pdfData, formNumber);
+//       if (!pdfFilePath) return res.status(400).json({ message: "Invalid base64 PDF." });
+//       document = { formType, formNumber, pdfFile: pdfFilePath, uploadedAt: new Date(), seleMonth, approvedBy: [], doneBy: [] };
+//     } else {
+//       return res.status(400).json({ message: "PDF file or base64 required." });
+//     }
+
+//     // PDF Update Function - IMPROVED POSITIONING TO PREVENT OVERLAP
+//     const updatePdfWithAllSignatures = async (pdfPath, approvalData, formNum, targetWardName) => {
+//       try {
+//         const existingPdfBytes = fs.readFileSync(pdfPath);
+//         const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+//         const pages = pdfDoc.getPages();
+//         const firstPage = pages[0];
+//         const { width, height } = firstPage.getSize();
+
+//         // ENHANCED POSITIONING SYSTEM - Single column layout for better readability
+//         const approvedRoles = approvalData.filter(approval => approval.signature);
+//         const startY = height - 120; // Start position from top
+//         const leftMargin = 50;
+//         const rightMargin = width - 50;
+//         const contentWidth = rightMargin - leftMargin;
+
+//         // Calculate dynamic section height based on content
+//         const baseSectionHeight = 140; // Minimum height per section
+//         const lineHeight = 12; // Height per line of text
+//         const signatureHeight = 35; // Space for signature
+//         const separatorHeight = 15; // Space for separator line
+
+//         let currentY = startY;
+//         let currentPage = firstPage;
+//         let pageIndex = 0;
+
+//         // Sort approvals according to hierarchy for proper display order
+//         const hierarchyOrder = ['Lipik', 'Junior Engineer', 'Accountant', 'Assistant Municipal Commissioner', 'Dy.Municipal Commissioner'];
+//         const sortedApprovals = approvedRoles.sort((a, b) => {
+//           const indexA = hierarchyOrder.indexOf(a.role);
+//           const indexB = hierarchyOrder.indexOf(b.role);
+//           return indexA - indexB;
+//         });
+
+//         for (let i = 0; i < sortedApprovals.length; i++) {
+//           const approval = sortedApprovals[i];
+          
+//           // Calculate required height for this approval section
+//           let requiredHeight = baseSectionHeight;
+          
+//           // Role label with ward info
+//           let roleLabel = approval.role;
+//           if (approval.role === 'Junior Engineer') {
+//             if (approval.userWard === 'Head Office') {
+//               roleLabel = `JE (Head Office) - ${targetWardName || wardName || 'Ward'}`;
+//             } else {
+//               roleLabel = `JE (${approval.ward || approval.userWard})`;
+//             }
+//           }
+          
+//           // Check if we need a new page
+//           if (currentY - requiredHeight < 100) {
+//             // Add new page
+//             currentPage = pdfDoc.addPage([width, height]);
+//             pages.push(currentPage);
+//             currentY = startY;
+//             pageIndex++;
+//           }
+
+//           // Draw approval section background (optional - for better visual separation)
+//           currentPage.drawRectangle({
+//             x: leftMargin - 5,
+//             y: currentY - requiredHeight + 20,
+//             width: contentWidth + 10,
+//             height: requiredHeight - 20,
+//             borderColor: PDFLib.rgb(0.9, 0.9, 0.9),
+//             borderWidth: 1,
+//             color: PDFLib.rgb(0.98, 0.98, 0.98)
+//           });
+
+//           // Draw role header with bold font
+//           currentPage.drawText(`${roleLabel}:`, {
+//             x: leftMargin,
+//             y: currentY,
+//             size: 11,
+//             color: PDFLib.rgb(0, 0, 0),
+//             font: await pdfDoc.embedFont('Helvetica-Bold')
+//           });
+
+//           // Draw status with appropriate color
+//           const statusColor = approval.status === 'verified' ? PDFLib.rgb(0, 0.6, 0) : PDFLib.rgb(0.8, 0.4, 0);
+//           currentPage.drawText(`Status: ${approval.status || 'verified'}`, {
+//             x: leftMargin,
+//             y: currentY - (lineHeight * 1.5),
+//             size: 9,
+//             color: statusColor
+//           });
+
+//           // Draw ward info
+//           let displayWard = approval.ward || approval.userWard || 'N/A';
+//           if (approval.role === 'Junior Engineer' && approval.userWard === 'Head Office') {
+//             displayWard = `${targetWardName || wardName || 'Ward'} (via Head Office)`;
+//           }
+//           currentPage.drawText(`Ward: ${displayWard}`, {
+//             x: leftMargin,
+//             y: currentY - (lineHeight * 3),
+//             size: 9,
+//             color: PDFLib.rgb(0, 0, 0)
+//           });
+
+//           // Draw month
+//           currentPage.drawText(`Month: ${approval.seleMonth || 'N/A'}`, {
+//             x: leftMargin,
+//             y: currentY - (lineHeight * 4.5),
+//             size: 9,
+//             color: PDFLib.rgb(0, 0, 0)
+//           });
+
+//           // Draw date
+//           currentPage.drawText(`Date: ${new Date(approval.date).toLocaleDateString()}`, {
+//             x: leftMargin,
+//             y: currentY - (lineHeight * 6),
+//             size: 9,
+//             color: PDFLib.rgb(0, 0, 0)
+//           });
+
+//           // Draw remark if available
+//           if (approval.remark && approval.remark !== 'Approved') {
+//             currentPage.drawText(`Remark: ${approval.remark}`, {
+//               x: leftMargin,
+//               y: currentY - (lineHeight * 7.5),
+//               size: 9,
+//               color: PDFLib.rgb(0.2, 0.2, 0.2)
+//             });
+//           }
+
+//           // Draw signature
+//           const signatureY = currentY - (lineHeight * 9);
+//           if (approval.signature && approval.signature.startsWith('data:image')) {
+//             try {
+//               const signatureBase64 = approval.signature.split(',')[1];
+//               const signatureBytes = Buffer.from(signatureBase64, 'base64');
+
+//               let embeddedImage;
+//               if (approval.signature.includes('png')) {
+//                 embeddedImage = await pdfDoc.embedPng(signatureBytes);
+//               } else if (approval.signature.includes('jpg') || approval.signature.includes('jpeg')) {
+//                 embeddedImage = await pdfDoc.embedJpg(signatureBytes);
+//               }
+
+//               if (embeddedImage) {
+//                 currentPage.drawImage(embeddedImage, {
+//                   x: leftMargin,
+//                   y: signatureY - signatureHeight,
+//                   width: 100,
+//                   height: signatureHeight
+//                 });
+//               }
+//             } catch (imageError) {
+//               console.error('Error embedding signature image:', imageError);
+//               currentPage.drawText('✓ Signature Applied', {
+//                 x: leftMargin,
+//                 y: signatureY - 15,
+//                 size: 9,
+//                 color: PDFLib.rgb(0, 0, 0.8)
+//               });
+//             }
+//           } else {
+//             currentPage.drawText('✓ Signature Applied', {
+//               x: leftMargin,
+//               y: signatureY - 15,
+//               size: 9,
+//               color: PDFLib.rgb(0, 0, 0.8)
+//             });
+//           }
+
+//           // Draw separator line
+//           const separatorY = currentY - requiredHeight + 30;
+//           currentPage.drawLine({
+//             start: { x: leftMargin, y: separatorY },
+//             end: { x: rightMargin, y: separatorY },
+//             thickness: 1,
+//             color: PDFLib.rgb(0.7, 0.7, 0.7)
+//           });
+
+//           // Update Y position for next approval section
+//           currentY -= requiredHeight;
+//         }
+
+//         const pdfBytes = await pdfDoc.save();
+//         const updatedPdfPath = path.join(path.dirname(pdfPath), `updated_${formNum}_${Date.now()}.pdf`);
+//         fs.writeFileSync(updatedPdfPath, pdfBytes);
+//         return updatedPdfPath;
+//       } catch (error) {
+//         console.error('Error updating PDF:', error);
+//         throw error;
+//       }
+//     };
+
+//     // Create approval data from reporting remarks - WARD SPECIFIC FILTERING
+//     const createApprovalData = (reportingRemarks, targetWard, seleMonth, wardName) => {
+//       return reportingRemarks
+//         .filter(remark => {
+//           // STRICT WARD FILTERING: Only include remarks for the EXACT target ward
+//           // OR Head Office Junior Engineers approving for this specific ward
+//           if (remark.role === "Junior Engineer" && remark.userWard === "Head Office") {
+//             // Head Office JE can approve, but only for the specific target ward
+//             return true;
+//           }
+//           // For all other roles, they must belong to the exact same ward
+//           return remark.ward === targetWard || remark.userWard === targetWard;
+//         })
+//         .map(remark => ({
+//           role: remark.role,
+//           remark: remark.remark,
+//           signature: remark.signature,
+//           date: remark.date,
+//           status: remark.remark === 'Approved' ? 'verified' : 'pending',
+//           ward: remark.ward,
+//           userWard: remark.userWard,
+//           seleMonth: seleMonth,
+//           wardName: wardName || targetWard
+//         }))
+//         .sort((a, b) => {
+//           const hierarchy = ['Lipik', 'Junior Engineer', 'Accountant', 'Assistant Municipal Commissioner', 'Dy.Municipal Commissioner'];
+//           return hierarchy.indexOf(a.role) - hierarchy.indexOf(b.role);
+//         });
+//     };
+
+//     let report;
+
+//     // Handle Head Office Junior Engineer approving for specific ward
+//     if (role === "Junior Engineer" && ward === "Head Office" && wardName) {
+//       // Find the report for the specific ward they're approving
+//       report = await Report.findOne({ seleMonth, ward: wardName });
+//       if (!report) return res.status(400).json({ message: "Ward report not found." });
+
+//       // Check if Ward JE has approved all forms for this specific ward
+//       const approved = areAllFormsApprovedByRole(report, "Junior Engineer", wardName);
+//       if (!approved) {
+//         const missing = getMissingFormTypes(report, "Junior Engineer", wardName, userId);
+//         return res.status(400).json({ message: `Ward JE must approve all forms. Missing: ${missing.join(", ")}` });
+//       }
+
+//       const jeRemark = {
+//         userId: new mongoose.Types.ObjectId(userId),
+//         role: "Junior Engineer",
+//         ward: "Head Office",
+//         userWard: "Head Office",
+//         remark,
+//         signature,
+//         date: new Date()
+//       };
+
+//       const exists = report.reportingRemarks.some(r => r.userId.toString() === userId && r.role === "Junior Engineer" && (r.ward === "Head Office" || r.userWard === "Head Office"));
+
+//       if (!exists) {
+//         if (remark === "Approved") {
+//           const lipik = report.reportingRemarks.find(r => r.role === "Lipik");
+//           if (lipik?.documents) {
+//             for (let doc of lipik.documents) {
+//               if (!doc.approvedBy.includes(userId)) doc.approvedBy.push(userId);
+//               doc.doneBy = populateDoneByArray(doc, [...report.reportingRemarks, jeRemark], wardName);
+              
+//               // Update PDF with Head Office JE signature - passing wardName for display
+//               try {
+//                 const approvalData = createApprovalData([...report.reportingRemarks, jeRemark], wardName, seleMonth, wardName);
+//                 const updatedPdfPath = await updatePdfWithAllSignatures(doc.pdfFile, approvalData, doc.formNumber, wardName);
+//                 doc.pdfFile = updatedPdfPath;
+//                 doc.lastUpdated = new Date();
+//               } catch (pdfError) {
+//                 console.error('Error updating PDF for Head Office JE:', pdfError);
+//               }
+//             }
+//           }
+//         }
+//         report.reportingRemarks.push(jeRemark);
+//         await report.save();
+//       }
+//       return res.status(201).json({ message: "Head Office JE remark added.", report });
+//     }
+
+//     // Handle regular ward-specific operations
+//     // STRICT WARD ISOLATION: Only find/create reports for the exact ward
+//     report = await Report.findOne({ seleMonth, ward });
+//     if (!report) {
+//       // Create new report ONLY for this specific ward
+//       report = new Report({ 
+//         seleMonth, 
+//         ward, 
+//         monthReport: seleMonth, 
+//         reportingRemarks: [] 
+//       });
+//     }
+
+//     if (report.reportingRemarks.length === 0 && role !== "Lipik") {
+//       return res.status(400).json({ message: "First remark must be from Lipik." });
+//     }
+
+//     // Hierarchy checks - WARD SPECIFIC
+//     if (role !== "Lipik") {
+//       const checks = {
+//         "Junior Engineer": "Lipik",
+//         "Accountant": "Junior Engineer",
+//         "Assistant Municipal Commissioner": "Accountant",
+//         "Dy.Municipal Commissioner": "Assistant Municipal Commissioner"
+//       };
+//       const checkRole = checks[role];
+//       if (checkRole) {
+//         // Special case for Accountant: needs both Ward JE and Head Office JE approval
+//         const approved = checkRole === "Junior Engineer" && role === "Accountant"
+//           ? areAllFormsApprovedByRole(report, checkRole, ward) && areAllFormsApprovedByRole(report, checkRole, "Head Office")
+//           : areAllFormsApprovedByRole(report, checkRole, ward);
+
+//         if (!approved) {
+//           const missing = getMissingFormTypes(report, checkRole, checkRole === "Junior Engineer" ? [ward, "Head Office"].find(w => !areAllFormsApprovedByRole(report, checkRole, w)) : ward, userId);
+//           return res.status(400).json({ message: `${checkRole} must approve all forms. Missing: ${missing.join(", ")}` });
+//         }
+//       }
+//     }
+
+//     // Find existing remark for this user, role, and ward
+//     const index = report.reportingRemarks.findIndex(r => r.userId.toString() === userId && r.role === role && (r.ward === ward || r.userWard === ward));
+
+//     if (index !== -1) {
+//       // Update existing remark
+//       const existing = report.reportingRemarks[index];
+//       existing.remark = remark;
+//       existing.signature = signature;
+//       existing.date = new Date();
+
+//       if (role === "Lipik") {
+//         const docs = existing.documents || [];
+//         const docIndex = docs.findIndex(d => d.formType === formType);
+
+//         if (docIndex !== -1) {
+//           const doc = docs[docIndex];
+//           doc.uploadedAt = new Date();
+//           doc.pdfFile = document.pdfFile;
+//           doc.approvedBy = remark === "Approved" ? [userId] : doc.approvedBy;
+//           doc.doneBy = populateDoneByArray(doc, report.reportingRemarks, ward);
+          
+//           // Update PDF with Lipik signature for updated document
+//           if (remark === "Approved") {
+//             try {
+//               const approvalData = createApprovalData(report.reportingRemarks, ward, seleMonth, ward);
+//               const updatedPdfPath = await updatePdfWithAllSignatures(doc.pdfFile, approvalData, doc.formNumber, ward);
+//               doc.pdfFile = updatedPdfPath;
+//               doc.lastUpdated = new Date();
+//             } catch (pdfError) {
+//               console.error('Error updating PDF for Lipik update:', pdfError);
+//             }
+//           }
+//         } else {
+//           const newDoc = { ...document, approvedBy: remark === "Approved" ? [userId] : [], doneBy: [] };
+//           newDoc.doneBy = populateDoneByArray(newDoc, report.reportingRemarks, ward);
+          
+//           // Update PDF with Lipik signature for new document
+//           if (remark === "Approved") {
+//             try {
+//               const approvalData = createApprovalData(report.reportingRemarks, ward, seleMonth, ward);
+//               const updatedPdfPath = await updatePdfWithAllSignatures(newDoc.pdfFile, approvalData, newDoc.formNumber, ward);
+//               newDoc.pdfFile = updatedPdfPath;
+//               newDoc.lastUpdated = new Date();
+//             } catch (pdfError) {
+//               console.error('Error updating PDF for Lipik new:', pdfError);
+//             }
+//           }
+          
+//           docs.push(newDoc);
+//         }
+//         existing.documents = docs;
+//       }
+
+//       // Update PDF for all approved roles
+//       if (remark === "Approved") {
+//         const lipik = report.reportingRemarks.find(r => r.role === "Lipik");
+//         if (lipik?.documents) {
+//           for (let doc of lipik.documents) {
+//             if (role === "Lipik" || doc.formType === formType) {
+//               if (!doc.approvedBy.includes(userId)) doc.approvedBy.push(userId);
+//               doc.doneBy = populateDoneByArray(doc, report.reportingRemarks, ward);
+              
+//               // Update PDF with current role signature
+//               try {
+//                 const approvalData = createApprovalData(report.reportingRemarks, ward, seleMonth, ward);
+//                 const updatedPdfPath = await updatePdfWithAllSignatures(doc.pdfFile, approvalData, doc.formNumber, ward);
+//                 doc.pdfFile = updatedPdfPath;
+//                 doc.lastUpdated = new Date();
+//               } catch (pdfError) {
+//                 console.error(`Error updating PDF for ${role}:`, pdfError);
+//               }
+//             }
+//           }
+//         }
+//       }
+
+//       report.reportingRemarks[index] = existing;
+//     } else {
+//       // Create new remark
+//       const remarkObj = {
+//         userId: new mongoose.Types.ObjectId(userId),
+//         ward,
+//         role,
+//         remark,
+//         signature,
+//         userWard,
+//         date: new Date(),
+//         documents: []
+//       };
+
+//       if (role === "Lipik" && remark === "Approved") {
+//         document.approvedBy.push(userId);
+//         document.doneBy = populateDoneByArray(document, [remarkObj], ward);
+        
+//         // Update PDF with initial Lipik signature
+//         try {
+//           const approvalData = createApprovalData([remarkObj], ward, seleMonth, ward);
+//           const updatedPdfPath = await updatePdfWithAllSignatures(document.pdfFile, approvalData, document.formNumber, ward);
+//           document.pdfFile = updatedPdfPath;
+//           document.lastUpdated = new Date();
+//         } catch (pdfError) {
+//           console.error('Error updating PDF for initial Lipik:', pdfError);
+//         }
+        
+//         remarkObj.documents.push(document);
+//       } else if (role !== "Lipik") {
+//         const lipik = report.reportingRemarks.find(r => r.role === "Lipik");
+//         if (!lipik) return res.status(400).json({ message: "Lipik remark not found." });
+
+//         const docIndex = lipik.documents.findIndex(d => d.formType === formType);
+
+//         if (docIndex !== -1) {
+//           const doc = lipik.documents[docIndex];
+//           if (!doc.signatures) doc.signatures = {};
+//           doc.signatures[role] = signature;
+//           if (remark === "Approved" && !doc.approvedBy.includes(userId)) doc.approvedBy.push(userId);
+//           doc.doneBy = populateDoneByArray(doc, [...report.reportingRemarks, remarkObj], ward);
+          
+//           // Update PDF with new role signature
+//           if (remark === "Approved") {
+//             try {
+//               const approvalData = createApprovalData([...report.reportingRemarks, remarkObj], ward, seleMonth, ward);
+//               const updatedPdfPath = await updatePdfWithAllSignatures(doc.pdfFile, approvalData, doc.formNumber, ward);
+//               doc.pdfFile = updatedPdfPath;
+//               doc.lastUpdated = new Date();
+//             } catch (pdfError) {
+//               console.error(`Error updating PDF for ${role}:`, pdfError);
+//             }
+//           }
+//         } else {
+//           const newDoc = { ...document, signatures: { [role]: signature }, approvedBy: remark === "Approved" ? [userId] : [], doneBy: [] };
+//           newDoc.doneBy = populateDoneByArray(newDoc, [...report.reportingRemarks, remarkObj], ward);
+          
+//           // Update PDF for new document with non-Lipik role
+//           if (remark === "Approved") {
+//             try {
+//               const approvalData = createApprovalData([...report.reportingRemarks, remarkObj], ward, seleMonth, ward);
+//               const updatedPdfPath = await updatePdfWithAllSignatures(newDoc.pdfFile, approvalData, newDoc.formNumber, ward);
+//               newDoc.pdfFile = updatedPdfPath;
+//               newDoc.lastUpdated = new Date();
+//             } catch (pdfError) {
+//               console.error(`Error updating PDF for ${role} new doc:`, pdfError);
+//             }
+//           }
+          
+//           lipik.documents.push(newDoc);
+//         }
+//       }
+
+//       report.reportingRemarks.push(remarkObj);
+//     }
+
+//     // Final update of doneBy arrays for all documents
+//     const lipik = report.reportingRemarks.find(r => r.role === "Lipik");
+//     lipik?.documents?.forEach(doc => doc.doneBy = populateDoneByArray(doc, report.reportingRemarks, ward));
+    
+//     await report.save();
+
+//     res.status(201).json({ message: "Report saved.", report });
+//   } catch (error) {
+//     console.error("🚨 Error:", error);
+//     res.status(500).json({ message: "Error while saving report.", error: error.message });
+//   }
+// };
+
+// =============================
+
 // exports.addRemarkReports = async (req, res) => {
 //   try {
 //     const { userId, remark, role, signature, ward, formType, pdfData, seleMonth, wardName, mode } = req.body;
@@ -2397,206 +3339,129 @@ const updateDocumentDoneBy = (document, reportingRemarks, ward) => {
 //     res.status(500).json({ message: "Error while saving report.", error: error.message });
 //   }
 // };
-// ========================================================================================
-// Main controller
+
+
+
+
+
 exports.addRemarkReports = async (req, res) => {
   try {
     const { userId, remark, role, signature, ward, formType, pdfData, seleMonth, wardName, mode } = req.body;
     const userWard = ward;
+
+    // 1. Validate required fields
     const missingFields = [];
     if (!role) missingFields.push("role");
     if (!remark) missingFields.push("remark");
     if (!formType) missingFields.push("formType");
     if (!seleMonth) missingFields.push("seleMonth");
     if (!ward) missingFields.push("ward");
+    if (missingFields.length) {
+      return res.status(400).json({ message: `Missing: ${missingFields.join(", ")}` });
+    }
 
-    if (missingFields.length) return res.status(400).json({ message: `Missing: ${missingFields.join(", ")}` });
-
+    // 2. Prepare incoming PDF document
     const formNumber = await generateFormNumber(formType);
     let document = null;
-
     if (req.file) {
       document = { formType, formNumber, pdfFile: req.file.path, uploadedAt: new Date(), seleMonth, approvedBy: [], doneBy: [] };
     } else if (pdfData) {
       const pdfFilePath = saveBase64File(pdfData, formNumber);
-      if (!pdfFilePath) return res.status(400).json({ message: "Invalid base64 PDF." });
+      if (!pdfFilePath) {
+        return res.status(400).json({ message: "Invalid base64 PDF." });
+      }
       document = { formType, formNumber, pdfFile: pdfFilePath, uploadedAt: new Date(), seleMonth, approvedBy: [], doneBy: [] };
     } else {
       return res.status(400).json({ message: "PDF file or base64 required." });
     }
 
-    // PDF Update Function - Modified to handle BOTH Junior Engineers and display ward & seleMonth
+    // 3. PDF helper — append new "APPROVAL SIGNATURES" page at end
     const updatePdfWithAllSignatures = async (pdfPath, approvalData, formNum, targetWardName) => {
-      try {
-        const existingPdfBytes = fs.readFileSync(pdfPath);
-        const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-        const pages = pdfDoc.getPages();
-        const firstPage = pages[0];
-        const { width, height } = firstPage.getSize();
+      const existingPdfBytes = fs.readFileSync(pdfPath);
+      const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+      const { width, height } = pdfDoc.getPages()[0].getSize();
 
+      const signed = approvalData.filter(a => a.signature);
+      if (signed.length) {
+        let page = pdfDoc.addPage([width, height]);
+        let y = height - 60;
+        const left = 50;
+        const titleFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+        const bodyFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
 
-        
+        page.drawText('APPROVAL SIGNATURES', { x: left, y, size: 18, font: titleFont });
+        y -= 30;
 
-        // Define signature positions - SEPARATE positions for BOTH Junior Engineers
-        const signaturePositions = {
-          'Lipik': { x: 50, y: height - 150 },
-          'Junior Engineer_Ward': { x: 200, y: height - 150 },
-          'Junior Engineer_Head Office': { x: 350, y: height - 150 },
-          'Accountant': { x: 50, y: height - 250 },
-          'Assistant Municipal Commissioner': { x: 200, y: height - 250 },
-          'Dy.Municipal Commissioner': { x: 350, y: height - 250 }
-        };
+        const order = ['Lipik','Junior Engineer','Accountant','Assistant Municipal Commissioner','Dy.Municipal Commissioner'];
+        signed.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
 
-        // Add signatures for each approved role
-        for (const approval of approvalData) {
-          if (approval.signature) {
-            let positionKey = approval.role;
-            
-            // Handle BOTH Junior Engineer positions based on userWard
-            if (approval.role === 'Junior Engineer') {
-              if (approval.userWard === 'Head Office') {
-                positionKey = 'Junior Engineer_Head Office';
-              } else {
-                positionKey = 'Junior Engineer_Ward';
-              }
-            }
-            
-            const position = signaturePositions[positionKey];
-            
-            if (position) {
-              // Add role label with ward info for Junior Engineers
-              let roleLabel = approval.role;
-              if (approval.role === 'Junior Engineer') {
-                if (approval.userWard === 'Head Office') {
-                  // Display wardName for Head Office JE to show which ward they're approving for
-                  roleLabel = `JE (Head Office) - ${targetWardName || wardName || 'Ward'}`;
-                } else {
-                  roleLabel = `JE (${approval.ward || approval.userWard})`;
-                }
-              }
-              
-              firstPage.drawText(`${roleLabel}:`, {
-                x: position.x,
-                y: position.y + 50,
-                size: 10,
-                color: PDFLib.rgb(0, 0, 0)
-              });
-
-              // Add status
-              firstPage.drawText(`Status: ${approval.status || 'verified'}`, {
-                x: position.x,
-                y: position.y + 35,
-                size: 8,
-                color: PDFLib.rgb(0, 0.5, 0)
-              });
-
-              // Add ward - For Head Office JE, show the target ward they're approving for
-              let displayWard = approval.ward || approval.userWard || 'N/A';
-              if (approval.role === 'Junior Engineer' && approval.userWard === 'Head Office') {
-                displayWard = `${targetWardName || wardName || 'Ward'} (via Head Office)`;
-              }
-              firstPage.drawText(`Ward: ${displayWard}`, {
-                x: position.x,
-                y: position.y + 20,
-                size: 8,
-                color: PDFLib.rgb(0, 0, 0)
-              });
-
-              // Add seleMonth
-              firstPage.drawText(`Month: ${approval.seleMonth || 'N/A'}`, {
-                x: position.x,
-                y: position.y + 5,
-                size: 8,
-                color: PDFLib.rgb(0, 0, 0)
-              });
-
-              // Add date
-              firstPage.drawText(`Date: ${new Date(approval.date).toLocaleDateString()}`, {
-                x: position.x,
-                y: position.y - 10,
-                size: 8,
-                color: PDFLib.rgb(0, 0, 0)
-              });
-
-              // Add signature image if available
-              if (approval.signature && approval.signature.startsWith('data:image')) {
-                try {
-                  const signatureBase64 = approval.signature.split(',')[1];
-                  const signatureBytes = Buffer.from(signatureBase64, 'base64');
-
-                  let embeddedImage;
-                  if (approval.signature.includes('png')) {
-                    embeddedImage = await pdfDoc.embedPng(signatureBytes);
-                  } else if (approval.signature.includes('jpg') || approval.signature.includes('jpeg')) {
-                    embeddedImage = await pdfDoc.embedJpg(signatureBytes);
-                  }
-
-                  if (embeddedImage) {
-                    firstPage.drawImage(embeddedImage, {
-                      x: position.x,
-                      y: position.y - 50,
-                      width: 80,
-                      height: 30
-                    });
-                  }
-                } catch (imageError) {
-                  firstPage.drawText('Signature Applied', {
-                    x: position.x,
-                    y: position.y - 30,
-                    size: 8,
-                    color: PDFLib.rgb(0, 0, 0.8)
-                  });
-                }
-              } else {
-                firstPage.drawText('Signature Applied', {
-                  x: position.x,
-                  y: position.y - 30,
-                  size: 8,
-                  color: PDFLib.rgb(0, 0, 0.8)
-                });
-              }
-            }
+        for (const a of signed) {
+          if (y < 120) {
+            page = pdfDoc.addPage([width, height]);
+            y = height - 60;
           }
+          page.drawRectangle({
+            x: left - 5,
+            y: y - 80,
+            width: width - left * 2 + 10,
+            height: 90,
+            color: PDFLib.rgb(0.97, 0.97, 0.97)
+          });
+          page.drawText(`${a.role}:`, { x: left, y, size: 12, font: titleFont });
+          y -= 18;
+          page.drawText(`Status: ${a.status}`, { x: left, y, size: 10, font: bodyFont });
+          y -= 14;
+          const wardDisplay = (a.role === 'Junior Engineer' && a.userWard === 'Head Office')
+            ? `${targetWardName} (via Head Office)`
+            : (a.ward || a.userWard);
+          page.drawText(`Ward: ${wardDisplay}`, { x: left, y, size: 10, font: bodyFont });
+          y -= 14;
+          page.drawText(`Month: ${a.seleMonth}    Date: ${new Date(a.date).toLocaleDateString()}`, { x: left, y, size: 10, font: bodyFont });
+          y -= 14;
+
+          if (a.signature.startsWith('data:image')) {
+            const imgBytes = Buffer.from(a.signature.split(',')[1], 'base64');
+            const img = a.signature.includes('png')
+              ? await pdfDoc.embedPng(imgBytes)
+              : await pdfDoc.embedJpg(imgBytes);
+            page.drawImage(img, { x: left, y: y - 40, width: 100, height: 30 });
+          } else {
+            page.drawText('✓ Signature Applied', { x: left, y, size: 10, font: bodyFont });
+          }
+          y -= 60;
         }
-
-        const pdfBytes = await pdfDoc.save();
-        const updatedPdfPath = path.join(path.dirname(pdfPath), `updated_${formNum}_${Date.now()}.pdf`);
-        fs.writeFileSync(updatedPdfPath, pdfBytes);
-        return updatedPdfPath;
-      } catch (error) {
-        console.error('Error updating PDF:', error);
-        throw error;
       }
+
+      const outBytes = await pdfDoc.save();
+      const updatedPath = path.join(path.dirname(pdfPath), `updated_${formNum}_${Date.now()}.pdf`);
+      fs.writeFileSync(updatedPath, outBytes);
+      return updatedPath;
     };
 
-    // Create approval data from reporting remarks - INCLUDES BOTH Junior Engineers
-    const createApprovalData = (reportingRemarks, targetWard, seleMonth, wardName) => {
-      return reportingRemarks
-        .filter(remark => {
-          // Include remarks for the target ward OR Head Office Junior Engineers
-          return remark.ward === targetWard || 
-                 remark.userWard === targetWard || 
-                 (remark.role === "Junior Engineer" && remark.userWard === "Head Office");
-        })
-        .map(remark => ({
-          role: remark.role,
-          remark: remark.remark,
-          signature: remark.signature,
-          date: remark.date,
-          status: remark.remark === 'Approved' ? 'verified' : 'pending',
-          ward: remark.ward,
-          userWard: remark.userWard,
-          seleMonth: seleMonth,
-          wardName: wardName || targetWard
+    // 4. Build approval-data array
+    const createApprovalData = (remarks, targetWard, month, wName) => {
+      const hierarchy = ['Lipik','Junior Engineer','Accountant','Assistant Municipal Commissioner','Dy.Municipal Commissioner'];
+      return remarks
+        .filter(r => (r.role === "Junior Engineer" && r.userWard === "Head Office") || r.ward === targetWard || r.userWard === targetWard)
+        .map(r => ({
+          role:      r.role,
+          remark:    r.remark,
+          signature: r.signature,
+          date:      r.date,
+          status:    r.remark === 'Approved' ? 'verified' : 'pending',
+          ward:      r.ward,
+          userWard:  r.userWard,
+          seleMonth: month,
+          wardName:  wName || targetWard
         }))
-        .sort((a, b) => {
-          const hierarchy = ['Lipik', 'Junior Engineer', 'Accountant', 'Assistant Municipal Commissioner', 'Dy.Municipal Commissioner'];
-          return hierarchy.indexOf(a.role) - hierarchy.indexOf(b.role);
-        });
+        .sort((a, b) => hierarchy.indexOf(a.role) - hierarchy.indexOf(b.role));
     };
+
+    // 5. === Full existing logic below ===
 
     let report;
 
+    // Head Office JE case
     if (role === "Junior Engineer" && ward === "Head Office" && wardName) {
       report = await Report.findOne({ seleMonth, ward: wardName });
       if (!report) return res.status(400).json({ message: "Ward report not found." });
@@ -2617,7 +3482,11 @@ exports.addRemarkReports = async (req, res) => {
         date: new Date()
       };
 
-      const exists = report.reportingRemarks.some(r => r.userId.toString() === userId && r.role === "Junior Engineer" && (r.ward === "Head Office" || r.userWard === "Head Office"));
+      const exists = report.reportingRemarks.some(r =>
+        r.userId.toString() === userId &&
+        r.role === "Junior Engineer" &&
+        (r.ward === "Head Office" || r.userWard === "Head Office")
+      );
 
       if (!exists) {
         if (remark === "Approved") {
@@ -2626,16 +3495,14 @@ exports.addRemarkReports = async (req, res) => {
             for (let doc of lipik.documents) {
               if (!doc.approvedBy.includes(userId)) doc.approvedBy.push(userId);
               doc.doneBy = populateDoneByArray(doc, [...report.reportingRemarks, jeRemark], wardName);
-              
-              // Update PDF with Head Office JE signature - passing wardName for display
-              try {
-                const approvalData = createApprovalData([...report.reportingRemarks, jeRemark], wardName, seleMonth, wardName);
-                const updatedPdfPath = await updatePdfWithAllSignatures(doc.pdfFile, approvalData, doc.formNumber, wardName);
-                doc.pdfFile = updatedPdfPath;
-                doc.lastUpdated = new Date();
-              } catch (pdfError) {
-                console.error('Error updating PDF for Head Office JE:', pdfError);
-              }
+
+              doc.pdfFile = await updatePdfWithAllSignatures(
+                doc.pdfFile,
+                createApprovalData([...report.reportingRemarks, jeRemark], wardName, seleMonth, wardName),
+                doc.formNumber,
+                wardName
+              );
+              doc.lastUpdated = new Date();
             }
           }
         }
@@ -2645,14 +3512,21 @@ exports.addRemarkReports = async (req, res) => {
       return res.status(201).json({ message: "Head Office JE remark added.", report });
     }
 
+    // Regular ward case
     report = await Report.findOne({ seleMonth, ward });
-    if (!report) report = new Report({ seleMonth, ward, monthReport: seleMonth, reportingRemarks: [] });
+    if (!report) {
+      report = new Report({
+        seleMonth,
+        ward,
+        monthReport: seleMonth,
+        reportingRemarks: []
+      });
+    }
 
     if (report.reportingRemarks.length === 0 && role !== "Lipik") {
       return res.status(400).json({ message: "First remark must be from Lipik." });
     }
 
-    // Hierarchy checks
     if (role !== "Lipik") {
       const checks = {
         "Junior Engineer": "Lipik",
@@ -2667,15 +3541,27 @@ exports.addRemarkReports = async (req, res) => {
           : areAllFormsApprovedByRole(report, checkRole, ward);
 
         if (!approved) {
-          const missing = getMissingFormTypes(report, checkRole, checkRole === "Junior Engineer" ? [ward, "Head Office"].find(w => !areAllFormsApprovedByRole(report, checkRole, w)) : ward, userId);
+          const missing = getMissingFormTypes(
+            report,
+            checkRole,
+            checkRole === "Junior Engineer"
+              ? [ward, "Head Office"].find(w => !areAllFormsApprovedByRole(report, checkRole, w))
+              : ward,
+            userId
+          );
           return res.status(400).json({ message: `${checkRole} must approve all forms. Missing: ${missing.join(", ")}` });
         }
       }
     }
 
-    const index = report.reportingRemarks.findIndex(r => r.userId.toString() === userId && r.role === role && (r.ward === ward || r.userWard === ward));
+    const index = report.reportingRemarks.findIndex(r =>
+      r.userId.toString() === userId &&
+      r.role === role &&
+      (r.ward === ward || r.userWard === ward)
+    );
 
     if (index !== -1) {
+      // Update existing remark
       const existing = report.reportingRemarks[index];
       existing.remark = remark;
       existing.signature = signature;
@@ -2684,47 +3570,40 @@ exports.addRemarkReports = async (req, res) => {
       if (role === "Lipik") {
         const docs = existing.documents || [];
         const docIndex = docs.findIndex(d => d.formType === formType);
-
         if (docIndex !== -1) {
           const doc = docs[docIndex];
           doc.uploadedAt = new Date();
           doc.pdfFile = document.pdfFile;
           doc.approvedBy = remark === "Approved" ? [userId] : doc.approvedBy;
           doc.doneBy = populateDoneByArray(doc, report.reportingRemarks, ward);
-          
-          // Update PDF with Lipik signature for updated document
+
           if (remark === "Approved") {
-            try {
-              const approvalData = createApprovalData(report.reportingRemarks, ward, seleMonth, wardName);
-              const updatedPdfPath = await updatePdfWithAllSignatures(doc.pdfFile, approvalData, doc.formNumber, wardName);
-              doc.pdfFile = updatedPdfPath;
-              doc.lastUpdated = new Date();
-            } catch (pdfError) {
-              console.error('Error updating PDF for Lipik update:', pdfError);
-            }
+            doc.pdfFile = await updatePdfWithAllSignatures(
+              doc.pdfFile,
+              createApprovalData(report.reportingRemarks, ward, seleMonth, wardName),
+              doc.formNumber,
+              wardName
+            );
+            doc.lastUpdated = new Date();
           }
         } else {
           const newDoc = { ...document, approvedBy: remark === "Approved" ? [userId] : [], doneBy: [] };
           newDoc.doneBy = populateDoneByArray(newDoc, report.reportingRemarks, ward);
-          
-          // Update PDF with Lipik signature for new document
+
           if (remark === "Approved") {
-            try {
-              const approvalData = createApprovalData(report.reportingRemarks, ward, seleMonth, wardName);
-              const updatedPdfPath = await updatePdfWithAllSignatures(newDoc.pdfFile, approvalData, newDoc.formNumber, wardName);
-              newDoc.pdfFile = updatedPdfPath;
-              newDoc.lastUpdated = new Date();
-            } catch (pdfError) {
-              console.error('Error updating PDF for Lipik new:', pdfError);
-            }
+            newDoc.pdfFile = await updatePdfWithAllSignatures(
+              newDoc.pdfFile,
+              createApprovalData(report.reportingRemarks, ward, seleMonth, wardName),
+              newDoc.formNumber,
+              wardName
+            );
+            newDoc.lastUpdated = new Date();
           }
-          
           docs.push(newDoc);
         }
         existing.documents = docs;
       }
 
-      // Update PDF for all approved roles
       if (remark === "Approved") {
         const lipik = report.reportingRemarks.find(r => r.role === "Lipik");
         if (lipik?.documents) {
@@ -2732,23 +3611,23 @@ exports.addRemarkReports = async (req, res) => {
             if (role === "Lipik" || doc.formType === formType) {
               if (!doc.approvedBy.includes(userId)) doc.approvedBy.push(userId);
               doc.doneBy = populateDoneByArray(doc, report.reportingRemarks, ward);
-              
-              // Update PDF with current role signature
-              try {
-                const approvalData = createApprovalData(report.reportingRemarks, ward, seleMonth, wardName);
-                const updatedPdfPath = await updatePdfWithAllSignatures(doc.pdfFile, approvalData, doc.formNumber, wardName);
-                doc.pdfFile = updatedPdfPath;
-                doc.lastUpdated = new Date();
-              } catch (pdfError) {
-                console.error(`Error updating PDF for ${role}:`, pdfError);
-              }
+
+              doc.pdfFile = await updatePdfWithAllSignatures(
+                doc.pdfFile,
+                createApprovalData(report.reportingRemarks, ward, seleMonth, wardName),
+                doc.formNumber,
+                wardName
+              );
+              doc.lastUpdated = new Date();
             }
           }
         }
       }
 
       report.reportingRemarks[index] = existing;
+
     } else {
+      // Create new remark
       const remarkObj = {
         userId: new mongoose.Types.ObjectId(userId),
         ward,
@@ -2763,58 +3642,55 @@ exports.addRemarkReports = async (req, res) => {
       if (role === "Lipik" && remark === "Approved") {
         document.approvedBy.push(userId);
         document.doneBy = populateDoneByArray(document, [remarkObj], ward);
-        
-        // Update PDF with initial Lipik signature
-        try {
-          const approvalData = createApprovalData([remarkObj], ward, seleMonth, wardName);
-          const updatedPdfPath = await updatePdfWithAllSignatures(document.pdfFile, approvalData, document.formNumber, wardName);
-          document.pdfFile = updatedPdfPath;
-          document.lastUpdated = new Date();
-        } catch (pdfError) {
-          console.error('Error updating PDF for initial Lipik:', pdfError);
-        }
-        
+
+        document.pdfFile = await updatePdfWithAllSignatures(
+          document.pdfFile,
+          createApprovalData([remarkObj], ward, seleMonth, wardName),
+          document.formNumber,
+          wardName
+        );
+        document.lastUpdated = new Date();
         remarkObj.documents.push(document);
+
       } else if (role !== "Lipik") {
         const lipik = report.reportingRemarks.find(r => r.role === "Lipik");
-        if (!lipik) return res.status(400).json({ message: "Lipik remark not found." });
+        if (!lipik) {
+          return res.status(400).json({ message: "Lipik remark not found." });
+        }
 
         const docIndex = lipik.documents.findIndex(d => d.formType === formType);
-
         if (docIndex !== -1) {
           const doc = lipik.documents[docIndex];
-          if (!doc.signatures) doc.signatures = {};
+          doc.signatures = doc.signatures || {};
           doc.signatures[role] = signature;
-          if (remark === "Approved" && !doc.approvedBy.includes(userId)) doc.approvedBy.push(userId);
-          doc.doneBy = populateDoneByArray(doc, [...report.reportingRemarks, remarkObj], ward);
-          
-          // Update PDF with new role signature
-          if (remark === "Approved") {
-            try {
-              const approvalData = createApprovalData([...report.reportingRemarks, remarkObj], ward, seleMonth, wardName);
-              const updatedPdfPath = await updatePdfWithAllSignatures(doc.pdfFile, approvalData, doc.formNumber, wardName);
-              doc.pdfFile = updatedPdfPath;
-              doc.lastUpdated = new Date();
-            } catch (pdfError) {
-              console.error(`Error updating PDF for ${role}:`, pdfError);
-            }
+          if (remark === "Approved" && !doc.approvedBy.includes(userId)) {
+            doc.approvedBy.push(userId);
           }
+          doc.doneBy = populateDoneByArray(doc, [...report.reportingRemarks, remarkObj], ward);
+
+          if (remark === "Approved") {
+            doc.pdfFile = await updatePdfWithAllSignatures(
+              doc.pdfFile,
+              createApprovalData([...report.reportingRemarks, remarkObj], ward, seleMonth, wardName),
+              doc.formNumber,
+              wardName
+            );
+            doc.lastUpdated = new Date();
+          }
+
         } else {
           const newDoc = { ...document, signatures: { [role]: signature }, approvedBy: remark === "Approved" ? [userId] : [], doneBy: [] };
           newDoc.doneBy = populateDoneByArray(newDoc, [...report.reportingRemarks, remarkObj], ward);
-          
-          // Update PDF for new document with non-Lipik role
+
           if (remark === "Approved") {
-            try {
-              const approvalData = createApprovalData([...report.reportingRemarks, remarkObj], ward, seleMonth, wardName);
-              const updatedPdfPath = await updatePdfWithAllSignatures(newDoc.pdfFile, approvalData, newDoc.formNumber, wardName);
-              newDoc.pdfFile = updatedPdfPath;
-              newDoc.lastUpdated = new Date();
-            } catch (pdfError) {
-              console.error(`Error updating PDF for ${role} new doc:`, pdfError);
-            }
+            newDoc.pdfFile = await updatePdfWithAllSignatures(
+              newDoc.pdfFile,
+              createApprovalData([...report.reportingRemarks, remarkObj], ward, seleMonth, wardName),
+              newDoc.formNumber,
+              wardName
+            );
+            newDoc.lastUpdated = new Date();
           }
-          
           lipik.documents.push(newDoc);
         }
       }
@@ -2822,17 +3698,23 @@ exports.addRemarkReports = async (req, res) => {
       report.reportingRemarks.push(remarkObj);
     }
 
+    // 6. Final doneBy update & save
     const lipik = report.reportingRemarks.find(r => r.role === "Lipik");
-    lipik?.documents?.forEach(doc => doc.doneBy = populateDoneByArray(doc, report.reportingRemarks, ward));
-    await report.save();
+    lipik?.documents?.forEach(doc => {
+      doc.doneBy = populateDoneByArray(doc, report.reportingRemarks, ward);
+    });
 
+    await report.save();
     res.status(201).json({ message: "Report saved.", report });
   } catch (error) {
     console.error("🚨 Error:", error);
     res.status(500).json({ message: "Error while saving report.", error: error.message });
   }
 };
-// ==============================================================================================
+
+
+
+// ==================================================================================
 
 
 
