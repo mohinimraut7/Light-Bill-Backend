@@ -888,7 +888,7 @@ bill.netLoad = netLoad || bill.netLoad || '';
 
 
 
-
+//bfore server pagiantion
   exports.getBills = async (req, res) => {
     try {
       const bills = await Bill.find();
@@ -898,6 +898,76 @@ bill.netLoad = netLoad || bill.netLoad || '';
       res.status(500).json({ message: 'Internal Server Error' });
     }
   };
+
+//after server pagination
+//   exports.getBills = async (req, res) => {
+//   try {
+//     const {
+//       page = 0,
+//       pageSize = 100,
+//       consumerNumber = '',
+//       ward = '',
+//       monthYear = '',
+//       userRole = '',
+//       userWard = ''
+//     } = req.query;
+
+//     // Convert page and pageSize to numbers
+//     const pageNum = parseInt(page);
+//     const limit = parseInt(pageSize);
+//     const skip = pageNum * limit;
+
+//     // Build filter object
+//     let filter = {};
+
+//     // Consumer number search
+//     if (consumerNumber) {
+//       filter.consumerNumber = { $regex: consumerNumber, $options: 'i' };
+//     }
+
+//     // Ward filter - only apply if ward is selected in frontend
+//     if (ward) {
+//       filter.ward = ward;
+//     }
+
+//     // Month and year filter - optional, only apply if selected
+//     if (monthYear) {
+//       filter.monthAndYear = monthYear.toUpperCase();
+//     }
+
+//     // Role-based filtering - MAIN LOGIC HERE
+//     if (userRole === 'Junior Engineer' && userWard && userWard !== 'Head Office') {
+//       // Junior Engineer with specific ward - only see their ward data
+//       filter.ward = userWard;
+//     }
+//     // For Admin, Super Admin, Executive Engineer, and Junior Engineer with Head Office ward
+//     // No additional ward restriction - they can see all wards
+
+//     // Get total count for pagination
+//     const totalCount = await Bill.countDocuments(filter);
+
+//     // Get bills with pagination
+//     const bills = await Bill.find(filter)
+//       .sort({ createdAt: -1 }) // Sort by newest first
+//       .skip(skip)
+//       .limit(limit);
+
+//     // Calculate if there are more pages
+//     const hasMore = (pageNum + 1) * limit < totalCount;
+
+//     res.status(200).json({
+//       bills,
+//       totalCount,
+//       currentPage: pageNum,
+//       hasMore,
+//       totalPages: Math.ceil(totalCount / limit)
+//     });
+
+//   } catch (error) {
+//     console.error('Error fetching bills:', error);
+//     res.status(500).json({ message: 'Internal Server Error' });
+//   }
+// };
 
   exports.getBillsWithMeterPurpose = async (req, res) => {
     try {
