@@ -164,23 +164,52 @@ exports.resendVerificationEmail = async (req, res) => {
 };
 
 
+// exports.deleteUser = async (req, res) => {
+//   const { user_id } = req.params;
+
+//   try {
+   
+//     const deletedUser = await User.findByIdAndDelete(user_id);
+
+//     if (!deletedUser) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+    
+// // await Role.deleteOne({ _id: deletedUser.roleId });
+// await Role.deleteOne({ userId: deletedUser._id });
+
+    
+//     res.status(200).json({
+//       message: "User, associated role, and bills deleted successfully",
+//       user: deletedUser,
+//     });
+
+//   } catch (error) {
+//     console.error("Error deleting user:", error);
+//     res.status(500).json({ message: "Internal Server Error" });
+//   }
+// };
+
+
 exports.deleteUser = async (req, res) => {
   const { user_id } = req.params;
 
   try {
-   
-    const deletedUser = await User.findByIdAndDelete(user_id);
-
-    if (!deletedUser) {
+    // Step 1: Find the user before deleting
+    const user = await User.findById(user_id);
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    
-    await Role.deleteOne({ _id: deletedUser.roleId });
+    // Step 2: Delete associated role using user._id
+    await Role.deleteOne({ userId: user._id });
 
-    
+    // Step 3: Now delete the user
+    const deletedUser = await User.findByIdAndDelete(user_id);
+
     res.status(200).json({
-      message: "User, associated role, and bills deleted successfully",
+      message: "User and associated role deleted successfully",
       user: deletedUser,
     });
 
@@ -189,6 +218,7 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 exports.editProfile = async (req, res) => {
   const { userId } = req.params;

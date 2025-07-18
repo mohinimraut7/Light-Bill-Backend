@@ -134,8 +134,9 @@ exports.editRole = async (req, res) => {
     const { role_id } = req.params;
     const { name, email, ward } = req.body;
     const requesterRole = req?.user?.role;
+    const requesterWard = req?.user?.ward;
 
-    if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin') {
+    if (requesterRole !== 'Super Admin' && requesterRole !== 'Admin' && !(requesterRole === 'Junior Engineer' && requesterWard === 'Head Office')) {
         return res.status(403).json({ message: "You don't have authority to edit role" });
     }
 
