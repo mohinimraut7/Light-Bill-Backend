@@ -899,6 +899,51 @@ bill.netLoad = netLoad || bill.netLoad || '';
     }
   };
 
+
+  exports.getBillsOverdue = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
+
+    // Build search query (example: based on consumerNumber if passed)
+    let searchQuery = {};
+    if (req.query.consumerNumber) {
+      searchQuery.consumerNumber = { $regex: req.query.consumerNumber, $options: 'i' };
+    }
+
+    // Get total count
+    const totalBills = await Bill.countDocuments(searchQuery);
+
+    // Fetch paginated bills
+    const bills = await Bill.find(searchQuery)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalBills / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    res.status(200).json({
+      bills,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalBills,
+        hasNextPage,
+        hasPrevPage,
+        limit
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching bills:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+
 //after server pagination
 //   exports.getBills = async (req, res) => {
 //   try {
