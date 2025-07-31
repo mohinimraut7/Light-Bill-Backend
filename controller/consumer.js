@@ -1,6 +1,7 @@
 const Consumer = require('../models/consumer');
 const User = require('../models/user'); 
-
+const cron = require('node-cron');
+const Bill = require('../models/bill');
 // async function removeUniqueIndexes() {
 //     try {
 //         await Consumer.collection.dropIndex("consumerAddress_1");
@@ -17,6 +18,7 @@ exports.addConsumer = async (req, res) => {
     try {
         var { consumerNumber,consumerPlace,consumerAddress,meterPurpose, ward, phaseType  } = req.body;
         consumerNumber = consumerNumber.trim();
+       
         consumerPlace=consumerPlace.trim();
         consumerAddress = consumerAddress.trim();
         ward = ward?.trim(); // Handle undefined case
@@ -45,7 +47,7 @@ exports.addConsumer = async (req, res) => {
             consumerNumber,
             consumerPlace,
             consumerAddress,
-           ward,
+            ward,
             meterPurpose,
             phaseType,
     
@@ -105,7 +107,7 @@ exports.importExcel = async (req, res) => {
         let updatedCount = 0;
 
         for (const consumerData of consumers) {
-            const { consumerNumber, consumerPlace, ward, consumerAddress,meterPurpose } = consumerData;
+            const { consumerNumber,meterNumber,consumerPlace, ward, consumerAddress,meterPurpose } = consumerData;
 
             // Validate consumerNumber
             if (!consumerNumber || consumerNumber.length !== 12) {
@@ -118,7 +120,7 @@ exports.importExcel = async (req, res) => {
             if (existingConsumer) {
                 // Update only if consumerPlace, ward, or consumerAddress is missing in DB but present in Excel
                 const updateFields = {};
-
+                if (!existingConsumer.meterNumber && meterNumber) updateFields.meterNumber = meterNumber;
                 if (!existingConsumer.consumerPlace && consumerPlace) updateFields.consumerPlace = consumerPlace;
                 if (!existingConsumer.ward && ward) updateFields.ward = ward;
                 if (!existingConsumer.consumerAddress && consumerAddress) updateFields.consumerAddress = consumerAddress;
@@ -239,3 +241,45 @@ exports.editConsumer = async (req, res) => {
         });
     }
 };
+
+
+exports.updateMeterNumbersFromBill = async (req, res) => {
+    try {
+        const bills = await Bill.find({
+            consumerNumber: { $exists: true, $ne: null },
+            meterNumber: { $exists: true, $ne: null }
+        });
+
+        let updatedCount = 0;
+
+        for (const bill of bills) {
+            const { consumerNumber, meterNumber } = bill;
+
+            const consumer = await Consumer.findOne({ consumerNumber });
+
+            if (consumer && !consumer.meterNumber) {
+                consumer.meterNumber = meterNumber;
+                await consumer.save();
+                updatedCount++;
+                console.log(`✅ Updated ${consumerNumber} with meter ${meterNumber}`);
+            }
+        }
+
+        return res.status(200).json({
+            message: "Meter numbers synced from Bill to Consumer",
+            updatedCount
+        });
+
+    } catch (error) {
+        console.error("❌ Error syncing meter numbers:", error);
+        return res.status(500).json({
+            message: "Internal Server Error",
+            error: error.message
+        });
+    }
+};
+
+cron.schedule('57 17 * * *', () => {
+    console.log("🕔 Running Cron Job at 5:40 PM...");
+    updateMeterNumbersFromBill();
+});

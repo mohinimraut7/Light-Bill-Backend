@@ -899,23 +899,84 @@ bill.netLoad = netLoad || bill.netLoad || '';
     }
   };
 
+// ----------------------------------------------------------------
 
-  exports.getBillsOverdue = async (req, res) => {
+//   exports.getBillsOverdue = async (req, res) => {
+//   try {
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 50;
+//     const skip = (page - 1) * limit;
+
+//     // Build search query (example: based on consumerNumber if passed)
+//     let searchQuery = {};
+//     if (req.query.consumerNumber) {
+//       searchQuery.consumerNumber = { $regex: req.query.consumerNumber, $options: 'i' };
+//     }
+
+//     // Get total count
+//     const totalBills = await Bill.countDocuments(searchQuery);
+
+//     // Fetch paginated bills
+//     const bills = await Bill.find(searchQuery)
+//       .skip(skip)
+//       .limit(limit)
+//       .sort({ createdAt: -1 });
+
+//     // Calculate pagination info
+//     const totalPages = Math.ceil(totalBills / limit);
+//     const hasNextPage = page < totalPages;
+//     const hasPrevPage = page > 1;
+
+//     res.status(200).json({
+//       bills,
+//       pagination: {
+//         currentPage: page,
+//         totalPages,
+//         totalBills,
+//         hasNextPage,
+//         hasPrevPage,
+//         limit
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Error fetching bills:', error);
+//     res.status(500).json({ message: 'Internal Server Error' });
+//   }
+// };
+
+// -------------------------------------------------------------------
+
+
+
+exports.getBillsOverdue = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const skip = (page - 1) * limit;
+    const selectedMonthYear = req.query.selectedMonthYear;
 
-    // Build search query (example: based on consumerNumber if passed)
+    // Build search query
     let searchQuery = {};
+    
+    // Add consumerNumber filter if provided
     if (req.query.consumerNumber) {
       searchQuery.consumerNumber = { $regex: req.query.consumerNumber, $options: 'i' };
     }
 
-    // Get total count
+    // Apply the filtering logic from frontend to backend
+    // Filter by selectedMonthYear if provided
+    if (selectedMonthYear) {
+      searchQuery.monthAndYear = selectedMonthYear;
+    }
+
+    // Filter for overdue bills: due date passed and status is unpaid
+    searchQuery.dueDate = { $lt: new Date() }; // Due date is in the past
+    searchQuery.paymentStatus = 'unpaid'; // Payment status is unpaid
+
+    // Get total count with filters applied
     const totalBills = await Bill.countDocuments(searchQuery);
 
-    // Fetch paginated bills
+    // Fetch paginated bills with all filters applied
     const bills = await Bill.find(searchQuery)
       .skip(skip)
       .limit(limit)
@@ -938,7 +999,7 @@ bill.netLoad = netLoad || bill.netLoad || '';
       }
     });
   } catch (error) {
-    console.error('Error fetching bills:', error);
+    console.error('Error fetching overdue bills:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
