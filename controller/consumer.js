@@ -165,6 +165,71 @@ exports.getConsumers = async (req, res) => {
 }
 
 
+
+
+// exports.getConsumers = async (req, res) => {
+//     try {
+//         const consumers = await Consumer.find();
+
+//         const enrichedConsumers = await Promise.all(
+//             consumers.map(async (consumer) => {
+//                 const bill = await Bill.findOne(
+//                     { consumerNumber: consumer.consumerNumber },
+//                     { meterNumber: 1 }
+//                 );
+
+//                 const consumerObj = consumer.toObject();
+//                 consumerObj.meterNumber = bill?.meterNumber || null;
+
+//                 return consumerObj;
+//             })
+//         );
+
+//         res.status(200).json(enrichedConsumers);
+//     } catch (error) {
+//         console.log(error);
+//         res.status(500).json({
+//             message: 'Internal Server Error'
+//         });
+//     }
+// };
+
+
+
+
+
+exports.getConsumers = async (req, res) => {
+    try {
+        const consumers = await Consumer.find();
+
+        // Bill मधून meterNumber आणणे आणि consumer मध्ये जोडणे
+        for (const consumer of consumers) {
+            const bill = await Bill.findOne(
+                { consumerNumber: consumer.consumerNumber },
+                { meterNumber: 1 }
+            );
+            consumer.meterNumber = bill?.meterNumber || null;
+        }
+
+        res.status(200).json(consumers);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: 'Internal Server Error'
+        });
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
 exports.deleteConsumer = async (req, res) => {
     const { consumer_id } = req.params;
     try {
