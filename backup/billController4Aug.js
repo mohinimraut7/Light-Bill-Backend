@@ -2,12 +2,10 @@ const Bill = require('../models/bill');
 const mongoose = require("mongoose");
 const User = require('../models/user'); 
 const Meter = require('../models/meter'); 
-const bcrypt=require('bcryptjs');
 const Consumer = require('../models/consumer'); 
 const cron = require("node-cron");
 const axios = require('axios');
-const Paidbill = require("../models/paidbill"); // adjust the path as needed
-
+const Paidbill = require("../models/paidbill"); 
 
 cron.schedule("40 16 * * *", async () => {
  
@@ -29,8 +27,6 @@ cron.schedule("40 16 * * *", async () => {
   }
 });
 
-
-
 cron.schedule("46 16 * * *", async () => { 
   console.log("Updating due alerts...");
   try {
@@ -41,8 +37,6 @@ cron.schedule("46 16 * * *", async () => {
       { dueDate: oldDueDateString, dueAlert: true, paymentStatus: { $regex: /^unpaid$/i } },
       { $set: { dueAlert: false } } 
     );
-
-  
   
     const paidUpdate = await Bill.updateMany(
       { dueAlert: true, paymentStatus: { $regex: /^paid$/i } },
@@ -117,8 +111,6 @@ exports.addBill = async (req, res) => {
         dueDate,
         netBillAmountWithDPC,
         dueAlert,
-        billPaymentDate, 
-        paidAmount,   
       } = billData;
 
       const validContactNumber = contactNumber || "N/A";
@@ -146,7 +138,6 @@ exports.addBill = async (req, res) => {
         },
         { new: true } 
       );
-
      
       const duplicateBill = await Bill.findOne({ consumerNumber, monthAndYear });
       if (duplicateBill) {
@@ -240,161 +231,7 @@ exports.addBill = async (req, res) => {
 };
 
 
-// exports.updateBillPaymentStatus = async (req, res) => {
-//   try {
-//     const payments = Array.isArray(req.body) ? req.body : [req.body];
-//     const updatedBills = [];
-//     const failedBills = [];
 
-//     for (const payment of payments) {
-//       const { consumerNumber, receiptAmount, receiptDate } = payment;
-
-//       if (!consumerNumber || receiptAmount == null || !receiptDate) {
-//         failedBills.push({
-//           consumerNumber,
-//           error: "Missing consumerNumber, receiptAmount or receiptDate",
-//         });
-//         continue;
-//       }
-
-//       const bills = await Bill.find({ consumerNumber }).sort({ billDate: -1 });
-
-//       const matchingBill = bills.find(bill => {
-//         const billDateValid = new Date(bill.billDate) < new Date(receiptDate);
-//         const amountMatch =
-//           receiptAmount === bill.netBillAmount ||
-//           receiptAmount === bill.netBillAmountWithDPC ||
-//           receiptAmount === bill.promptPaymentAmount;
-//         const isUnpaid = bill.paymentStatus === 'unpaid';
-
-//         return billDateValid && amountMatch && isUnpaid;
-//       });
-
-//       if (!matchingBill) {
-//         failedBills.push({
-//           consumerNumber,
-//           error: "No matching unpaid bill found with valid date and amount",
-//         });
-//         continue;
-//       }
-
-//       // Update the main bill
-//       matchingBill.paymentStatus = "paid";
-//       matchingBill.paidAmount = receiptAmount;
-//       matchingBill.billPaymentDate = receiptDate;
-//       await matchingBill.save();
-
-//       // Save receipt info in Paidbill collection
-//       await Paidbill.create({
-//         consumerNumber,
-//         receiptAmount,
-//         receiptDate,
-//       });
-
-//       // updatedBills.push({
-//       //   consumerNumber: matchingBill.consumerNumber,
-//       //   monthAndYear: matchingBill.monthAndYear,
-//       //   updated: true,
-//       // });
-//       updatedBills.push({
-//         consumerNo: consumerNumber,
-//         receiptDate,
-//         status: "SUCCESS",
-//       });
-//     }
-
-//     res.status(200).json({
-//       // message: "Payment status update complete",
-//       updatedBills,
-//       failedBills,
-//     });
-
-//   } catch (error) {
-//     console.error("Error in updateBillPaymentStatus:", error);
-//     res.status(500).json({
-//       message: "Internal server error",
-//       error: error.message,
-//     });
-//   }
-// };
-
-// ----------------------------------------------------------------------------------------
-
-// -----------------------------------------------------------------------------
-// exports.updateBillPaymentStatus = async (req, res) => {
-//   try {
-//     const payments = Array.isArray(req.body) ? req.body : [req.body];
-//     const responseArray = [];
-
-//     for (const payment of payments) {
-//       const { consumerNumber, receiptAmount, receiptDate } = payment;
-
-//       if (!consumerNumber || receiptAmount == null || !receiptDate) {
-//         responseArray.push({
-//           consumerNo: consumerNumber || "UNKNOWN",
-//           receiptDate: receiptDate || "INVALID DATE",
-//           status: "FAILED",
-//           errorReason: "Missing consumerNumber, receiptAmount or receiptDate",
-//         });
-//         continue;
-//       }
-
-//       const bills = await Bill.find({ consumerNumber }).sort({ billDate: -1 });
-
-//       const matchingBill = bills.find(bill => {
-//         const billDateValid = new Date(bill.billDate) < new Date(receiptDate);
-//         const amountMatch =
-//           receiptAmount === bill.netBillAmount ||
-//           receiptAmount === bill.netBillAmountWithDPC ||
-//           receiptAmount === bill.promptPaymentAmount;
-//         const isUnpaid = bill.paymentStatus === 'unpaid';
-
-//         return billDateValid && amountMatch && isUnpaid;
-//       });
-
-//       if (!matchingBill) {
-//         responseArray.push({
-//           consumerNo: consumerNumber,
-//           receiptDate,
-//           status: "FAILED",
-//           errorReason: "No matching unpaid bill found with valid date and amount",
-//         });
-//         continue;
-//       }
-
-//       // Update the bill
-//       matchingBill.paymentStatus = "paid";
-//       matchingBill.paidAmount = receiptAmount;
-//       matchingBill.billPaymentDate = receiptDate;
-//       await matchingBill.save();
-
-//       // Save in Paidbill
-//       await Paidbill.create({
-//         consumerNumber,
-//         receiptAmount,
-//         receiptDate,
-//       });
-
-//       responseArray.push({
-//         consumerNo: consumerNumber,
-//         receiptDate,
-//         status: "SUCCESS",
-//       });
-//     }
-
-//     // ✅ Final combined response
-//     res.status(200).json(responseArray);
-
-//   } catch (error) {
-//     console.error("Error in updateBillPaymentStatus:", error);
-//     res.status(500).json({
-//       message: "Internal server error",
-//       error: error.message,
-//     });
-//   }
-// };
-
-// ------------------------------------------------------------------------------
 exports.updateBillPaymentStatus = async (req, res) => {
   try {
     const payments = Array.isArray(req.body) ? req.body : [req.body];
@@ -402,8 +239,7 @@ exports.updateBillPaymentStatus = async (req, res) => {
 
     for (const payment of payments) {
       const { consumerNumber, receiptAmount, receiptDate } = payment;
-
-      // Validation
+      
       if (!consumerNumber || receiptAmount == null || !receiptDate) {
         responseArray.push({
           consumerNo: consumerNumber || "UNKNOWN",
@@ -413,9 +249,8 @@ exports.updateBillPaymentStatus = async (req, res) => {
         });
         continue;
       }
-
-      // Check consumer exists
-      const consumerExists = await Consumer.exists({ consumerNumber }); // adjust if collection name differs
+      
+      const consumerExists = await Consumer.exists({ consumerNumber }); 
       if (!consumerExists) {
         responseArray.push({
           consumerNo: consumerNumber,
@@ -470,7 +305,7 @@ exports.updateBillPaymentStatus = async (req, res) => {
       });
     }
 
-    // Final response
+    
     res.status(200).json(responseArray);
 
   } catch (error) {
@@ -888,17 +723,7 @@ bill.netLoad = netLoad || bill.netLoad || '';
 
 
 
-// //bfore server pagiantion
-//   exports.getBills = async (req, res) => {
-//     try {
-//       const bills = await Bill.find();
-//       res.status(200).json(bills);
-//     } catch (error) {
-//       console.error('Error fetching bills:', error);
-//       res.status(500).json({ message: 'Internal Server Error' });
-//     }
-//   };
-// ------------------------------------------------------------------------
+
 //   exports.getBills = async (req, res) => {
 //     try {
 //       const bills = await Bill.find();
@@ -968,54 +793,6 @@ exports.getBills = async (req, res) => {
   }
 };
 
-// ----------------------------------------------------------------
-
-//   exports.getBillsOverdue = async (req, res) => {
-//   try {
-//     const page = parseInt(req.query.page) || 1;
-//     const limit = parseInt(req.query.limit) || 50;
-//     const skip = (page - 1) * limit;
-
-//     // Build search query (example: based on consumerNumber if passed)
-//     let searchQuery = {};
-//     if (req.query.consumerNumber) {
-//       searchQuery.consumerNumber = { $regex: req.query.consumerNumber, $options: 'i' };
-//     }
-
-//     // Get total count
-//     const totalBills = await Bill.countDocuments(searchQuery);
-
-//     // Fetch paginated bills
-//     const bills = await Bill.find(searchQuery)
-//       .skip(skip)
-//       .limit(limit)
-//       .sort({ createdAt: -1 });
-
-//     // Calculate pagination info
-//     const totalPages = Math.ceil(totalBills / limit);
-//     const hasNextPage = page < totalPages;
-//     const hasPrevPage = page > 1;
-
-//     res.status(200).json({
-//       bills,
-//       pagination: {
-//         currentPage: page,
-//         totalPages,
-//         totalBills,
-//         hasNextPage,
-//         hasPrevPage,
-//         limit
-//       }
-//     });
-//   } catch (error) {
-//     console.error('Error fetching bills:', error);
-//     res.status(500).json({ message: 'Internal Server Error' });
-//   }
-// };
-
-// -------------------------------------------------------------------
-
-
 
 exports.getBillsOverdue = async (req, res) => {
   try {
@@ -1024,34 +801,33 @@ exports.getBillsOverdue = async (req, res) => {
     const skip = (page - 1) * limit;
     const selectedMonthYear = req.query.selectedMonthYear;
 
-    // Build search query
+    
     let searchQuery = {};
     
-    // Add consumerNumber filter if provided
+    
     if (req.query.consumerNumber) {
       searchQuery.consumerNumber = { $regex: req.query.consumerNumber, $options: 'i' };
     }
 
-    // Apply the filtering logic from frontend to backend
-    // Filter by selectedMonthYear if provided
+   
     if (selectedMonthYear) {
       searchQuery.monthAndYear = selectedMonthYear;
     }
 
-    // Filter for overdue bills: due date passed and status is unpaid
-    searchQuery.dueDate = { $lt: new Date() }; // Due date is in the past
-    searchQuery.paymentStatus = 'unpaid'; // Payment status is unpaid
+    
+    searchQuery.dueDate = { $lt: new Date() }; 
+    searchQuery.paymentStatus = 'unpaid'; 
 
-    // Get total count with filters applied
+    
     const totalBills = await Bill.countDocuments(searchQuery);
 
-    // Fetch paginated bills with all filters applied
+    
     const bills = await Bill.find(searchQuery)
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
 
-    // Calculate pagination info
+    
     const totalPages = Math.ceil(totalBills / limit);
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
@@ -1074,77 +850,8 @@ exports.getBillsOverdue = async (req, res) => {
 };
 
 
-//after server pagination
-//   exports.getBills = async (req, res) => {
-//   try {
-//     const {
-//       page = 0,
-//       pageSize = 100,
-//       consumerNumber = '',
-//       ward = '',
-//       monthYear = '',
-//       userRole = '',
-//       userWard = ''
-//     } = req.query;
 
-//     // Convert page and pageSize to numbers
-//     const pageNum = parseInt(page);
-//     const limit = parseInt(pageSize);
-//     const skip = pageNum * limit;
-
-//     // Build filter object
-//     let filter = {};
-
-//     // Consumer number search
-//     if (consumerNumber) {
-//       filter.consumerNumber = { $regex: consumerNumber, $options: 'i' };
-//     }
-
-//     // Ward filter - only apply if ward is selected in frontend
-//     if (ward) {
-//       filter.ward = ward;
-//     }
-
-//     // Month and year filter - optional, only apply if selected
-//     if (monthYear) {
-//       filter.monthAndYear = monthYear.toUpperCase();
-//     }
-
-//     // Role-based filtering - MAIN LOGIC HERE
-//     if (userRole === 'Junior Engineer' && userWard && userWard !== 'Head Office') {
-//       // Junior Engineer with specific ward - only see their ward data
-//       filter.ward = userWard;
-//     }
-//     // For Admin, Super Admin, Executive Engineer, and Junior Engineer with Head Office ward
-//     // No additional ward restriction - they can see all wards
-
-//     // Get total count for pagination
-//     const totalCount = await Bill.countDocuments(filter);
-
-//     // Get bills with pagination
-//     const bills = await Bill.find(filter)
-//       .sort({ createdAt: -1 }) // Sort by newest first
-//       .skip(skip)
-//       .limit(limit);
-
-//     // Calculate if there are more pages
-//     const hasMore = (pageNum + 1) * limit < totalCount;
-
-//     res.status(200).json({
-//       bills,
-//       totalCount,
-//       currentPage: pageNum,
-//       hasMore,
-//       totalPages: Math.ceil(totalCount / limit)
-//     });
-
-//   } catch (error) {
-//     console.error('Error fetching bills:', error);
-//     res.status(500).json({ message: 'Internal Server Error' });
-//   }
-// };
-
-  exports.getBillsWithMeterPurpose = async (req, res) => {
+exports.getBillsWithMeterPurpose = async (req, res) => {
     try {
         const bills = await Bill.find();
         
