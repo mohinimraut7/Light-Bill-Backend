@@ -6210,8 +6210,8 @@ exports.addRemarkReports = async (req, res) => {
 exports.searchReport = async (req, res) => {
     
     try {
-        const { month } = req.body;
-     
+        const { month,finalWard } = req.body;
+     console.log("month,finalWard ",month,finalWard )
 
 
         if (!month) {
