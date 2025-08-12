@@ -6210,8 +6210,8 @@ exports.addRemarkReports = async (req, res) => {
 exports.searchReport = async (req, res) => {
     
     try {
-        const { month,finalWard } = req.body;
-     console.log("month,finalWard ",month,finalWard )
+        const { month,ward } = req.body;
+     console.log("month,finalWard ",month,ward )
 
 
         if (!month) {
@@ -6220,7 +6220,7 @@ exports.searchReport = async (req, res) => {
             });
         }
 
-        const reports = await Report.find({ seleMonth: month });
+        const reports = await Report.find({ seleMonth: month,ward});
 
         res.status(200).json(reports);
     } catch (error) {
