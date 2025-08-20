@@ -38,7 +38,7 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }));
   app.use('/api',addReportRoutes)
   app.use('/api',imageRoutes)
 app.get('/',(req,res)=>{
-res.send("Hello world....")
+res.send("Hello world .")
 });
 app.listen(port,()=>{
     console.log(`Server is running on port ${port}`)
