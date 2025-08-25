@@ -3092,3 +3092,11 @@ API=https://lightbillbackend.saavi.co.in
 BASEURL=https://lightbillbackend.saavi.co.in
 API=https://lightbillbackend.saavi.co.in
 BASEURLEMAIL=https://lightbillbackend.saavi.co.in
+===================================================
+ BASEURL=https://lightbillbackend.onrender.com
+ API=https://lightbillbackend.onrender.com
+BASEURLEMAIL=https://lightbillbackend.onrender.com
+-------------------------
+BASEURL=https://lightbillbackend.saavi.co.in
+API=https://lightbillbackend.saavi.co.in
+BASEURLEMAIL=https://lightbillbackend.saavi.co.in
