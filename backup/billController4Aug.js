@@ -354,6 +354,7 @@ cron.schedule("10 18 * * *", async () => {
 });
 
 
+
 exports.dropBillsCollection = async (req, res) => {
   try {
       await mongoose.connection.db.collection("bills").drop();
