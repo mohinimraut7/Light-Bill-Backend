@@ -19,9 +19,16 @@ const imageRoutes = require('./routes/imageRoute');
 app.use("/uploads", express.static("uploads"));
 const port = process.env.PORT || 5000;
 env.config();
+// mongoose
+//   .connect(
+//     `mongodb+srv://mohini:mohiniraut@cluster0.rxemnue.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+//   )
+//   .then(() => {
+//     console.log("Database connected");
+//   });
 mongoose
   .connect(
-    `mongodb+srv://mohini:mohiniraut@cluster0.rxemnue.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+    `mongodb://127.0.0.1:27017/lightbill?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.3.3`
   )
   .then(() => {
     console.log("Database connected");
