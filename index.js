@@ -5,12 +5,8 @@ const app=express();
 const mongoose=require('mongoose');
 const path=require('path');
 const cors = require("cors");
-env.config();
 app.use(cors({ origin: '*' }));
 // app.use(cors());
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true }));
-
 const addUserRoutes = require("./routes/user");
 const addRoleRoutes=require('./routes/role');
 const addBillRoutes=require('./routes/bill');
@@ -22,7 +18,7 @@ const addReportRoutes = require('./routes/report');
 const imageRoutes = require('./routes/imageRoute'); 
 app.use("/uploads", express.static("uploads"));
 const port = process.env.PORT || 5000;
-
+env.config();
 mongoose
   .connect(
     `mongodb+srv://mohini:mohiniraut@cluster0.rxemnue.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
@@ -30,8 +26,8 @@ mongoose
   .then(() => {
     console.log("Database connected");
   });
-
-
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
   app.use('/api',addUserRoutes)
   app.use('/api',addRoleRoutes)
   app.use('/api',addBillRoutes)
