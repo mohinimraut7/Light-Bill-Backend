@@ -90,9 +90,16 @@ const areAllFormsApprovedByRole = (report, role, ward) => {
   const lipikRemark = report.reportingRemarks.find(r => r.role === "Lipik");
   if (!lipikRemark || !lipikRemark.documents?.length) return false;
 
+   const roleUserId = roleRemark.userId.toString(); // ✅ ADD THIS
+
   return REQUIRED_FORM_TYPES.every(type => {
     const doc = lipikRemark.documents.find(d => d.formType === type);
-    return doc && doc.approvedBy?.includes(roleRemark.userId.toString());
+
+    // return doc && doc.approvedBy?.includes(roleRemark.userId.toString());
+
+    // ✅ नवीन
+    return doc.approvedBy.some(id => id.toString() === roleUserId);
+
   });
 };
 
@@ -106,9 +113,17 @@ const getMissingFormTypes = (report, role, ward, userId) => {
     const lipikRemark = report.reportingRemarks.find(r => r.role === "Lipik");
     if (!lipikRemark || !lipikRemark.documents) return REQUIRED_FORM_TYPES;
 
+    const userIdStr = userId.toString(); // ✅ ADD THIS
+
+
     return REQUIRED_FORM_TYPES.filter(type => {
       const doc = lipikRemark.documents.find(d => d.formType === type);
-      return !doc?.approvedBy?.includes(userId);
+
+      // return !doc?.approvedBy?.includes(userId);
+
+        // ✅ नवीन
+    return !doc.approvedBy.some(id => id.toString() === userIdStr);
+
     });
   }
 };
@@ -5750,202 +5765,379 @@ exports.addRemarkReports = async (req, res) => {
     }
 
     // ✅ FIXED: Enhanced PDF signature function - removes ALL signature pages and creates one complete page
-    const updatePdfWithAllSignatures = async (pdfPath, approvalData, formNum, targetWardName) => {
-      try {
-        const existingPdfBytes = fs.readFileSync(pdfPath);
-        const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-        const pages = pdfDoc.getPages();
-        const { width, height } = pages[0].getSize();
+    // const updatePdfWithAllSignatures = async (pdfPath, approvalData, formNum, targetWardName) => {
+    //   try {
+    //     const existingPdfBytes = fs.readFileSync(pdfPath);
+    //     const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+    //     const pages = pdfDoc.getPages();
+    //     const { width, height } = pages[0].getSize();
 
-        console.log(`Processing PDF: ${formNum}, Original pages: ${pages.length}`);
+    //     console.log(`Processing PDF: ${formNum}, Original pages: ${pages.length}`);
 
-        // ✅ CRITICAL FIX: Remove ALL signature pages (not just the last one)
-        // We'll scan from the end and remove any page that might be a signature page
-        let removedPages = 0;
-        for (let i = pages.length - 1; i >= 0; i--) {
-          // Only remove pages beyond the first 2 pages (original content)
-          // This ensures we never remove original document content
-          if (i >= 2) {
-            try {
-              // Remove any page that's likely a signature page
-              // (any page after the first 2 pages is considered a signature page)
-              pdfDoc.removePage(i);
-              removedPages++;
-              console.log(`Removed signature page at index: ${i}`);
-            } catch (removeError) {
-              console.warn(`Could not remove page ${i}:`, removeError);
-              break; // Stop if we can't remove pages
-            }
-          } else {
-            // For pages 0 and 1, we keep them as they are original content
-            break;
-          }
-        }
+    //     // ✅ CRITICAL FIX: Remove ALL signature pages (not just the last one)
+    //     // We'll scan from the end and remove any page that might be a signature page
+    //     let removedPages = 0;
+    //     for (let i = pages.length - 1; i >= 0; i--) {
+    //       // Only remove pages beyond the first 2 pages (original content)
+    //       // This ensures we never remove original document content
+    //       if (i >= 2) {
+    //         try {
+    //           // Remove any page that's likely a signature page
+    //           // (any page after the first 2 pages is considered a signature page)
+    //           pdfDoc.removePage(i);
+    //           removedPages++;
+    //           console.log(`Removed signature page at index: ${i}`);
+    //         } catch (removeError) {
+    //           console.warn(`Could not remove page ${i}:`, removeError);
+    //           break; // Stop if we can't remove pages
+    //         }
+    //       } else {
+    //         // For pages 0 and 1, we keep them as they are original content
+    //         break;
+    //       }
+    //     }
 
-        console.log(`Removed ${removedPages} signature pages`);
+    //     console.log(`Removed ${removedPages} signature pages`);
 
-        // ✅ Always create ONE fresh signature page with ALL approval data
-        const signaturePage = pdfDoc.addPage([width, height]);
-        const titleFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
-        const bodyFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+    //     // ✅ Always create ONE fresh signature page with ALL approval data
+    //     const signaturePage = pdfDoc.addPage([width, height]);
+    //     const titleFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+    //     const bodyFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
 
-        // Title
-        signaturePage.drawText('APPROVAL SIGNATURES', {
-          x: 50,
-          y: height - 50,
-          size: 18,
-          font: titleFont,
-          color: PDFLib.rgb(0, 0, 0)
-        });
+    //     // Title
+    //     signaturePage.drawText('APPROVAL SIGNATURES', {
+    //       x: 50,
+    //       y: height - 50,
+    //       size: 18,
+    //       font: titleFont,
+    //       color: PDFLib.rgb(0, 0, 0)
+    //     });
 
-        // Add a subtitle with form info
-        signaturePage.drawText(`Form: ${formNum} | Month: ${targetWardName ? `${seleMonth} (Ward: ${targetWardName})` : seleMonth}`, {
-          x: 50,
-          y: height - 75,
-          size: 10,
-          font: bodyFont,
-          color: PDFLib.rgb(0.3, 0.3, 0.3)
-        });
+    //     // Add a subtitle with form info
+    //     signaturePage.drawText(`Form: ${formNum} | Month: ${targetWardName ? `${seleMonth} (Ward: ${targetWardName})` : seleMonth}`, {
+    //       x: 50,
+    //       y: height - 75,
+    //       size: 10,
+    //       font: bodyFont,
+    //       color: PDFLib.rgb(0.3, 0.3, 0.3)
+    //     });
 
-        // Grid layout for signatures
-        const columns = 2;
-        const cellWidth = (width - 100) / columns;
-        const cellHeight = 140;
-        const startX = 50;
-        const startY = height - 110; // Adjusted to accommodate subtitle
+    //     // Grid layout for signatures
+    //     const columns = 2;
+    //     const cellWidth = (width - 100) / columns;
+    //     const cellHeight = 140;
+    //     const startX = 50;
+    //     const startY = height - 110; // Adjusted to accommodate subtitle
 
-        const order = ['Lipik', 'Junior Engineer', 'Accountant', 'Assistant Municipal Commissioner', 'Dy.Municipal Commissioner'];
-        const sortedData = approvalData
-          .filter(a => a.signature)
-          .sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
+    //     const order = ['Lipik', 'Junior Engineer', 'Accountant', 'Assistant Municipal Commissioner', 'Dy.Municipal Commissioner'];
+    //     const sortedData = approvalData
+    //       .filter(a => a.signature)
+    //       .sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
 
-        console.log(`Adding ${sortedData.length} signatures to the page`);
+    //     console.log(`Adding ${sortedData.length} signatures to the page`);
 
-        for (let i = 0; i < sortedData.length; i++) {
-          const a = sortedData[i];
-          const col = i % columns;
-          const row = Math.floor(i / columns);
+    //     for (let i = 0; i < sortedData.length; i++) {
+    //       const a = sortedData[i];
+    //       const col = i % columns;
+    //       const row = Math.floor(i / columns);
 
-          const x = startX + col * cellWidth;
-          const y = startY - row * cellHeight;
+    //       const x = startX + col * cellWidth;
+    //       const y = startY - row * cellHeight;
 
-          // Background rectangle with border
-          signaturePage.drawRectangle({
-            x: x - 5,
-            y: y - cellHeight + 10,
-            width: cellWidth - 10,
-            height: cellHeight - 20,
-            color: PDFLib.rgb(0.98, 0.98, 0.98),
-            borderColor: PDFLib.rgb(0.8, 0.8, 0.8),
-            borderWidth: 1,
-          });
+    //       // Background rectangle with border
+    //       signaturePage.drawRectangle({
+    //         x: x - 5,
+    //         y: y - cellHeight + 10,
+    //         width: cellWidth - 10,
+    //         height: cellHeight - 20,
+    //         color: PDFLib.rgb(0.98, 0.98, 0.98),
+    //         borderColor: PDFLib.rgb(0.8, 0.8, 0.8),
+    //         borderWidth: 1,
+    //       });
 
-          // Role text
-          signaturePage.drawText(`${a.role}:`, { 
-            x: x + 5, 
-            y: y - 5, 
-            size: 12, 
-            font: titleFont,
-            color: PDFLib.rgb(0.2, 0.2, 0.2)
-          });
+    //       // Role text
+    //       signaturePage.drawText(`${a.role}:`, { 
+    //         x: x + 5, 
+    //         y: y - 5, 
+    //         size: 12, 
+    //         font: titleFont,
+    //         color: PDFLib.rgb(0.2, 0.2, 0.2)
+    //       });
           
-          // Status text with color coding
-          const statusColor = a.status === 'verified' ? PDFLib.rgb(0, 0.6, 0) : PDFLib.rgb(0.8, 0.4, 0);
-          signaturePage.drawText(`Status: ${a.status}`, { 
-            x: x + 5, 
-            y: y - 25, 
-            size: 10, 
-            font: bodyFont,
-            color: statusColor
-          });
+    //       // Status text with color coding
+    //       const statusColor = a.status === 'verified' ? PDFLib.rgb(0, 0.6, 0) : PDFLib.rgb(0.8, 0.4, 0);
+    //       signaturePage.drawText(`Status: ${a.status}`, { 
+    //         x: x + 5, 
+    //         y: y - 25, 
+    //         size: 10, 
+    //         font: bodyFont,
+    //         color: statusColor
+    //       });
 
-          // Ward display logic
-          const wardDisplay = (a.role === 'Junior Engineer' && a.userWard === 'Head Office')
-            ? `${targetWardName} (via Head Office)`
-            : (a.ward || a.userWard);
+    //       // Ward display logic
+    //       const wardDisplay = (a.role === 'Junior Engineer' && a.userWard === 'Head Office')
+    //         ? `${targetWardName} (via Head Office)`
+    //         : (a.ward || a.userWard);
 
-          signaturePage.drawText(`Ward: ${wardDisplay}`, { 
-            x: x + 5, 
-            y: y - 40, 
-            size: 10, 
-            font: bodyFont,
-            color: PDFLib.rgb(0.4, 0.4, 0.4)
-          });
+    //       signaturePage.drawText(`Ward: ${wardDisplay}`, { 
+    //         x: x + 5, 
+    //         y: y - 40, 
+    //         size: 10, 
+    //         font: bodyFont,
+    //         color: PDFLib.rgb(0.4, 0.4, 0.4)
+    //       });
 
-          // Date and month
-          signaturePage.drawText(`Month: ${a.seleMonth}`, {
-            x: x + 5, 
-            y: y - 55, 
-            size: 10, 
-            font: bodyFont,
-            color: PDFLib.rgb(0.4, 0.4, 0.4)
-          });
+    //       // Date and month
+    //       signaturePage.drawText(`Month: ${a.seleMonth}`, {
+    //         x: x + 5, 
+    //         y: y - 55, 
+    //         size: 10, 
+    //         font: bodyFont,
+    //         color: PDFLib.rgb(0.4, 0.4, 0.4)
+    //       });
 
-          signaturePage.drawText(`Date: ${new Date(a.date).toLocaleDateString()}`, {
-            x: x + 5, 
-            y: y - 70, 
-            size: 10, 
-            font: bodyFont,
-            color: PDFLib.rgb(0.4, 0.4, 0.4)
-          });
+    //       signaturePage.drawText(`Date: ${new Date(a.date).toLocaleDateString()}`, {
+    //         x: x + 5, 
+    //         y: y - 70, 
+    //         size: 10, 
+    //         font: bodyFont,
+    //         color: PDFLib.rgb(0.4, 0.4, 0.4)
+    //       });
 
-          // Signature image or text
-          if (a.signature && a.signature.startsWith('data:image')) {
-            try {
-              const imgBytes = Buffer.from(a.signature.split(',')[1], 'base64');
-              const img = a.signature.includes('png') 
-                ? await pdfDoc.embedPng(imgBytes) 
-                : await pdfDoc.embedJpg(imgBytes);
+    //       // Signature image or text
+    //       if (a.signature && a.signature.startsWith('data:image')) {
+    //         try {
+    //           const imgBytes = Buffer.from(a.signature.split(',')[1], 'base64');
+    //           const img = a.signature.includes('png') 
+    //             ? await pdfDoc.embedPng(imgBytes) 
+    //             : await pdfDoc.embedJpg(imgBytes);
               
-              signaturePage.drawImage(img, {
-                x: x + 5, 
-                y: y - 110, 
-                width: 100, 
-                height: 30,
-              });
-            } catch (imgError) {
-              console.warn('Failed to embed signature image:', imgError);
-              signaturePage.drawText('✓ Digital Signature Applied', {
-                x: x + 5, 
-                y: y - 95, 
-                size: 9, 
-                font: bodyFont,
-                color: PDFLib.rgb(0, 0.5, 0)
-              });
-            }
-          } else {
-            signaturePage.drawText('✓ Digital Signature Applied', {
-              x: x + 5, 
-              y: y - 95, 
-              size: 9, 
-              font: bodyFont,
-              color: PDFLib.rgb(0, 0.5, 0)
-            });
-          }
-        }
+    //           signaturePage.drawImage(img, {
+    //             x: x + 5, 
+    //             y: y - 110, 
+    //             width: 100, 
+    //             height: 30,
+    //           });
+    //         } catch (imgError) {
+    //           console.warn('Failed to embed signature image:', imgError);
+    //           signaturePage.drawText('✓ Digital Signature Applied', {
+    //             x: x + 5, 
+    //             y: y - 95, 
+    //             size: 9, 
+    //             font: bodyFont,
+    //             color: PDFLib.rgb(0, 0.5, 0)
+    //           });
+    //         }
+    //       } else {
+    //         signaturePage.drawText('✓ Digital Signature Applied', {
+    //           x: x + 5, 
+    //           y: y - 95, 
+    //           size: 9, 
+    //           font: bodyFont,
+    //           color: PDFLib.rgb(0, 0.5, 0)
+    //         });
+    //       }
+    //     }
 
-        // Add footer with timestamp
-        signaturePage.drawText(`Generated: ${new Date().toLocaleString()}`, {
-          x: 50,
-          y: 30,
-          size: 8,
-          font: bodyFont,
-          color: PDFLib.rgb(0.6, 0.6, 0.6)
-        });
+    //     // Add footer with timestamp
+    //     signaturePage.drawText(`Generated: ${new Date().toLocaleString()}`, {
+    //       x: 50,
+    //       y: 30,
+    //       size: 8,
+    //       font: bodyFont,
+    //       color: PDFLib.rgb(0.6, 0.6, 0.6)
+    //     });
 
-        // Save the updated PDF
-        const outBytes = await pdfDoc.save();
-        const updatedPath = path.join(path.dirname(pdfPath), `updated_${formNum}_${Date.now()}.pdf`);
-        fs.writeFileSync(updatedPath, outBytes);
+    //     // Save the updated PDF
+    //     const outBytes = await pdfDoc.save();
+    //     const updatedPath = path.join(path.dirname(pdfPath), `updated_${formNum}_${Date.now()}.pdf`);
+    //     fs.writeFileSync(updatedPath, outBytes);
         
-        console.log(`PDF updated successfully. Final pages: ${pdfDoc.getPageCount()}`);
-        return updatedPath;
+    //     console.log(`PDF updated successfully. Final pages: ${pdfDoc.getPageCount()}`);
+    //     return updatedPath;
 
-      } catch (error) {
-        console.error('Error updating PDF with signatures:', error);
-        throw error;
-      }
+    //   } catch (error) {
+    //     console.error('Error updating PDF with signatures:', error);
+    //     throw error;
+    //   }
+    // };
+
+
+const updatePdfWithAllSignatures = async (pdfPath, approvalData, formNum, targetWardName) => {
+  try {
+    const existingPdfBytes = fs.readFileSync(pdfPath);
+    const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+    const pages = pdfDoc.getPages();
+    const { width, height } = pages[0].getSize();
+
+    console.log(`Processing PDF: ${formNum}, Original pages: ${pages.length}`);
+
+    // ✅ FIX: formType नुसार original pages count ठरवा
+    const getOriginalPageCount = (formNumber) => {
+      if (formNumber.startsWith('wardbilllist')) return null;      // dynamic - खाली handle होतो
+      if (formNumber.startsWith('form22')) return 2;               // always 2 pages
+      if (formNumber.startsWith('karyalayintipani')) return 1;     // always 1 page
+      return 1;
     };
+
+    const fixedPageCount = getOriginalPageCount(formNum);
+
+    let originalPageCount;
+
+    if (fixedPageCount !== null) {
+      // form22, karyalayintipani - fixed pages
+      originalPageCount = fixedPageCount;
+    } else {
+      // wardbilllist - dynamic pages
+      // filename मध्ये 'updated_' आहे म्हणजे आधी process झालेला आहे
+      // त्यामुळे शेवटचा page signature page आहे - तो सोडून बाकी original
+      const isAlreadyProcessed = path.basename(pdfPath).startsWith('updated_');
+      if (isAlreadyProcessed) {
+        // शेवटचा page signature page आहे - remove करायचा
+        originalPageCount = pages.length - 1;
+      } else {
+        // पहिल्यांदा process होतोय - सगळे pages original आहेत
+        originalPageCount = pages.length;
+      }
+    }
+
+    console.log(`Original page count: ${originalPageCount}, Total pages: ${pages.length}`);
+
+    // ✅ originalPageCount नंतरचे सगळे signature pages remove करा
+    for (let i = pages.length - 1; i >= originalPageCount; i--) {
+      try {
+        pdfDoc.removePage(i);
+        console.log(`Removed signature page at index: ${i}`);
+      } catch (removeError) {
+        console.warn(`Could not remove page ${i}:`, removeError);
+        break;
+      }
+    }
+
+    // ✅ नवीन signature page add करा
+    const signaturePage = pdfDoc.addPage([width, height]);
+    const titleFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+    const bodyFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+
+    signaturePage.drawText('APPROVAL SIGNATURES', {
+      x: 50,
+      y: height - 50,
+      size: 18,
+      font: titleFont,
+      color: PDFLib.rgb(0, 0, 0)
+    });
+
+    signaturePage.drawText(`Form: ${formNum} | Month: ${targetWardName ? `${seleMonth} (Ward: ${targetWardName})` : seleMonth}`, {
+      x: 50,
+      y: height - 75,
+      size: 10,
+      font: bodyFont,
+      color: PDFLib.rgb(0.3, 0.3, 0.3)
+    });
+
+    const columns = 2;
+    const cellWidth = (width - 100) / columns;
+    const cellHeight = 140;
+    const startX = 50;
+    const startY = height - 110;
+
+    const order = ['Lipik', 'Junior Engineer', 'Accountant', 'Assistant Municipal Commissioner', 'Dy.Municipal Commissioner'];
+    const sortedData = approvalData
+      .filter(a => a.signature)
+      .sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
+
+    console.log(`Adding ${sortedData.length} signatures to the page`);
+
+    for (let i = 0; i < sortedData.length; i++) {
+      const a = sortedData[i];
+      const col = i % columns;
+      const row = Math.floor(i / columns);
+
+      const x = startX + col * cellWidth;
+      const y = startY - row * cellHeight;
+
+      signaturePage.drawRectangle({
+        x: x - 5,
+        y: y - cellHeight + 10,
+        width: cellWidth - 10,
+        height: cellHeight - 20,
+        color: PDFLib.rgb(0.98, 0.98, 0.98),
+        borderColor: PDFLib.rgb(0.8, 0.8, 0.8),
+        borderWidth: 1,
+      });
+
+      signaturePage.drawText(`${a.role}:`, { 
+        x: x + 5, y: y - 5, size: 12, font: titleFont,
+        color: PDFLib.rgb(0.2, 0.2, 0.2)
+      });
+
+      const statusColor = a.status === 'verified' 
+        ? PDFLib.rgb(0, 0.6, 0) 
+        : PDFLib.rgb(0.8, 0.4, 0);
+
+      signaturePage.drawText(`Status: ${a.status}`, { 
+        x: x + 5, y: y - 25, size: 10, font: bodyFont, color: statusColor
+      });
+
+      const wardDisplay = (a.role === 'Junior Engineer' && a.userWard === 'Head Office')
+        ? `${targetWardName} (via Head Office)`
+        : (a.ward || a.userWard);
+
+      signaturePage.drawText(`Ward: ${wardDisplay}`, { 
+        x: x + 5, y: y - 40, size: 10, font: bodyFont,
+        color: PDFLib.rgb(0.4, 0.4, 0.4)
+      });
+
+      signaturePage.drawText(`Month: ${a.seleMonth}`, {
+        x: x + 5, y: y - 55, size: 10, font: bodyFont,
+        color: PDFLib.rgb(0.4, 0.4, 0.4)
+      });
+
+      signaturePage.drawText(`Date: ${new Date(a.date).toLocaleDateString()}`, {
+        x: x + 5, y: y - 70, size: 10, font: bodyFont,
+        color: PDFLib.rgb(0.4, 0.4, 0.4)
+      });
+
+      if (a.signature && a.signature.startsWith('data:image')) {
+        try {
+          const imgBytes = Buffer.from(a.signature.split(',')[1], 'base64');
+          const img = a.signature.includes('png') 
+            ? await pdfDoc.embedPng(imgBytes) 
+            : await pdfDoc.embedJpg(imgBytes);
+          signaturePage.drawImage(img, { x: x + 5, y: y - 110, width: 100, height: 30 });
+        } catch (imgError) {
+          console.warn('Failed to embed signature image:', imgError);
+          signaturePage.drawText('✓ Digital Signature Applied', {
+            x: x + 5, y: y - 95, size: 9, font: bodyFont,
+            color: PDFLib.rgb(0, 0.5, 0)
+          });
+        }
+      } else {
+        signaturePage.drawText('✓ Digital Signature Applied', {
+          x: x + 5, y: y - 95, size: 9, font: bodyFont,
+          color: PDFLib.rgb(0, 0.5, 0)
+        });
+      }
+    }
+
+    signaturePage.drawText(`Generated: ${new Date().toLocaleString()}`, {
+      x: 50, y: 30, size: 8, font: bodyFont,
+      color: PDFLib.rgb(0.6, 0.6, 0.6)
+    });
+
+    const outBytes = await pdfDoc.save();
+    const updatedPath = path.join(path.dirname(pdfPath), `updated_${formNum}_${Date.now()}.pdf`);
+    fs.writeFileSync(updatedPath, outBytes);
+
+    console.log(`PDF updated successfully. Final pages: ${pdfDoc.getPageCount()}`);
+    return updatedPath;
+
+  } catch (error) {
+    console.error('Error updating PDF with signatures:', error);
+    throw error;
+  }
+};
+
 
     const createApprovalData = (remarks, targetWard, month, wName) => {
       const hierarchy = ['Lipik', 'Junior Engineer', 'Accountant', 'Assistant Municipal Commissioner', 'Dy.Municipal Commissioner'];
@@ -5998,7 +6190,18 @@ exports.addRemarkReports = async (req, res) => {
           const lipik = report.reportingRemarks.find(r => r.role === "Lipik");
           if (lipik?.documents) {
             for (let doc of lipik.documents) {
-              if (!doc.approvedBy.includes(userId)) doc.approvedBy.push(userId);
+
+              // if (!doc.approvedBy.includes(userId)) doc.approvedBy.push(userId);
+
+
+
+// ✅ नवीन
+if (!doc.approvedBy.some(id => id.toString() === userId.toString())) {
+  doc.approvedBy.push(new mongoose.Types.ObjectId(userId));
+}
+
+
+
               doc.doneBy = populateDoneByArray(doc, [...report.reportingRemarks, jeRemark], wardName);
               doc.pdfFile = await updatePdfWithAllSignatures(
                 doc.pdfFile,
@@ -6076,7 +6279,17 @@ exports.addRemarkReports = async (req, res) => {
           const doc = docs[docIndex];
           doc.uploadedAt = new Date();
           doc.pdfFile = document.pdfFile;
-          doc.approvedBy = remark === "Approved" ? [userId] : doc.approvedBy;
+
+          // doc.approvedBy = remark === "Approved" ? [userId] : doc.approvedBy;
+
+
+// ✅ नवीन - push करा
+if (remark === "Approved") {
+  if (!doc.approvedBy.some(id => id.toString() === userId.toString())) {
+    doc.approvedBy.push(new mongoose.Types.ObjectId(userId));
+  }
+}
+
           doc.doneBy = populateDoneByArray(doc, report.reportingRemarks, ward);
 
           if (remark === "Approved") {
@@ -6159,9 +6372,19 @@ exports.addRemarkReports = async (req, res) => {
           const doc = lipik.documents[docIndex];
           doc.signatures = doc.signatures || {};
           doc.signatures[role] = signature;
-          if (remark === "Approved" && !doc.approvedBy.includes(userId)) {
-            doc.approvedBy.push(userId);
-          }
+
+          // if (remark === "Approved" && !doc.approvedBy.includes(userId)) {
+
+          //   doc.approvedBy.push(userId);
+          // }
+
+
+if (remark === "Approved" && 
+    !doc.approvedBy.some(id => id.toString() === userId.toString())) {
+  doc.approvedBy.push(new mongoose.Types.ObjectId(userId));
+}
+
+
           doc.doneBy = populateDoneByArray(doc, [...report.reportingRemarks, remarkObj], ward);
           if (remark === "Approved") {
             doc.pdfFile = await updatePdfWithAllSignatures(
