@@ -19,20 +19,24 @@ const imageRoutes = require('./routes/imageRoute');
 app.use("/uploads", express.static("uploads"));
 const port = process.env.PORT || 5000;
 env.config();
+
+// Database: .env मध्ये MONGO_URI असेल तर तो (laptop = Atlas), नसेल तर local DB (server)
+const MONGO_URI =
+  process.env.MONGO_URI ||
+  "mongodb://127.0.0.1:27017/lightbill?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.3.3";
+
 mongoose
-  .connect(
-    `mongodb+srv://mohini:mohiniraut@cluster0.rxemnue.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
-  )
+  .connect(MONGO_URI)
   .then(() => {
-    console.log("Database connected");
+    console.log("Database connected:", MONGO_URI.split("@").pop().split("?")[0]);
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err.message);
   });
-// mongoose
-//   .connect(
-//     `mongodb://127.0.0.1:27017/lightbill?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.3.3`
-//   )
-//   .then(() => {
-//     console.log("Database connected");
-//   });
+
+
+
+
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
   app.use('/api',addUserRoutes)
