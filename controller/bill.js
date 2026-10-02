@@ -75,11 +75,15 @@ const getPreviousMonthYear = (monthAndYear) => {
 
 exports.addBill = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ message: "Database unavailable, please retry later" });
+    }
     const bills = Array.isArray(req.body) ? req.body : [req.body];
     const createdBills = [];
     const failedBills = [];
   
     for (const billData of bills) {
+            try {
       const {
         consumerNumber,
         consumerName,
@@ -221,10 +225,29 @@ exports.addBill = async (req, res) => {
             prevBill.billPaymentDate = lastReceiptDate; 
             await prevBill.save();
           }
-        } else {
+    //     } else {
+    //       prevBill.paymentStatus = "unpaid";
+    //       await prevBill.save();
+    //     }
+    //   }
+    // }
+
+
+            } else if (prevBill.paymentStatus !== "paid") {
+          // आधीच paid असलेलं bill परत unpaid करू नये (receipts API ने paid केलेलं)
           prevBill.paymentStatus = "unpaid";
           await prevBill.save();
         }
+      }
+      } catch (billError) {
+        // एका bill मधली चूक बाकीचा batch थांबवत नाही
+        console.error("addBill error for consumer", billData && billData.consumerNumber, ":", billError.message);
+        failedBills.push({
+          consumerNo: billData && billData.consumerNumber,
+          errorMessage: billError.message,
+          errorCode: "2005",
+          status: "FAILURE",
+        });
       }
     }
  
