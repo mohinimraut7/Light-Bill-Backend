@@ -4,3 +4,9 @@ credential.txt
 backup
 uploads
 .env
+sign-service/venv/
+sign-service/**/__pycache__/
+sign-service/dummy-certs/*.pfx
+sign-service/dummy-certs/*.key
+sign-service/dummy-certs/*.pem
+sign-service/dummy-certs/ca.crt

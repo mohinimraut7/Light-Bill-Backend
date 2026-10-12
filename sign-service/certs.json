@@ -1,0 +1,8 @@
+{
+  "LIPIK":      { "pfx": "dummy-certs/lipik.pfx",      "pass": "test1234" },
+  "JE_WARD":    { "pfx": "dummy-certs/je_ward.pfx",    "pass": "test1234" },
+  "JE_HO":      { "pfx": "dummy-certs/je_ho.pfx",      "pass": "test1234" },
+  "ACCOUNTANT": { "pfx": "dummy-certs/accountant.pfx", "pass": "test1234" },
+  "AMC":        { "pfx": "dummy-certs/amc.pfx",        "pass": "test1234" },
+  "DMC":        { "pfx": "dummy-certs/dmc.pfx",        "pass": "test1234" }
+}
