@@ -1,4 +1,0 @@
-pyHanko==0.37.0
-pyhanko-certvalidator
-fastapi
-uvicorn
