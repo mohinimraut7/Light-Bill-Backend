@@ -3110,3 +3110,6 @@ API=http://localhost:5000
 BASEURL=https://lightbillbackend.saavi.co.in
 API=https://lightbillbackend.saavi.co.in
 BASEURLEMAIL=https://lightbillbackend.saavi.co.in
+
+-----------------------------------------------------------------------------------------------
+npm install node-forge

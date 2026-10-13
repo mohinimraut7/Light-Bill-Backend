@@ -1,6 +1,6 @@
 // =====================================================================
 // utils/digitalSignature.js
-// Report PDF वर officer चा Digital Signature (DSC) लावणे.
+// Report PDF वर officer चा Digital Signature (DSC) लावणे - backend मध्येच (वेगळी service नाही).
 //
 // नियम (महत्त्वाचे):
 //   * पहिला DSC लागल्यानंतर PDF कधीही pdf-lib ने पुन्हा save / removePage करायची नाही.
@@ -9,16 +9,16 @@
 //   * सही कुठे लावायची ते doc.signatureSlots मध्ये असते
 //       - Ward Bills / Form 22 : frontend PDF बनवतानाच slots पाठवतो (dynamic)
 //       - कार्यालयीन टिपणी   : frontend slots पाठवतो, नसेल तर खालचे FIXED_SLOTS
-//
-// Signing प्रत्यक्ष "sign-service" (pyHanko) करते. आत्ता dummy .pfx ने,
-// नंतर USB token (Class-3 DSC) आल्यावर फक्त हा module बदलायचा.
+//   * Sign करण्यासाठी officer चा token PIN ने unlock करावा लागतो (utils/dsc/dummyToken.js).
 // =====================================================================
+const fs = require("fs");
 const path = require("path");
-const axios = require("axios");
+const { signPdf, verifyPdfSignatures, istStamp } = require("./dsc/pdfSigner");
+const dummyToken = require("./dsc/dummyToken");
 
-const SIGN_SERVICE_URL = process.env.SIGN_SERVICE_URL || "http://127.0.0.1:7001";
-const SIGN_SERVICE_KEY = process.env.SIGN_SERVICE_KEY || "";
-const DSC_ENABLED = process.env.DSC_ENABLED !== "false";
+const UPLOADS_DIR = path.resolve(process.env.UPLOADS_DIR || path.join(__dirname, "..", "uploads"));
+const DSC_ENABLED = String(process.env.DSC_ENABLED || "true").toLowerCase() !== "false";
+const LOCATION = "Vasai-Virar City Municipal Corporation";
 
 // role + ward -> signature slot key
 const getRoleKey = (role, userWard) => {
@@ -41,7 +41,6 @@ const DESIGNATION = {
 
 // Frontend ने slots पाठवले नाहीत तर fallback (PDF points, A4 portrait 595x842, origin खाली-डावीकडे).
 // कार्यालयीन टिपणी मधील सध्याच्या jsPDF positions (mm) वरून काढलेले.
-// ⚠ Form 22 वर कोणत्या role ची सही कोणत्या जागी - office कडून confirm करा.
 const FIXED_SLOTS = {
   karyalayintipani: {
     LIPIK:      { page: 0, box: [103.5, 436.5, 250.9, 484.7] },
@@ -74,9 +73,27 @@ const getSlot = (doc, roleKey) =>
   (FIXED_SLOTS[doc.formType] && FIXED_SLOTS[doc.formType][roleKey]) ||
   null;
 
+// "uploads/abc.pdf", "/uploads/abc.pdf", "uploads\\abc.pdf" -> <backend>/uploads/abc.pdf
+const uploadPath = (p) => {
+  const name = String(p || "").replace(/\\/g, "/").split("/").pop();
+  if (!name || !name.toLowerCase().endsWith(".pdf")) throw new Error(`Only .pdf allowed: ${p}`);
+  return path.join(UPLOADS_DIR, name);
+};
+
+/** या role ला approve करताना DSC (PIN) लागेल का */
+const needsDsc = (role, userWard, remark) =>
+  DSC_ENABLED && remark === "Approved" && !!getRoleKey(role, userWard);
+
+/**
+ * PIN तपासून officer चा token उघडतो. Controller मध्ये request च्या सुरुवातीलाच call करा,
+ * म्हणजे चुकीच्या PIN वर काहीच save होत नाही.
+ */
+const unlockSigner = async (userId, pin) => dummyToken.unlockToken(userId, pin);
+
 /**
  * doc वर (Lipik च्या documents[] मधील एक) roleKey चा DSC लावतो.
  * Idempotent: त्या role ने आधीच sign केले असेल तर काही करत नाही.
+ * @param signer { userId, token }  token = unlockSigner() चा result
  * @returns {Promise<boolean>} नवीन signature लागला का
  */
 const applyDigitalSignature = async (doc, role, userWard, signer = {}) => {
@@ -89,45 +106,62 @@ const applyDigitalSignature = async (doc, role, userWard, signer = {}) => {
 
   const slot = getSlot(doc, roleKey);
   if (!slot) {
-    // या report वर या role साठी जागा नाही (उदा. Form 22 वर JE_HO) -> skip, workflow चालू राहतो
+    // या report वर या role साठी जागा नाही -> skip, workflow चालू राहतो
     console.warn(`No signature slot for ${roleKey} on ${doc.formType}; skipping DSC`);
     return false;
   }
+  if (!signer.token) {
+    throw new dummyToken.DscError("DSC_PIN_REQUIRED", "DSC PIN टाका.", 401);
+  }
 
-  const outName = `signed_${doc.formNumber}_${roleKey}_${Date.now()}.pdf`;
-  await axios.post(
-    `${SIGN_SERVICE_URL}/sign`,
+  const now = new Date();
+  const input = fs.readFileSync(uploadPath(doc.pdfFile));
+  const signed = await signPdf(
+    input,
     {
-      inputPath: doc.pdfFile,
-      outputPath: outName,
-      signerKey: roleKey, // dummy mode: role नुसार dummy certificate
       fieldName: `SIG_${roleKey}`,
       page: slot.page,
       box: slot.box,
-      designation: DESIGNATION[roleKey],
       reason: "Approved",
+      location: LOCATION,
+      signerName: signer.token.subjectName,
+      signingTime: now,
+      lines: [
+        "Digitally signed by",
+        signer.token.subjectName,
+        DESIGNATION[roleKey],
+        `Date: ${istStamp(now)}`,
+      ],
     },
-    { headers: { "X-Sign-Key": SIGN_SERVICE_KEY }, timeout: 60000 }
+    signer.token
   );
+
+  const outName = `signed_${doc.formNumber}_${roleKey}_${Date.now()}.pdf`;
+  fs.writeFileSync(path.join(UPLOADS_DIR, outName), signed);
 
   doc.pdfFile = path.posix.join("uploads", outName);
   doc.signedRoles.push({
     roleKey,
     userId: signer.userId,
-    signerName: signer.name,
-    signedAt: new Date(),
+    signerName: signer.token.subjectName,
+    tokenSerial: signer.token.tokenSerial,
+    certSerial: signer.token.certSerial,
+    signedAt: now,
   });
-  doc.lastUpdated = new Date();
+  doc.lastUpdated = now;
   return true;
 };
 
-const verifyPdf = async (pdfFile) => {
-  const { data } = await axios.post(
-    `${SIGN_SERVICE_URL}/verify`,
-    { path: pdfFile },
-    { headers: { "X-Sign-Key": SIGN_SERVICE_KEY }, timeout: 60000 }
-  );
-  return data.signatures;
-};
+const verifyPdf = async (pdfFile) =>
+  verifyPdfSignatures(fs.readFileSync(uploadPath(pdfFile)), dummyToken.trustedRoots());
 
-module.exports = { applyDigitalSignature, verifyPdf, getRoleKey, parseSlots, FIXED_SLOTS };
+module.exports = {
+  applyDigitalSignature,
+  verifyPdf,
+  getRoleKey,
+  parseSlots,
+  needsDsc,
+  unlockSigner,
+  DESIGNATION,
+  FIXED_SLOTS,
+};

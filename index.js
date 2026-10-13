@@ -35,6 +35,8 @@ const addConsumersRoutes=require('./routes/consumer');
 const addTarriffRoutes=require('./routes/tarriff');
 const addReportRoutes = require('./routes/report');
 const imageRoutes = require('./routes/imageRoute'); 
+
+const dscRoutes = require('./routes/dsc');   // ✅ DSC token + PIN
 app.use("/uploads", express.static("uploads"));
 const port = process.env.PORT || 5000;
 
@@ -66,6 +68,7 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }));
   app.use('/api',addTarriffRoutes)
   app.use('/api',addReportRoutes)
   app.use('/api',imageRoutes)
+  app.use('/api',dscRoutes)
 app.get('/',(req,res)=>{
 res.send("Hello world .")
 });
