@@ -7,7 +7,6 @@ const express=require('express');
 const env = require("dotenv");
 env.config();
 
-require('./utils/startSignService')();
 const app=express();
 const mongoose=require('mongoose');
 const path=require('path');
