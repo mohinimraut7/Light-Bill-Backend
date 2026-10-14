@@ -19,7 +19,10 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.addUser = async (req, res) => {
   
-  const {cn,username, email, password, contactNumber, address,signature,role,ward } = req.body;
+  // const {cn,username, email, password, contactNumber, address,signature,role,ward } = req.body;
+
+
+    const {cn,username, email, password, contactNumber, address,/* signature, */role,ward } = req.body;
  
   try {
     if (!/^\d{10}$/.test(contactNumber.toString())) {
@@ -43,6 +46,51 @@ exports.addUser = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+//     const newUser = new User({
+//       cn,
+//       username,
+//       email,
+//       password: hashedPassword,
+//       contactNumber,
+//       address,
+//       // signature,
+//       role,
+//       ward
+//     });
+//     const savedUser = await newUser.save();
+//     const verificationToken = crypto.randomBytes(32).toString('hex'); 
+//     newUser.verificationToken = verificationToken;
+// await newUser.save();
+
+
+// const transporter = nodemailer.createTransport({
+//   service: 'gmail',
+//   auth: {
+//     user: "mohinimraut7@gmail.com",
+//     pass: "enpz swmp tycr ryhh",
+
+//   },
+// });
+
+// const verificationLink = `${process.env.BASEURL}/api/verify-email/${verificationToken}`;
+
+// await transporter.sendMail({
+//   from: process.env.EMAIL,
+//   to: newUser.email,
+//   subject: 'Email Verification',
+//   html: `<p>Click <a href="${verificationLink}">here</a> to verify your email address.</p>`,
+// });
+
+   
+//     res.status(201).json({ message: "User added successfully. Check your email to verify your account." });
+
+//   } catch (error) {
+//     res.status(400).json({ message: "Error adding user", error });
+//   }
+// };
+
+
+
     const newUser = new User({
       cn,
       username,
@@ -50,41 +98,42 @@ exports.addUser = async (req, res) => {
       password: hashedPassword,
       contactNumber,
       address,
-      signature,
+      // signature,
       role,
-      ward
+      ward,
+      isVerified: true, // email verification बंद — user थेट verified
     });
     const savedUser = await newUser.save();
-    const verificationToken = crypto.randomBytes(32).toString('hex'); 
-    newUser.verificationToken = verificationToken;
-await newUser.save();
 
+    // ===== Email verification commented out =====
+    // const verificationToken = crypto.randomBytes(32).toString('hex');
+    // newUser.verificationToken = verificationToken;
+    // await newUser.save();
+    //
+    // const transporter = nodemailer.createTransport({
+    //   service: 'gmail',
+    //   auth: {
+    //     user: process.env.EMAIL_USER,
+    //     pass: process.env.EMAIL_PASS,
+    //   },
+    // });
+    //
+    // const verificationLink = `${process.env.BASEURL}/api/verify-email/${verificationToken}`;
+    //
+    // await transporter.sendMail({
+    //   from: process.env.EMAIL,
+    //   to: newUser.email,
+    //   subject: 'Email Verification',
+       //   html: `<p>Click <a href="${verificationLink}">here</a> to verify your email address.</p>`,
+    // });
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: "mohinimraut7@gmail.com",
-    pass: "enpz swmp tycr ryhh",
-
-  },
-});
-
-const verificationLink = `${process.env.BASEURL}/api/verify-email/${verificationToken}`;
-
-await transporter.sendMail({
-  from: process.env.EMAIL,
-  to: newUser.email,
-  subject: 'Email Verification',
-  html: `<p>Click <a href="${verificationLink}">here</a> to verify your email address.</p>`,
-});
-
-   
-    res.status(201).json({ message: "User added successfully. Check your email to verify your account." });
+    res.status(201).json({ message: "User added successfully" });
 
   } catch (error) {
     res.status(400).json({ message: "Error adding user", error });
   }
 };
+
 
 
 
@@ -225,7 +274,9 @@ exports.editProfile = async (req, res) => {
 
   const {
     cn,username, email, password, contactNumber,
-    address,signature,city, country, postalCode, role, roleSupervisor, ward, wardsection, description
+    address,
+    // signature,
+    city, country, postalCode, role, roleSupervisor, ward, wardsection, description
   } = req.body;
 
  
@@ -262,7 +313,7 @@ const reqward=req?.user?.ward;
     user.city = city || user.city;
     user.country = country || user.country;
     user.postalCode = postalCode || user.postalCode;
-    user.signature = signature || user.signature;
+    // user.signature = signature || user.signature;
     user.role = role || user.role;
     user.roleSupervisor = roleSupervisor || user.roleSupervisor;
     user.ward = ward || user.ward;
