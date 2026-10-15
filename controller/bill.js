@@ -1012,9 +1012,18 @@ exports.getBills = async (req, res) => {
     const wardName = req.query.wardName;
 
     let searchQuery = {};
+    // if (consumerNumber) {
+    //   searchQuery.consumerNumber = { $regex: consumerNumber, $options: 'i' };
+    // }
+
+
     if (consumerNumber) {
-      searchQuery.consumerNumber = { $regex: consumerNumber, $options: 'i' };
+      // FIX (15-Oct-2026): ( * + ? [ सारख्या characters मुळे regex error → 500 येत होता
+      const safeConsumerNumber = String(consumerNumber).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      searchQuery.consumerNumber = { $regex: safeConsumerNumber, $options: 'i' };
     }
+
+    
     if (selectedMonthYear) {
       searchQuery.monthAndYear = selectedMonthYear;
     }
