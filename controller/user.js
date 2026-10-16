@@ -406,3 +406,90 @@ exports.getUsers = async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 }
+
+
+
+// ══════════════════════════════════════════════
+//  16-Oct-2026: SMS OTP LOGIN (streetvendor pramane)
+//  Password login (exports.login) jasa hota tasach aahe — ha fakta navin paryay.
+// ══════════════════════════════════════════════
+const sendSmsOtp = require("../utils/sendSmsOtp");
+const { setOtp, verifyOtp: checkOtp } = require("../utils/otpStore");
+
+// ✅ SEND OTP — registered contactNumber asel tarach SMS OTP pathva
+exports.sendOtp = async (req, res) => {
+  try {
+    const mobileNo = (req.body.mobileNo || "").toString().trim();
+
+    if (!/^\d{10}$/.test(mobileNo)) {
+      return res.status(400).json({ success: false, message: "Valid 10 digit mobile number required" });
+    }
+
+    const user = await User.findOne({ contactNumber: Number(mobileNo) });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "This mobile number is not registered" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setOtp(mobileNo, otp);
+
+    const result = await sendSmsOtp(mobileNo, otp, "login");
+    if (!result.success) {
+      return res.status(500).json({ success: false, message: "Error sending OTP. Please try again." });
+    }
+
+    return res.status(200).json({ success: true, message: "OTP sent successfully" });
+  } catch (error) {
+    console.log("SendOTP Error:", error);
+    return res.status(500).json({ success: false, message: "Error sending OTP" });
+  }
+};
+
+// ✅ VERIFY OTP + LOGIN — response password login (exports.login) sarkhach
+exports.verifyOtpLogin = async (req, res) => {
+  try {
+    const mobileNo = (req.body.mobileNo || "").toString().trim();
+    const otp = (req.body.otp || "").toString().trim();
+
+    if (!mobileNo || !otp) {
+      return res.status(400).json({ message: "Mobile number and OTP are required" });
+    }
+
+    const result = checkOtp(mobileNo, otp);
+    if (!result.valid) {
+      return res.status(400).json({ message: result.reason });
+    }
+
+    const user = await User.findOne({ contactNumber: Number(mobileNo) });
+    if (!user) {
+      return res.status(400).json({ message: "This mobile number is not registered" });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({
+        message: "Email is not verified. Please verify your email to login.",
+        resendOption: true
+      });
+    }
+
+    if (user.email === "mohinimraut7@gmail.com" && user.role !== "Super Admin") {
+      user.role = "Super Admin";
+      await user.save();
+    }
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+    const { _id, cn, username, email: userEmail, contactNumber, address, ward, role, city, country, postalCode, section, description, signature } = user;
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      user: { _id, cn, username, email: userEmail, contactNumber, address, ward, role, city, country, postalCode, section, description, signature }
+    });
+  } catch (error) {
+    console.log("VerifyOtpLogin Error:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
