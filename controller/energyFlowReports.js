@@ -544,16 +544,62 @@ const generateFormNumber = async (formType) => {
 const statusOf = (doc, key) => (doc?.stepStatus || []).find((s) => s.roleKey === key)?.status;
 const isApproved = (doc, key) => statusOf(doc, key) === "Approved";
 
-const setStatus = (doc, step, status, userId) => {
+// const setStatus = (doc, step, status, userId) => {
+//   doc.stepStatus = doc.stepStatus || [];
+//   const existing = doc.stepStatus.find((s) => s.roleKey === step.key);
+//   if (existing) {
+//     existing.status = status;
+//     existing.date = new Date();
+//     if (userId) existing.userId = userId;
+//   } else {
+//     doc.stepStatus.push({ roleKey: step.key, role: step.label, userId, status, date: new Date() });
+//   }
+// };
+
+
+// 24-Oct-2026: reason (Rejected / Send Back चे कारण) पण save होतो. reason दिला नाही तर आधीसारखेच.
+// const setStatus = (doc, step, status, userId, reason) => {
+//   doc.stepStatus = doc.stepStatus || [];
+//   const existing = doc.stepStatus.find((s) => s.roleKey === step.key);
+//   if (existing) {
+//     existing.status = status;
+//     existing.date = new Date();
+//     if (userId) existing.userId = userId;
+//     if (reason) existing.reason = reason;
+//   } else {
+//     doc.stepStatus.push({ roleKey: step.key, role: step.label, userId, status, date: new Date(), ...(reason ? { reason } : {}) });
+//   }
+// };
+
+
+// 24-Oct-2026: + Approved चे description, approval count आणि decisionHistory.
+// Count: हा step "Approved" नसताना Approved झाला तरच +1 (approve -> send back -> परत approve = 2).
+// Count decisionHistory वरून काढतो, म्हणून नवीन PDF मुळे stepStatus reset झाला तरी count टिकतो.
+const setStatus = (doc, step, status, userId, reason, description) => {
   doc.stepStatus = doc.stepStatus || [];
+  doc.decisionHistory = doc.decisionHistory || [];
   const existing = doc.stepStatus.find((s) => s.roleKey === step.key);
+  const pastApprovals = doc.decisionHistory.filter((h) => h.roleKey === step.key && h.status === "Approved" && h.approvalNo).length;
+  const isNewApproval = status === "Approved" && (!existing || existing.status !== "Approved");
+  const approvalCount = isNewApproval ? pastApprovals + 1 : pastApprovals;
   if (existing) {
     existing.status = status;
     existing.date = new Date();
     if (userId) existing.userId = userId;
+    if (reason) existing.reason = reason;
+    if (description) existing.description = description;
+    existing.approvalCount = approvalCount;
   } else {
-    doc.stepStatus.push({ roleKey: step.key, role: step.label, userId, status, date: new Date() });
+    doc.stepStatus.push({
+      roleKey: step.key, role: step.label, userId, status, date: new Date(),
+      ...(reason ? { reason } : {}), ...(description ? { description } : {}), approvalCount,
+    });
   }
+  doc.decisionHistory.push({
+    roleKey: step.key, role: step.label, userId, status, date: new Date(),
+    ...(reason ? { reason } : {}), ...(description ? { description } : {}),
+    ...(isNewApproval ? { approvalNo: approvalCount } : {}),
+  });
 };
 
 // जुन्या screens साठी approvedBy / doneBy पण stepStatus वरून भरतो
@@ -575,7 +621,15 @@ exports.addRemarkReportsHO = async (req, res) => {
     if (req.file) fs.unlink(req.file.path, () => {});
   };
   try {
-    const { userId, remark, signature, formType, seleMonth, wardName } = req.body;
+    // const { userId, remark, signature, formType, seleMonth, wardName } = req.body;
+
+        const { userId, remark, signature, formType, seleMonth, wardName } = req.body;
+    // 24-Oct-2026: Rejected / Send Back चे कारण (optional - जुन्या screens reason पाठवत नाहीत)
+    // const reason = typeof req.body.reason === "string" ? req.body.reason.trim().slice(0, 1000) : "";
+
+        const reason = typeof req.body.reason === "string" ? req.body.reason.trim().slice(0, 1000) : "";
+    // 24-Oct-2026: Approved चे description (optional)
+    const description = typeof req.body.description === "string" ? req.body.description.trim().slice(0, 1000) : "";
 
     const missing = [];
     if (!userId) missing.push("userId");
@@ -711,8 +765,12 @@ exports.addRemarkReportsHO = async (req, res) => {
     }
 
     // ---------- निर्णय नोंदवा ----------
-    setStatus(doc, step, remark === "Send Back" ? "Returned" : remark, user._id);
-    if (isReturn && prevStep) {
+    // setStatus(doc, step, remark === "Send Back" ? "Returned" : remark, user._id);
+        // setStatus(doc, step, remark === "Send Back" ? "Returned" : remark, user._id, isReturn ? reason : undefined); // 24-Oct-2026: reason
+   
+       setStatus(doc, step, remark === "Send Back" ? "Returned" : remark, user._id, isReturn ? reason : undefined, remark === "Approved" ? description : undefined); // 24-Oct-2026: reason + description + count
+   
+        if (isReturn && prevStep) {
       // ↕ मागच्या step कडे परत
       setStatus(doc, prevStep, "SentBack");
     }
@@ -732,11 +790,28 @@ exports.addRemarkReportsHO = async (req, res) => {
       if (signature) entry.signature = signature;
       entry.userWard = user.ward;
       entry.ward = reportWard;
-      entry.date = new Date();
+    //   entry.date = new Date();
+    // } else {
+    //   report.reportingRemarks.push({
+    //     userId: user._id, role: user.role, roleKey: step.key, department: user.department,
+    //     remark, signature, ward: reportWard, userWard: user.ward, date: new Date(), documents: [],
+    //   });
+    // }
+
+          entry.date = new Date();
+      // if (isReturn && reason) entry.reason = reason; // 24-Oct-2026
+      if (isReturn && reason) entry.reason = reason; // 24-Oct-2026
+      if (remark === "Approved" && description) entry.description = description; // 24-Oct-2026
+
     } else {
       report.reportingRemarks.push({
         userId: user._id, role: user.role, roleKey: step.key, department: user.department,
         remark, signature, ward: reportWard, userWard: user.ward, date: new Date(), documents: [],
+        // ...(isReturn && reason ? { reason } : {}), // 24-Oct-2026
+
+
+                ...(isReturn && reason ? { reason } : {}), // 24-Oct-2026
+        ...(remark === "Approved" && description ? { description } : {}), // 24-Oct-2026
       });
     }
 
