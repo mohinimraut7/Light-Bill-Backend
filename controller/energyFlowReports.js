@@ -523,8 +523,12 @@ const fs = require("fs");
 const mongoose = require("mongoose");
 const Report = require("../models/report");
 const User = require("../models/user");
+// const { parseSlots, isSignatureImage, applySignatureForKey } = require("../utils/digitalSignature");
+// const { ENERGY_FLOW, FLOW_WARD, REQUIRED_FORM_TYPES, getStepIndex } = require("../utils/energyFlow");
+
 const { parseSlots, isSignatureImage, applySignatureForKey } = require("../utils/digitalSignature");
 const { ENERGY_FLOW, FLOW_WARD, REQUIRED_FORM_TYPES, getStepIndex } = require("../utils/energyFlow");
+const { isNoteImage, saveNoteImage, appendNoting, reapplyNotings } = require("../utils/tipaniNotings"); // 27-Oct-2026: टिपणी Notings
 
 const FORM_LABEL = {
   wardbilllist: "Ward Bills",
@@ -723,7 +727,14 @@ exports.addRemarkReportsHO = async (req, res) => {
           doc.uploadedAt = new Date();
           doc.signatureSlots = slots;
           doc.signedRoles = [];
-          doc.stepStatus = [];
+        //   doc.stepStatus = [];
+        // } else {
+
+                    doc.stepStatus = [];
+          // 27-Oct-2026: टिपणीचे आधीचे Notings (शेरे) नवीन PDF मध्ये परत लावा
+          if (formType === "karyalayintipani") {
+            try { await reapplyNotings(doc); } catch (e) { console.warn("reapplyNotings:", e.message); }
+          }
         } else {
           docs.push({
             formType,
@@ -775,7 +786,30 @@ exports.addRemarkReportsHO = async (req, res) => {
       setStatus(doc, prevStep, "SentBack");
     }
     if (remark === "Approved" && isRequired) {
-      await applySignatureForKey(doc, step.key, { userId: user._id, signature, signerName: user.username || "" });
+    //   await applySignatureForKey(doc, step.key, { userId: user._id, signature, signerName: user.username || "" });
+    // }
+
+
+          await applySignatureForKey(doc, step.key, { userId: user._id, signature, signerName: user.username || "" });
+    }
+    // 27-Oct-2026: कार्यालयीन टिपणी -> eOffice प्रमाणे "Note # n" : शेरा + सही + नाव + पद + दिनांक
+    if (formType === "karyalayintipani") {
+      doc.notings = doc.notings || [];
+      const note = {
+        noteNo: doc.notings.length + 1,
+        roleKey: step.key,
+        role: step.label,
+        userId: user._id,
+        userName: user.username || "",
+        status: remark,
+        text: isReturn ? reason : description,
+        image: isNoteImage(req.body.noteImage) ? saveNoteImage(req.body.noteImage, doc.formNumber, step.key) : null,
+        date: new Date(),
+      };
+      doc.notings.push(note);
+      if (note.image) {
+        try { await appendNoting(doc, note); } catch (e) { console.warn("appendNoting:", e.message); }
+      }
     }
     doc.lastUpdated = new Date();
     syncLegacyFields(doc, reportWard);
@@ -835,5 +869,87 @@ exports.addRemarkReportsHO = async (req, res) => {
       return res.status(error.status || 400).json({ message: error.message, code: error.code });
     }
     return res.status(500).json({ message: "Error while saving report.", error: error.message });
+//   }
+// };
+
+
+  }
+};
+
+// =====================================================================
+// 27-Oct-2026: Energy Expenditure — mailbox (Gmail / eOffice) सारखी files ची यादी
+// प्रत्येक file = एक HO report (महिना + ward). सह्या / images पाठवत नाही (हलके).
+// =====================================================================
+exports.getEnergyInbox = async (req, res) => {
+  try {
+    const reports = await Report.find({ flow: "HO" })
+      .select([
+        "seleMonth", "ward", "flow", "createdAt", "updatedAt",
+        "reportingRemarks.roleKey",
+        "reportingRemarks.documents.formType",
+        "reportingRemarks.documents.formNumber",
+        "reportingRemarks.documents.uploadedAt",
+        "reportingRemarks.documents.lastUpdated",
+        "reportingRemarks.documents.pdfFile",
+        "reportingRemarks.documents.stepStatus",
+        "reportingRemarks.documents.decisionHistory",
+        "reportingRemarks.documents.notings.noteNo",
+      ].join(" "))
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    // शेवटचा निर्णय कोणी घेतला (Gmail मधील "From")
+    const ids = new Set();
+    reports.forEach((r) => (r.reportingRemarks || []).forEach((e) => (e.documents || []).forEach((d) =>
+      (d.decisionHistory || []).forEach((h) => h.userId && ids.add(String(h.userId))))));
+    const users = ids.size ? await User.find({ _id: { $in: [...ids] } }).select("username").lean() : [];
+    const nameOf = Object.fromEntries(users.map((u) => [String(u._id), u.username || ""]));
+
+    const files = reports.map((r) => {
+      const owner = (r.reportingRemarks || []).find((e) => e.roleKey === "CLERK_E");
+      const docs = (owner?.documents || []).filter((d) => REQUIRED_FORM_TYPES.includes(d.formType));
+      const forms = docs.map((d) => {
+        const st = d.stepStatus || [];
+        const statusOfKey = (k) => (st.find((s) => s.roleKey === k) || {}).status || null;
+        // file सध्या कोणाकडे: पहिला step जो अजून Approved नाही
+        const pending = ENERGY_FLOW.find((s) => statusOfKey(s.key) !== "Approved");
+        return {
+          formType: d.formType,
+          formNumber: d.formNumber,
+          pdfFile: d.pdfFile,
+          uploadedAt: d.uploadedAt,
+          lastUpdated: d.lastUpdated || d.uploadedAt,
+          currentKey: pending ? pending.key : null,       // null = सर्वांनी approve केले
+          currentLabel: pending ? pending.label : "Completed",
+          steps: st.map((s) => ({ roleKey: s.roleKey, status: s.status, date: s.date })),
+          notings: (d.notings || []).length,
+        };
+      });
+
+      let last = null;
+      docs.forEach((d) => (d.decisionHistory || []).forEach((h) => {
+        if (!last || new Date(h.date) > new Date(last.date)) last = h;
+      }));
+
+      const lastDate = [r.updatedAt, ...forms.map((f) => f.lastUpdated)].filter(Boolean)
+        .reduce((a, b) => (new Date(b) > new Date(a) ? b : a), r.createdAt);
+
+      return {
+        _id: r._id,
+        seleMonth: r.seleMonth,
+        ward: r.ward,
+        createdAt: r.createdAt,
+        updatedAt: lastDate,
+        forms,
+        lastAction: last
+          ? { roleKey: last.roleKey, role: last.role, status: last.status, date: last.date, userName: nameOf[String(last.userId)] || "" }
+          : null,
+      };
+    });
+
+    return res.status(200).json(files);
+  } catch (error) {
+    console.error("🚨 getEnergyInbox error:", error);
+    return res.status(500).json({ message: "Error while loading files.", error: error.message });
   }
 };

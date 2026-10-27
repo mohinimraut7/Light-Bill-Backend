@@ -74,7 +74,26 @@ const reportSchema = new mongoose.Schema({
                     approvalNo: { type: Number },    // Approved असेल तर हे कितवे approval
                     date: { type: Date },
                   }
+                // ],
+                // doneBy: [
+
+
+                                ],
+                // 27-Oct-2026: कार्यालयीन टिपणी - eOffice प्रमाणे Notings (शेरा + सही), PDF मध्ये "Note # n"
+                notings: [
+                  {
+                    noteNo: { type: Number },
+                    roleKey: { type: String },
+                    role: { type: String },
+                    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+                    userName: { type: String },
+                    status: { type: String },   // Approved | Rejected | Send Back
+                    text: { type: String },     // शेरा (description / reason)
+                    image: { type: String },    // uploads/noting_....png (browser मध्ये तयार झालेली)
+                    date: { type: Date },
+                  }
                 ],
+                notingCursor: { type: mongoose.Schema.Types.Mixed }, // पुढची note PDF मध्ये कुठे लागेल {page, y}
                 doneBy: [
       {
         formType: { type: String },
