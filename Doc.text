@@ -3115,3 +3115,13 @@ BASEURLEMAIL=https://lightbillbackend.saavi.co.in
 npm install node-forge
 ============================
 dsc pin=>123456
+
+-----------------------------------
+Sagle 9 barobar disle tar delete kara:
+   node scripts/delete-extra-consumers.js --delete
+
+
+   . Ya consumers che bills pan kadhayche asel tar:
+
+
+      node scripts/delete-extra-consumers.js --delete --with-bills
