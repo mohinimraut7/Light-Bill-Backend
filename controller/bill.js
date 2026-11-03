@@ -3223,8 +3223,26 @@ exports.addBill = async (req, res) => {
         paidAmount,   
       } = billData;
 
-      const validContactNumber = contactNumber || "N/A";
+      // const validContactNumber = contactNumber || "N/A";
+      // const duealertvalue = dueAlert || false;
+
+
+            const validContactNumber = contactNumber || "N/A";
       const duealertvalue = dueAlert || false;
+
+      // 03-Nov-2026: नवीन field billPdfUrl (optional, जास्तीत जास्त 200 अक्षरे)
+      // request मध्ये "billPdfUrl" किंवा "billpdfurl" दोन्ही नावे चालतात
+      const rawBillPdfUrl = billData.billPdfUrl ?? billData.billpdfurl ?? billData.billPDFUrl;
+      const billPdfUrl = rawBillPdfUrl == null ? undefined : String(rawBillPdfUrl).trim();
+      if (billPdfUrl && billPdfUrl.length > 200) {
+        failedBills.push({
+          consumerNo: consumerNumber,
+          errorMessage: "billPdfUrl must not exceed 200 characters.",
+          errorCode: "2006",
+          status: "FAILURE",
+        });
+        continue;
+      }
 
     
       const consumerExists = await Consumer.findOne({ consumerNumber });
@@ -3297,8 +3315,14 @@ exports.addBill = async (req, res) => {
         promptPaymentDate,
         promptPaymentAmount,
         dueDate,
-        netBillAmountWithDPC,
+      //   netBillAmountWithDPC,
+      //   dueAlert: duealertvalue,
+      // });
+
+
+              netBillAmountWithDPC,
         dueAlert: duealertvalue,
+        billPdfUrl: billPdfUrl || undefined, // 03-Nov-2026
       });
 
       await bill.save();
