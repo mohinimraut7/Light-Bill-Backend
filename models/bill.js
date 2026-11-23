@@ -309,7 +309,7 @@ const billSchema = new mongoose.Schema(
             billDisplayParameter4:{
         type: String,
       },
-      // 03-Nov-2026: बिलाची PDF link (addBill API मधून) - जास्तीत जास्त 200 अक्षरे
+      
       billPdfUrl: {
         type: String,
         trim: true,
